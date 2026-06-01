@@ -10,7 +10,7 @@ export default function Learn() {
   const profile = useCurrentProfile();
   const [activeZone, setActiveZone] = useState<'all' | 'junior' | 'innovator'>('all');
 
-  const completedIds: string[] = JSON.parse(localStorage.getItem('completed_lessons') || '[]');
+  const completedIds: string[] = profile?.completed_lessons || [];
   const filtered = CURRICULUM.filter(l => activeZone === 'all' || l.zone === activeZone || l.zone === 'both');
 
   return (

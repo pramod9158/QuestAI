@@ -38,7 +38,7 @@ export default function Home() {
   const level = getLevel(profile.xp);
   const xpInfo = getXPForNextLevel(profile.xp);
   const badges = getEarnedBadges(profile.xp, profile.current_streak);
-  const completedLessons = parseInt(localStorage.getItem('completed_lessons_count') || '0');
+  const completedLessons = profile.completed_lessons?.length || 0;
 
   return (
     <div className="min-h-full bg-pixel-darker">

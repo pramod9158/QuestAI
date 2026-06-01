@@ -31,16 +31,15 @@ export default function StoryAdventures() {
   const [selectedQuest, setSelectedQuest] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [showXP, setShowXP] = useState(false);
-  const completedQuests: string[] = JSON.parse(localStorage.getItem('completed_quests') || '[]');
+  const completedQuests = profile?.completed_quests || [];
 
   const handleQuestComplete = async (questId: string, xpReward: number) => {
-    const done = [...completedQuests];
-    if (!done.includes(questId)) {
-      done.push(questId);
-      localStorage.setItem('completed_quests', JSON.stringify(done));
-      // Award XP to user profile
+    if (!completedQuests.includes(questId)) {
       const currentProfileXP = isGuest ? (guestProfile?.xp ?? 0) : (profile?.xp ?? 0);
-      await updateProfile({ xp: currentProfileXP + xpReward });
+      await updateProfile({
+        xp: currentProfileXP + xpReward,
+        completed_quests: [...completedQuests, questId],
+      });
     }
     setShowXP(true);
   };

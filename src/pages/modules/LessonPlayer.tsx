@@ -13,24 +13,25 @@ export default function LessonPlayer() {
   const navigate = useNavigate();
   const { profile, guestProfile, isGuest, updateProfile } = useAuth();
   const lesson = CURRICULUM.find(l => l.id === id);
-  const [completed, setCompleted] = useState(false);
   const [showXP, setShowXP] = useState(false);
 
   if (!lesson) return <div className="p-6 text-white font-body">Lesson not found.</div>;
 
+  const completed = profile?.completed_lessons?.includes(lesson.id) ?? false;
+
   const handleComplete = async () => {
-    const done: string[] = JSON.parse(localStorage.getItem('completed_lessons') || '[]');
-    if (!done.includes(lesson.id)) {
-      done.push(lesson.id);
-      localStorage.setItem('completed_lessons', JSON.stringify(done));
-      localStorage.setItem('completed_lessons_count', String(done.length));
-      
-      // Award XP to user profile
+    if (!completed) {
       const currentProfileXP = isGuest ? (guestProfile?.xp ?? 0) : (profile?.xp ?? 0);
-      await updateProfile({ xp: currentProfileXP + lesson.xpReward });
+      const currentProfileCoins = isGuest ? (guestProfile?.coins ?? 0) : (profile?.coins ?? 0);
+      const currentCompletedLessons = profile?.completed_lessons || [];
+      
+      await updateProfile({
+        xp: currentProfileXP + lesson.xpReward,
+        coins: currentProfileCoins + (lesson.coinsReward || 0),
+        completed_lessons: [...currentCompletedLessons, lesson.id],
+      });
+      setShowXP(true);
     }
-    setCompleted(true);
-    setShowXP(true);
   };
 
   const sandboxContent = () => {

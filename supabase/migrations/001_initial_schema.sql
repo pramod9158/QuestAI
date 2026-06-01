@@ -18,6 +18,8 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     coins INTEGER DEFAULT 0,
     current_streak INTEGER DEFAULT 0,
     last_active_date DATE DEFAULT CURRENT_DATE,
+    completed_lessons TEXT[] DEFAULT '{}',
+    completed_quests TEXT[] DEFAULT '{}',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
@@ -173,7 +175,7 @@ SECURITY DEFINER SET search_path = public
 LANGUAGE plpgsql
 AS $$
 BEGIN
-  INSERT INTO public.profiles (id, username, zone, avatar_assets, xp, coins, current_streak)
+  INSERT INTO public.profiles (id, username, zone, avatar_assets, xp, coins, current_streak, completed_lessons, completed_quests)
   VALUES (
     NEW.id,
     COALESCE(NEW.raw_user_meta_data->>'username', SPLIT_PART(NEW.email, '@', 1)),
@@ -181,7 +183,9 @@ BEGIN
     '{"hat": "none", "suit": "explorer_default"}'::jsonb,
     0,
     0,
-    1
+    1,
+    '{}',
+    '{}'
   );
   RETURN NEW;
 END;

@@ -12,6 +12,8 @@ interface Profile {
   coins: number;
   current_streak: number;
   last_active_date: string;
+  completed_lessons?: string[];
+  completed_quests?: string[];
 }
 
 interface AuthContextType {
@@ -58,6 +60,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           coins: 0,
           current_streak: 1,
           last_active_date: new Date().toISOString().split('T')[0],
+          completed_lessons: [],
+          completed_quests: [],
         };
         const { data: insertedData } = await supabase.from('profiles').insert(newProfile).select().single();
         if (insertedData) {
@@ -114,6 +118,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           coins: 0,
           current_streak: 1,
           last_active_date: new Date().toISOString().split('T')[0],
+          completed_lessons: [],
+          completed_quests: [],
         });
         await fetchProfile(data.user.id, email);
       } catch (err) {
@@ -200,6 +206,8 @@ export function useCurrentProfile() {
       xp: guestProfile.xp,
       coins: guestProfile.coins,
       current_streak: guestProfile.current_streak,
+      completed_lessons: guestProfile.completed_lessons || [],
+      completed_quests: guestProfile.completed_lessons || [], // map to lessons for guest if needed, though login is mandatory
     };
   }
   return profile ? {
@@ -208,5 +216,7 @@ export function useCurrentProfile() {
     xp: profile.xp,
     coins: profile.coins,
     current_streak: profile.current_streak,
+    completed_lessons: profile.completed_lessons || [],
+    completed_quests: profile.completed_quests || [],
   } : null;
 }

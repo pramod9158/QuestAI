@@ -17,8 +17,8 @@ export default function Dashboard() {
   const [pinVerified, setPinVerified] = useState(false);
   const CORRECT_PIN = '1234'; // Simple demo PIN
 
-  const completedLessons = parseInt(localStorage.getItem('completed_lessons_count') || '0');
-  const completedQuests = JSON.parse(localStorage.getItem('completed_quests') || '[]').length;
+  const completedLessons = profile?.completed_lessons?.length || 0;
+  const completedQuests = profile?.completed_quests?.length || 0;
   const submissions = JSON.parse(localStorage.getItem('mission_submissions') || '[]').length;
   const inventions = JSON.parse(localStorage.getItem('guest_inventions') || '[]').length;
   const savedIdeas = JSON.parse(localStorage.getItem('saved_ideas') || '[]').length;
