@@ -76,4 +76,4 @@ To set up the Supabase database schema, RLS policies, leaderboard views, and cur
    - `VITE_GEMINI_API_KEY`
 3. Click **Deploy**. Vercel will automatically configure the SPA client router using the provided `vercel.json` file.
 
-Anurag#01-06-2026
+
