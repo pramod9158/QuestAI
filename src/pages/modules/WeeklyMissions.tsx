@@ -5,12 +5,121 @@ import { XPToast } from '@/components/ui/GameUI';
 import { WEEKLY_MISSIONS_DATA } from '@/data/curriculum';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { Camera, FileText, CheckCircle, Clock, Zap } from 'lucide-react';
+import { FileText, CheckCircle, XCircle, Zap, ArrowLeft, HelpCircle } from 'lucide-react';
 
 interface Submission { missionId: number; text: string; status: string; xp: number; submittedAt: string; }
 
+const MISSION_HELPERS: Record<number, { goal: string; examples: string; validationDesc: string }> = {
+  1: {
+    goal: "Find 3 smart items or AI-powered features in your home.",
+    examples: "FaceID / fingerprint phone unlock, YouTube/Netflix recommendations, smart voice assistants (Alexa/Siri), robotic vacuum cleaner, smart light bulbs, or smart AC schedule.",
+    validationDesc: "Identify and describe at least 3 smart/AI features or devices and explain why they are smart."
+  },
+  2: {
+    goal: "Find 3 spots in your school or home where people waste time waiting.",
+    examples: "Waiting in line at the school canteen, waiting at the school bus stop, waiting to check out books in the library, or gate queues.",
+    validationDesc: "Propose how predictive AI, smart cameras, or scheduling apps could predict, automate, or reduce this waiting time."
+  },
+  3: {
+    goal: "Spot a real-world problem in your neighbourhood, school, or city.",
+    examples: "Water pipe leaks, overflowing trash bins, dark unlit streetlights, unsafe potholes on the road, or garbage pile-ups.",
+    validationDesc: "Describe the issue clearly and suggest how AI sensors, smart cameras, or automated mapping could detect it automatically."
+  },
+  4: {
+    goal: "Interview an adult (parent, teacher, neighbour) about technology at work.",
+    examples: "Ask them: 'What smart software, spreadsheets, computer apps, or automation tools do you use to make your job easier?'",
+    validationDesc: "Summarize who you interviewed, what their profession is, and the technology tools they rely on daily."
+  }
+};
+
+const validateSubmission = (missionId: number, text: string) => {
+  const t = text.trim().toLowerCase();
+  
+  if (missionId === 1) {
+    const keywords = ['phone', 'mobile', 'camera', 'face id', 'fingerprint', 'alexa', 'siri', 'assistant', 'speaker', 'tv', 'television', 'refrigerator', 'fridge', 'vacuum', 'robot', 'youtube', 'netflix', 'spotify', 'light', 'bulb', 'ac', 'conditioner', 'smart', 'ai', 'algorithm', 'app', 'feed', 'recommend'];
+    const matches = keywords.filter(kw => t.includes(kw));
+    const minChars = 35;
+    const hasEnoughChars = text.trim().length >= minChars;
+    const hasSmartKeywords = matches.length >= 2;
+    const nonRepetitive = !/(.)\1{4,}/.test(t) && !/^(xyz|abc|test|qwerty|asdf)/.test(t) && text.trim().split(/\s+/).length >= 5;
+    
+    return {
+      isValid: hasEnoughChars && hasSmartKeywords && nonRepetitive,
+      requirements: [
+        { label: `📝 Write at least ${minChars} characters of description`, done: hasEnoughChars },
+        { label: "🤖 Mention smart features (e.g. phone camera, Alexa, YouTube, smart TV)", done: hasSmartKeywords },
+        { label: "💡 Provide a realistic description (no random letters or spam)", done: nonRepetitive },
+      ]
+    };
+  }
+  
+  if (missionId === 2) {
+    const scenarios = ['queue', 'line', 'wait', 'bus', 'traffic', 'canteen', 'lunch', 'library', 'counter', 'gate', 'office', 'register', 'store', 'shop'];
+    const aiSolutions = ['predict', 'optimize', 'schedule', 'app', 'alert', 'route', 'camera', 'sensor', 'automated', 'time', 'manage'];
+    const hasScenario = scenarios.some(kw => t.includes(kw));
+    const hasAISolution = aiSolutions.some(kw => t.includes(kw));
+    const minChars = 35;
+    const hasEnoughChars = text.trim().length >= minChars;
+    const nonRepetitive = !/(.)\1{4,}/.test(t) && !/^(xyz|abc|test|qwerty|asdf)/.test(t) && text.trim().split(/\s+/).length >= 5;
+
+    return {
+      isValid: hasEnoughChars && hasScenario && hasAISolution && nonRepetitive,
+      requirements: [
+        { label: `📝 Write at least ${minChars} characters explaining the scenarios`, done: hasEnoughChars },
+        { label: "⏰ Describe waiting areas (e.g. canteen queue, bus stop, library)", done: hasScenario },
+        { label: "💡 Explain how AI/apps can help predict or reduce the wait", done: hasAISolution },
+      ]
+    };
+  }
+  
+  if (missionId === 3) {
+    const problems = ['trash', 'waste', 'garbage', 'leak', 'water', 'light', 'streetlight', 'hole', 'road', 'traffic', 'pollution', 'broken', 'dirty', 'litter'];
+    const techSolutions = ['sensor', 'camera', 'ai', 'app', 'system', 'detect', 'notify', 'alert', 'analyze', 'satellite', 'monitor'];
+    const hasProblem = problems.some(kw => t.includes(kw));
+    const hasTechSolution = techSolutions.some(kw => t.includes(kw));
+    const minChars = 40;
+    const hasEnoughChars = text.trim().length >= minChars;
+    const nonRepetitive = !/(.)\1{4,}/.test(t) && !/^(xyz|abc|test|qwerty|asdf)/.test(t) && text.trim().split(/\s+/).length >= 5;
+
+    return {
+      isValid: hasEnoughChars && hasProblem && hasTechSolution && nonRepetitive,
+      requirements: [
+        { label: `📝 Detailed description (at least ${minChars} characters)`, done: hasEnoughChars },
+        { label: "🌍 Describe a real local problem (e.g. trash leak, broken lights, traffic)", done: hasProblem },
+        { label: "🤖 Propose a smart tech/AI solution (e.g. sensors, auto alerts, cameras)", done: hasTechSolution },
+      ]
+    };
+  }
+  
+  if (missionId === 4) {
+    const people = ['father', 'mother', 'parent', 'teacher', 'neighbour', 'uncle', 'aunt', 'doctor', 'shopkeeper', 'adult', 'friend', 'colleague', 'he', 'she', 'they', 'mr', 'mrs', 'ms'];
+    const technology = ['computer', 'laptop', 'excel', 'software', 'app', 'email', 'search', 'write', 'track', 'teach', 'sell', 'record', 'system', 'smart', 'tool', 'internet', 'ai'];
+    const hasPerson = people.some(kw => t.includes(kw));
+    const hasTech = technology.some(kw => t.includes(kw));
+    const minChars = 40;
+    const hasEnoughChars = text.trim().length >= minChars;
+    const nonRepetitive = !/(.)\1{4,}/.test(t) && !/^(xyz|abc|test|qwerty|asdf)/.test(t) && text.trim().split(/\s+/).length >= 5;
+
+    return {
+      isValid: hasEnoughChars && hasPerson && hasTech && nonRepetitive,
+      requirements: [
+        { label: `📝 Write at least ${minChars} characters summarizing the interview`, done: hasEnoughChars },
+        { label: "👤 State who you interviewed (e.g. parent, teacher, shopkeeper)", done: hasPerson },
+        { label: "💻 List the software, computers, or smart apps they use", done: hasTech },
+      ]
+    };
+  }
+  
+  return {
+    isValid: text.trim().length >= 10,
+    requirements: [
+      { label: "📝 Write at least 10 characters", done: text.trim().length >= 10 }
+    ]
+  };
+};
+
 export default function WeeklyMissions() {
-  const { user } = useAuth();
+  const { user, profile, guestProfile, isGuest, updateProfile } = useAuth();
   const [activeTab, setActiveTab] = useState<'missions' | 'submissions'>('missions');
   const [selectedMission, setSelectedMission] = useState<number | null>(null);
   const [text, setText] = useState('');
@@ -23,8 +132,10 @@ export default function WeeklyMissions() {
   const mission = WEEKLY_MISSIONS_DATA.find(m => m.id === selectedMission);
   const isSubmitted = (id: number) => submissions.some(s => s.missionId === id);
 
+  const validation = mission ? validateSubmission(mission.id, text) : { isValid: false, requirements: [] };
+
   const handleSubmit = async () => {
-    if (!mission || !text.trim()) return;
+    if (!mission || !validation.isValid) return;
     setSubmitting(true);
     const submission: Submission = {
       missionId: mission.id,
@@ -41,6 +152,15 @@ export default function WeeklyMissions() {
         text_observation: text,
         status: 'approved',
         earned_xp: mission.xp_reward,
+      });
+      // Add XP to profile in Supabase & local state
+      await updateProfile({
+        xp: (profile?.xp ?? 0) + mission.xp_reward
+      });
+    } else if (isGuest) {
+      // Add XP to guest profile in local state & localStorage
+      await updateProfile({
+        xp: (guestProfile?.xp ?? 0) + mission.xp_reward
       });
     }
 
@@ -163,35 +283,74 @@ export default function WeeklyMissions() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/80 z-50 flex items-end justify-center p-4"
+            className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 overflow-y-auto"
           >
             <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 25 }}
-              className="w-full max-w-md border-4 border-black bg-pixel-dark"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="w-full max-w-md border-4 border-black bg-pixel-dark my-auto shadow-pixel-lg"
             >
-              <div className="border-b-4 border-black p-4 flex items-center gap-3">
+              {/* Header */}
+              <div className="border-b-4 border-black p-4 flex items-center gap-3 bg-pixel-darker">
                 <span className="text-3xl">{mission.emoji}</span>
                 <div>
                   <div className="text-white font-game text-sm">{mission.title}</div>
                   <div className="text-warning font-body text-xs">+{mission.xp_reward} XP on completion</div>
                 </div>
               </div>
+
+              {/* Instructions */}
+              <div className="p-4 border-b-4 border-black bg-primary/10">
+                <div className="text-white font-game text-[10px] uppercase text-primary tracking-wider mb-1 flex items-center gap-1">
+                  <HelpCircle className="w-3 h-3" /> Step-by-Step Instructions
+                </div>
+                <p className="text-white font-body text-xs font-semibold leading-relaxed">
+                  {MISSION_HELPERS[mission.id]?.goal}
+                </p>
+                <div className="mt-2 text-white/70 font-body text-[11px] leading-relaxed">
+                  <strong className="text-warning">💡 Examples:</strong> {MISSION_HELPERS[mission.id]?.examples}
+                </div>
+                <div className="mt-2 text-white/50 font-body text-[10px] leading-relaxed border-t border-white/5 pt-1">
+                  <strong className="text-white/70">⚙️ How it is validated:</strong> {MISSION_HELPERS[mission.id]?.validationDesc}
+                </div>
+              </div>
+
+              {/* Input & Live Checklist */}
               <div className="p-5 space-y-4">
                 <div>
-                  <label className="text-white/70 font-body text-sm mb-2 block flex items-center gap-2">
-                    <FileText className="w-4 h-4" /> Your Observation:
+                  <label className="text-white/70 font-body text-xs mb-2 block flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-primary" /> Your Observation:
                   </label>
                   <textarea value={text} onChange={e => setText(e.target.value)}
-                    placeholder="Describe what you found, observed, or learned..."
-                    className="pixel-input h-32 resize-none" maxLength={500} />
+                    placeholder="Provide your detailed observation here..."
+                    className="pixel-input h-28 resize-none text-xs" maxLength={500} />
                   <div className="text-right text-white/30 font-body text-xs mt-1">{text.length}/500</div>
                 </div>
-                <div className="flex gap-3">
+
+                {/* Validation Checklist */}
+                <div className="border-2 border-black bg-pixel-darker p-3">
+                  <div className="text-white/50 font-game text-[9px] uppercase tracking-wider mb-2">AI Verification Checklist</div>
+                  <div className="space-y-1.5">
+                    {validation.requirements.map((req, index) => (
+                      <div key={index} className="flex items-start gap-2">
+                        {req.done ? (
+                          <CheckCircle className="w-3.5 h-3.5 text-success flex-shrink-0 mt-0.5" />
+                        ) : (
+                          <XCircle className="w-3.5 h-3.5 text-pixel-red flex-shrink-0 mt-0.5 opacity-60" />
+                        )}
+                        <span className={`text-[10px] font-body transition-colors leading-tight ${req.done ? 'text-white' : 'text-white/40'}`}>
+                          {req.label}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Submit / Cancel Buttons */}
+                <div className="flex gap-3 pt-2">
                   <Button variant="ghost" onClick={() => { setSelectedMission(null); setText(''); }}>Cancel</Button>
-                  <Button variant="success" fullWidth loading={submitting} disabled={text.length < 10} onClick={handleSubmit}>
+                  <Button variant="success" fullWidth loading={submitting} disabled={!validation.isValid} onClick={handleSubmit}>
                     Submit Mission! 🚀
                   </Button>
                 </div>

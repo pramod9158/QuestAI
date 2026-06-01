@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { STORY_QUESTS } from '@/data/curriculum';
 import { Button } from '@/components/ui/Button';
 import { XPToast } from '@/components/ui/GameUI';
+import { useAuth } from '@/contexts/AuthContext';
 import { Lock, Star, ChevronRight, ArrowLeft } from 'lucide-react';
 import { SpeakButton } from '@/components/ui/GameUI';
 
@@ -26,14 +27,21 @@ const QUEST_STEPS = {
 
 export default function StoryAdventures() {
   const navigate = useNavigate();
+  const { profile, guestProfile, isGuest, updateProfile } = useAuth();
   const [selectedQuest, setSelectedQuest] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [showXP, setShowXP] = useState(false);
   const completedQuests: string[] = JSON.parse(localStorage.getItem('completed_quests') || '[]');
 
-  const handleQuestComplete = (questId: string, xpReward: number) => {
+  const handleQuestComplete = async (questId: string, xpReward: number) => {
     const done = [...completedQuests];
-    if (!done.includes(questId)) { done.push(questId); localStorage.setItem('completed_quests', JSON.stringify(done)); }
+    if (!done.includes(questId)) {
+      done.push(questId);
+      localStorage.setItem('completed_quests', JSON.stringify(done));
+      // Award XP to user profile
+      const currentProfileXP = isGuest ? (guestProfile?.xp ?? 0) : (profile?.xp ?? 0);
+      await updateProfile({ xp: currentProfileXP + xpReward });
+    }
     setShowXP(true);
   };
 

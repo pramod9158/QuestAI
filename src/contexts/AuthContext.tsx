@@ -158,9 +158,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateProfile = async (updates: Partial<Profile>) => {
-    if (!user) return;
-    await supabase.from('profiles').update(updates).eq('id', user.id);
-    setProfile(prev => prev ? { ...prev, ...updates } : null);
+    if (user) {
+      await supabase.from('profiles').update(updates).eq('id', user.id);
+      setProfile(prev => prev ? { ...prev, ...updates } : null);
+    } else {
+      const gp = getGuestProfile();
+      if (gp) {
+        const updated = {
+          ...gp,
+          ...updates,
+        } as unknown as GuestProfile;
+        saveGuestProfile(updated);
+        setGuestProfileState(updated);
+      }
+    }
   };
 
   return (

@@ -4,12 +4,14 @@ import { useNavigate } from 'react-router-dom';
 import { QUIZ_QUESTIONS } from '@/data/curriculum';
 import { Button } from '@/components/ui/Button';
 import { XPToast } from '@/components/ui/GameUI';
+import { useAuth } from '@/contexts/AuthContext';
 import { Timer, Zap, Trophy, RotateCcw, ArrowLeft } from 'lucide-react';
 
 type Mode = 'lobby' | 'time-attack' | 'casual' | 'results';
 
 export default function QuizArena() {
   const navigate = useNavigate();
+  const { profile, guestProfile, isGuest, updateProfile } = useAuth();
   const [mode, setMode] = useState<Mode>('lobby');
   const [currentQ, setCurrentQ] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
@@ -35,13 +37,21 @@ export default function QuizArena() {
     setAnswers(prev => [...prev, idx]);
     const q = questions[currentQ];
     const isCorrect = idx === q.correct;
+    let currentEarned = xpEarned;
     if (isCorrect) {
       const xp = mode === 'time-attack' ? q.xp + Math.max(0, timeLeft) : q.xp;
       setScore(s => s + 1);
-      setXPEarned(xp => xp + (mode === 'time-attack' ? q.xp + Math.max(0, timeLeft) : q.xp));
+      currentEarned += xp;
+      setXPEarned(currentEarned);
     }
     setTimeout(() => {
-      if (currentQ + 1 >= questions.length) { setMode('results'); setShowXP(true); }
+      if (currentQ + 1 >= questions.length) { 
+        setMode('results'); 
+        setShowXP(true); 
+        // Update profile XP!
+        const currentProfileXP = isGuest ? (guestProfile?.xp ?? 0) : (profile?.xp ?? 0);
+        updateProfile({ xp: currentProfileXP + currentEarned });
+      }
       else { setCurrentQ(i => i + 1); setSelected(null); setTimeLeft(15); }
     }, 1400);
   };

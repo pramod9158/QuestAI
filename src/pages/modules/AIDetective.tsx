@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { DETECTIVE_CASES } from '@/data/curriculum';
 import { Button } from '@/components/ui/Button';
 import { XPToast, SpeakButton } from '@/components/ui/GameUI';
+import { useAuth } from '@/contexts/AuthContext';
 import { CheckCircle, XCircle, HelpCircle, ChevronRight, ArrowLeft } from 'lucide-react';
 
 type Answer = 'yes' | 'no' | 'maybe';
@@ -16,6 +17,7 @@ const ANSWER_CONFIG = {
 
 export default function AIDetective() {
   const navigate = useNavigate();
+  const { profile, guestProfile, isGuest, updateProfile } = useAuth();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selected, setSelected] = useState<Answer | null>(null);
   const [totalXP, setTotalXP] = useState(0);
@@ -33,6 +35,9 @@ export default function AIDetective() {
       setTotalXP(xp => xp + caseData.xp);
       setXPAmount(caseData.xp);
       setShowXP(true);
+      // Award XP to user profile
+      const currentProfileXP = isGuest ? (guestProfile?.xp ?? 0) : (profile?.xp ?? 0);
+      updateProfile({ xp: currentProfileXP + caseData.xp });
     }
   };
 
