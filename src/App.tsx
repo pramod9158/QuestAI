@@ -30,8 +30,8 @@ import QuizArena from '@/pages/modules/QuizArena';
 import InventorHall from '@/pages/modules/InventorHall';
 
 function AppRoutes() {
-  const { profile, guestProfile, isLoading } = useAuth();
-  const hasProfile = !!profile || !!guestProfile;
+  const { profile, isLoading } = useAuth();
+  const hasProfile = !!profile;
 
   if (isLoading) {
     return (

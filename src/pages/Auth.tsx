@@ -28,7 +28,8 @@ export default function Auth() {
       else navigate('/');
     } else {
       if (!username.trim()) { setError('Please enter a username'); setLoading(false); return; }
-      const { error } = await signUp(email, password, username);
+      const zone = location.state?.zone || 'junior';
+      const { error } = await signUp(email, password, username, zone);
       if (error) setError(error);
       else setSuccess('Account created! Check your email to confirm, then log in.');
     }
@@ -102,7 +103,7 @@ export default function Auth() {
           </form>
 
           <button onClick={() => navigate('/onboarding')} className="text-white/40 font-body text-xs text-center hover:text-white/70 underline">
-            Continue as Guest instead →
+            ← Back to Landing Page
           </button>
         </motion.div>
       </div>

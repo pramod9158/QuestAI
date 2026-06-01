@@ -21,7 +21,7 @@ interface AuthContextType {
   guestProfile: GuestProfile | null;
   isGuest: boolean;
   isLoading: boolean;
-  signUp: (email: string, password: string, username: string) => Promise<{ error: string | null }>;
+  signUp: (email: string, password: string, username: string, zone?: 'junior' | 'innovator') => Promise<{ error: string | null }>;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   continueAsGuest: (username: string, zone: 'junior' | 'innovator') => void;
@@ -89,14 +89,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, [fetchProfile]);
 
-  const signUp = async (email: string, password: string, username: string) => {
+  const signUp = async (email: string, password: string, username: string, zone: 'junior' | 'innovator' = 'junior') => {
     const { data, error } = await supabase.auth.signUp({ 
       email, 
       password,
       options: {
         data: {
           username,
-          zone: 'junior'
+          zone
         }
       }
     });
@@ -106,7 +106,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await supabase.from('profiles').insert({
           id: data.user.id,
           username,
-          zone: 'junior',
+          zone,
           avatar_assets: { hat: 'none', suit: 'explorer_default' },
           xp: 0,
           coins: 0,
