@@ -38,7 +38,8 @@ function AppRoutes() {
       <div className="min-h-screen bg-pixel-darker flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="text-6xl animate-bounce">🤖</div>
-          <div className="text-white font-pixel text-[10px] animate-pulse">LOADING AI EXPLORER...</div>
+          <div className="text-white font-pixel text-[10px] animate-pulse">LOADING QUESTAI...</div>
+          <div className="text-white/40 font-body text-xs">🌟 Getting your adventure ready!</div>
         </div>
       </div>
     );

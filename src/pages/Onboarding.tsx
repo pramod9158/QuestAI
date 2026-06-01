@@ -10,7 +10,7 @@ const ZONES = [
     age: '6–11',
     emoji: '🚀',
     title: 'Junior Explorer',
-    desc: 'Discover AI magic through games, stories & fun!',
+    desc: 'Learn AI through games, stories & fun activities!',
     color: 'bg-blue-game',
     borderColor: 'border-blue-game',
     shadowColor: 'shadow-pixel-blue',
@@ -20,7 +20,7 @@ const ZONES = [
     age: '12–16',
     emoji: '🧠',
     title: 'Future Innovator',
-    desc: 'Dive into AI ethics, prompts, and real-world problem solving!',
+    desc: 'Dive into AI ethics, prompts & real-world problem solving!',
     color: 'bg-primary',
     borderColor: 'border-primary-dark',
     shadowColor: 'shadow-pixel-purple',
@@ -70,14 +70,14 @@ export default function Onboarding() {
                 >
                   🤖
                 </motion.div>
-                <h1 className="font-pixel text-white text-xl leading-relaxed">AI EXPLORER</h1>
-                <p className="font-body text-white/60 text-sm mt-2">Your AI Learning Adventure Awaits!</p>
+                <h1 className="font-pixel text-white text-lg leading-relaxed">Welcome to QuestAI!</h1>
+                <p className="font-body text-white/70 text-sm mt-2">🌟 Your AI Learning Adventure Awaits!</p>
               </div>
 
               {/* Pixel divider */}
               <div className="w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent" />
 
-              <p className="font-game text-white text-xl text-center">How old are you?</p>
+              <p className="font-game text-white text-xl text-center">👋 How old are you?</p>
 
               <div className="w-full flex flex-col gap-4">
                 {ZONES.map((z) => (
@@ -123,7 +123,7 @@ export default function Onboarding() {
 
               {/* Avatar Picker */}
               <div className="w-full">
-                <p className="text-white/60 font-body text-sm mb-3 text-center">Pick your avatar:</p>
+                <p className="text-white/60 font-body text-sm mb-3 text-center">📸 Pick your avatar:</p>
                 <div className="grid grid-cols-4 gap-3">
                   {AVATARS.map((a, i) => (
                     <motion.button
@@ -140,7 +140,7 @@ export default function Onboarding() {
 
               {/* Name Input */}
               <div className="w-full">
-                <label className="text-white/70 font-body text-sm mb-2 block">Your Explorer Name:</label>
+                <label className="text-white/70 font-body text-sm mb-2 block">🏠 Your Explorer Name:</label>
                 <input
                   type="text"
                   value={username}
