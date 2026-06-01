@@ -52,12 +52,12 @@ export default function Leaderboard() {
     <div className="min-h-full bg-pixel-darker pb-6">
       <div className="bg-gradient-to-b from-success/30 to-pixel-darker p-5">
         <h1 className="text-white font-game text-xl flex items-center gap-2">
-          <Trophy className="w-6 h-6 text-warning" /> 🏆 Leaderboard
+          <Trophy className="w-6 h-6 text-warning" /> Leaderboard
         </h1>
-        <p className="text-white/60 font-body text-sm mt-1">Can you reach the top this week? 🚀</p>
+        <p className="text-white/60 font-body text-sm mt-1">Top AI Explorers this week!</p>
         <div className="flex items-center gap-2 mt-2">
           <div className="w-2 h-2 bg-success rounded-full animate-pulse" />
-          <span className="text-success font-body text-xs">🟢 Live · Updates in real-time</span>
+          <span className="text-success font-body text-xs">Live • Updates in real-time</span>
         </div>
       </div>
 

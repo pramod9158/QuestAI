@@ -160,3 +160,34 @@ INSERT INTO storage.buckets (id, name, public) VALUES ('mission-uploads', 'missi
 
 CREATE POLICY "Users can upload mission files" ON storage.objects
     FOR INSERT WITH CHECK (bucket_id = 'mission-uploads' AND auth.uid()::text = (storage.foldername(name))[1]);
+
+-- ============================================================
+-- PRODUCTION-GRADE AUTOMATIC PROFILE CREATION TRIGGER
+-- ============================================================
+-- This trigger automatically creates a profile row in public.profiles
+-- whenever a new user registers in auth.users, reading from user_metadata.
+
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER
+SECURITY DEFINER SET search_path = public
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  INSERT INTO public.profiles (id, username, zone, avatar_assets, xp, coins, current_streak)
+  VALUES (
+    NEW.id,
+    COALESCE(NEW.raw_user_meta_data->>'username', SPLIT_PART(NEW.email, '@', 1)),
+    COALESCE(NEW.raw_user_meta_data->>'zone', 'junior'),
+    '{"hat": "none", "suit": "explorer_default"}'::jsonb,
+    0,
+    0,
+    1
+  );
+  RETURN NEW;
+END;
+$$;
+
+-- Trigger to execute the function on signup
+CREATE OR REPLACE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();

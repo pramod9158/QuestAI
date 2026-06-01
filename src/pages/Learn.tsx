@@ -20,12 +20,12 @@ export default function Learn() {
         <h1 className="text-white font-game text-2xl flex items-center gap-2">
           📚 Learning Zones
         </h1>
-        <p className="text-white/60 font-body text-sm mt-1">20 AI lessons — learn at your own pace! 🌟</p>
+        <p className="text-white/60 font-body text-sm mt-1">20-lesson AI curriculum — explore at your own pace</p>
 
         {/* Zone filter */}
         <div className="flex gap-2 mt-4">
           {[
-            { key: 'all', label: 'All Ages', emoji: '🌍' },
+            { key: 'all', label: 'All', emoji: '🌍' },
             { key: 'junior', label: 'Ages 6–11', emoji: '🚀' },
             { key: 'innovator', label: 'Ages 12–16', emoji: '🧠' },
           ].map(z => (

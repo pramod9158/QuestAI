@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/contexts/AuthContext';
@@ -7,8 +7,11 @@ import { Mail, Lock, User, ArrowLeft } from 'lucide-react';
 
 export default function Auth() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { signIn, signUp } = useAuth();
-  const [tab, setTab] = useState<'login' | 'signup'>('login');
+  const [tab, setTab] = useState<'login' | 'signup'>(() => {
+    return location.state?.mode === 'signup' ? 'signup' : 'login';
+  });
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');

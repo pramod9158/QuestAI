@@ -40,11 +40,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const isGuest = !user && !!guestProfile;
 
-  const fetchProfile = useCallback(async (userId: string) => {
-    const { data } = await supabase.from('profiles').select('*').eq('id', userId).single();
-    if (data) {
-      setProfile(data as Profile);
-      await updateStreak(userId);
+  const fetchProfile = useCallback(async (userId: string, email?: string) => {
+    try {
+      const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
+      if (data) {
+        setProfile(data as Profile);
+        await updateStreak(userId);
+      } else {
+        // Fallback profile creation if none exists in the DB
+        const defaultUsername = email ? email.split('@')[0] : `Explorer_${Math.floor(Math.random() * 10000)}`;
+        const newProfile = {
+          id: userId,
+          username: defaultUsername,
+          zone: 'junior' as const,
+          avatar_assets: { hat: 'none', suit: 'explorer_default' },
+          xp: 0,
+          coins: 0,
+          current_streak: 1,
+          last_active_date: new Date().toISOString().split('T')[0],
+        };
+        const { data: insertedData } = await supabase.from('profiles').insert(newProfile).select().single();
+        if (insertedData) {
+          setProfile(insertedData as Profile);
+        } else {
+          setProfile(newProfile as unknown as Profile);
+        }
+      }
+    } catch (err) {
+      console.warn("Could not retrieve or create profile:", err);
     }
   }, []);
 
@@ -52,14 +75,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      if (session?.user) fetchProfile(session.user.id).finally(() => setIsLoading(false));
+      if (session?.user) fetchProfile(session.user.id, session.user.email).finally(() => setIsLoading(false));
       else setIsLoading(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
-      if (session?.user) fetchProfile(session.user.id);
+      if (session?.user) fetchProfile(session.user.id, session.user.email);
       else setProfile(null);
     });
 
@@ -67,20 +90,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [fetchProfile]);
 
   const signUp = async (email: string, password: string, username: string) => {
-    const { data, error } = await supabase.auth.signUp({ email, password });
+    const { data, error } = await supabase.auth.signUp({ 
+      email, 
+      password,
+      options: {
+        data: {
+          username,
+          zone: 'junior'
+        }
+      }
+    });
     if (error) return { error: error.message };
     if (data.user) {
-      await supabase.from('profiles').insert({
-        id: data.user.id,
-        username,
-        zone: 'junior',
-        avatar_assets: { hat: 'none', suit: 'explorer_default' },
-        xp: 0,
-        coins: 0,
-        current_streak: 1,
-        last_active_date: new Date().toISOString().split('T')[0],
-      });
-      await fetchProfile(data.user.id);
+      try {
+        await supabase.from('profiles').insert({
+          id: data.user.id,
+          username,
+          zone: 'junior',
+          avatar_assets: { hat: 'none', suit: 'explorer_default' },
+          xp: 0,
+          coins: 0,
+          current_streak: 1,
+          last_active_date: new Date().toISOString().split('T')[0],
+        });
+      } catch (err) {
+        console.warn("Skipped immediate profile pre-creation (it will be auto-created on first login if needed):", err);
+      }
+      await fetchProfile(data.user.id, email);
     }
     return { error: null };
   };

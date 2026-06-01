@@ -54,7 +54,7 @@ export default function Profile() {
           </div>
           <div>
             <h1 className="text-white font-game text-xl">{profile.username}</h1>
-            <p className="text-white/60 font-body text-sm">{profile.zone === 'junior' ? '🚀 Junior Explorer · Ages 6–11' : '🧠 Future Innovator · Ages 12–16'}</p>
+            <p className="text-white/60 font-body text-sm">{profile.zone === 'junior' ? '🚀 Junior Explorer' : '🧠 Future Innovator'}</p>
             {user ? (
               <div className="flex items-center gap-1 mt-1">
                 <div className="w-2 h-2 bg-success border border-black" />
@@ -119,16 +119,14 @@ export default function Profile() {
             <div className="border-4 border-black bg-pixel-dark p-5 shadow-pixel space-y-3">
               <h3 className="text-white font-game text-sm">📊 My Journey</h3>
               {[
-                { emoji: '📺', label: 'Lessons Done', value: completedLessons },
-                { emoji: '🗺️', label: 'Quests Solved', value: completedQuests },
-                { emoji: '🎯', label: 'Missions Done', value: submissions },
-                { emoji: '💡', label: 'Inventions Made', value: inventions },
+                { emoji: '📺', label: 'Lessons Completed', value: completedLessons },
+                { emoji: '⚔️', label: 'Quests Solved', value: completedQuests },
+                { emoji: '🎯', label: 'Missions Submitted', value: submissions },
+                { emoji: '💡', label: 'Inventions Created', value: inventions },
                 { emoji: '🪙', label: 'Coins Earned', value: profile.coins ?? 0 },
               ].map(item => (
                 <div key={item.label} className="flex items-center justify-between border-b border-white/10 pb-2 last:border-0 last:pb-0">
-                  <span className="text-white/70 font-body text-sm flex items-center gap-2">
-                    <span className="text-lg">{item.emoji}</span> {item.label}
-                  </span>
+                  <span className="text-white/70 font-body text-sm">{item.emoji} {item.label}</span>
                   <span className="text-white font-game text-sm">{item.value}</span>
                 </div>
               ))}
@@ -154,7 +152,7 @@ export default function Profile() {
             >
               <span className="text-3xl">👨‍🏫</span>
               <div>
-                <div className="text-white font-game text-sm">📊 Parent/Teacher Dashboard</div>
+                <div className="text-white font-game text-sm">Parent/Teacher Dashboard</div>
                 <div className="text-white/60 font-body text-xs">View progress & download certificate</div>
               </div>
             </button>

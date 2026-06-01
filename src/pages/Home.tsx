@@ -8,14 +8,14 @@ import { ProgressRing, XPToast } from '@/components/ui/GameUI';
 import { Zap, BookOpen, Swords, Target, Lightbulb, Star, Trophy, Users, ChevronRight } from 'lucide-react';
 
 const MODULE_CARDS = [
-  { path: '/play/around-me', emoji: '🌍', title: 'AI Around Me', desc: 'Spot AI in everyday life!', color: 'bg-blue-game', textColor: 'text-blue-game' },
-  { path: '/play/story', emoji: '🗺️', title: 'Story Adventures', desc: 'Go on 8 epic AI quests!', color: 'bg-primary', textColor: 'text-primary' },
-  { path: '/play/detective', emoji: '🕵️', title: 'AI Detective', desc: 'Solve mysteries with AI!', color: 'bg-success', textColor: 'text-success' },
-  { path: '/play/brainstorm', emoji: '💡', title: 'Brainstorm Lab', desc: 'Invent cool AI ideas!', color: 'bg-warning', textColor: 'text-warning' },
-  { path: '/play/idea-generator', emoji: '💫', title: 'Idea Generator', desc: 'Get 3 AI ideas instantly!', color: 'bg-pixel-pink', textColor: 'text-pink-400' },
-  { path: '/play/quiz', emoji: '🎯', title: 'Quiz Arena', desc: 'Test what you know!', color: 'bg-pixel-red', textColor: 'text-red-400' },
-  { path: '/play/cards', emoji: '🃏', title: 'AI Cards', desc: 'Collect all hero cards!', color: 'bg-yellow-600', textColor: 'text-yellow-400' },
-  { path: '/play/inventor-hall', emoji: '🏆', title: 'Inventor Hall', desc: 'Show off your inventions!', color: 'bg-gray-600', textColor: 'text-gray-300' },
+  { path: '/play/around-me', emoji: '🌍', title: 'AI Around Me', desc: 'Discover AI in your world', color: 'bg-blue-game', textColor: 'text-blue-game' },
+  { path: '/play/story', emoji: '⚔️', title: 'Story Adventures', desc: '8 epic quests to solve', color: 'bg-primary', textColor: 'text-primary' },
+  { path: '/play/detective', emoji: '🕵️', title: 'AI Detective', desc: 'Can AI help here?', color: 'bg-success', textColor: 'text-success' },
+  { path: '/play/brainstorm', emoji: '💡', title: 'Brainstorm Lab', desc: 'Invent AI solutions', color: 'bg-warning', textColor: 'text-warning' },
+  { path: '/play/idea-generator', emoji: '⚡', title: 'Idea Generator', desc: 'AI power your ideas', color: 'bg-pixel-pink', textColor: 'text-pink-400' },
+  { path: '/play/quiz', emoji: '🎯', title: 'Quiz Arena', desc: 'Test your AI knowledge', color: 'bg-pixel-red', textColor: 'text-red-400' },
+  { path: '/play/cards', emoji: '🃏', title: 'AI Cards', desc: 'Collect them all!', color: 'bg-yellow-600', textColor: 'text-yellow-400' },
+  { path: '/play/inventor-hall', emoji: '🏛️', title: 'Inventor Hall', desc: 'Share your inventions', color: 'bg-gray-600', textColor: 'text-gray-300' },
 ];
 
 export default function Home() {
@@ -61,7 +61,7 @@ export default function Home() {
               {profile.username}! 👋
             </motion.h1>
             <p className="text-white/50 font-body text-xs mt-1">
-              {profile.zone === 'junior' ? '🚀 Junior Explorer · Ages 6–11' : '🧠 Future Innovator · Ages 12–16'}
+              {profile.zone === 'junior' ? '🚀 Junior Explorer' : '🧠 Future Innovator'}
             </p>
           </div>
 
@@ -86,7 +86,7 @@ export default function Home() {
         >
           <span className="text-3xl">🎯</span>
           <div className="flex-1">
-            <div className="text-warning font-game text-sm">🌟 Daily Mission Active!</div>
+            <div className="text-warning font-game text-sm">Daily Mission Active!</div>
             <div className="text-white/70 font-body text-xs">{WEEKLY_MISSIONS_DATA[0].title}</div>
           </div>
           <ChevronRight className="w-5 h-5 text-warning" />
@@ -97,7 +97,7 @@ export default function Home() {
       <div className="px-4 -mt-4 grid grid-cols-3 gap-3 z-10 relative">
         {[
           { icon: '🔥', label: 'Streak', value: `${profile.current_streak} days`, color: 'border-orange-500' },
-          { icon: '⚡', label: 'My XP', value: profile.xp.toString(), color: 'border-yellow-400' },
+          { icon: '⚡', label: 'Total XP', value: profile.xp.toString(), color: 'border-yellow-400' },
           { icon: '🪙', label: 'Coins', value: profile.coins?.toString() ?? '0', color: 'border-yellow-300' },
         ].map((stat) => (
           <motion.div
@@ -190,22 +190,16 @@ export default function Home() {
       <div className="px-4 mt-6 mb-8">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-white font-game text-lg flex items-center gap-2">
-            <Users className="w-5 h-5 text-success" /> Top Explorers
+            <Users className="w-5 h-5 text-success" /> Leaderboard
           </h2>
           <button onClick={() => navigate('/leaderboard')} className="text-success font-body text-xs flex items-center gap-1">
-            See all <ChevronRight className="w-3 h-3" />
+            Full board <ChevronRight className="w-3 h-3" />
           </button>
         </div>
         <div className="border-4 border-black bg-success/10 p-4">
-          {[
-            { rank: '🥇', name: 'SuperCoder99', xp: '1,250 XP' },
-            { rank: '🥈', name: 'AIWizard', xp: '980 XP' },
-            { rank: '🥉', name: 'PixelHero', xp: '820 XP' },
-          ].map((row, i) => (
+          {['🥇 SuperCoder99 — 1,250 XP', '🥈 AIWizard — 980 XP', '🥉 PixelHero — 820 XP'].map((row, i) => (
             <div key={i} className="flex items-center gap-3 py-2 border-b border-white/10 last:border-0">
-              <span className="text-xl">{row.rank}</span>
-              <span className="font-game text-white text-sm flex-1">{row.name}</span>
-              <span className="font-body text-warning text-xs">⚡ {row.xp}</span>
+              <span className="font-body text-white/80 text-sm">{row}</span>
             </div>
           ))}
         </div>

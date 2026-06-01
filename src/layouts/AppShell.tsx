@@ -7,11 +7,11 @@ import { CoinCounter, StreakFlame, XPBar } from '@/components/ui/GameUI';
 import { getLevel, getXPForNextLevel } from '@/lib/gamification';
 
 const NAV_ITEMS = [
-  { path: '/', label: 'Home', emoji: '🏠', icon: Home },
-  { path: '/learn', label: 'Learn', emoji: '📚', icon: BookOpen },
-  { path: '/play', label: 'Play', emoji: '🎮', icon: Gamepad2 },
-  { path: '/missions', label: 'Missions', emoji: '🎯', icon: Target },
-  { path: '/profile', label: 'Profile', emoji: '🧑', icon: User },
+  { path: '/', label: 'Home', icon: Home },
+  { path: '/learn', label: 'Learn', icon: BookOpen },
+  { path: '/play', label: 'Play', icon: Gamepad2 },
+  { path: '/missions', label: 'Missions', icon: Target },
+  { path: '/profile', label: 'Profile', icon: User },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -39,9 +39,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1">
-              <span className="text-lg">🤖</span>
-              <span className="text-white font-pixel text-[10px]">QuestAI</span>
-            </div>
+                <span className="text-lg">🤖</span>
+                <span className="text-white font-pixel text-[10px]">AI EXPLORER</span>
+              </div>
               <div className="flex items-center gap-2">
                 <StreakFlame streak={profile.current_streak ?? 0} />
                 <CoinCounter coins={profile.coins ?? 0} />
@@ -89,7 +89,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                         )}
                       </div>
                     </motion.div>
-                    <span className="font-body text-[10px] font-bold">{emoji} {label}</span>
+                    <span className="font-body text-[9px] font-bold">{label}</span>
                   </NavLink>
                 );
               })}
