@@ -98,18 +98,18 @@ export default function Onboarding() {
                 ))}
               </div>
 
-              <div className="w-full flex flex-col gap-3 items-center justify-center mt-2">
+              <div className="flex flex-col gap-3 items-center justify-center mt-4">
                 <button
                   onClick={() => navigate('/auth', { state: { mode: 'signup' } })}
-                  className="w-full max-w-xs border-4 border-black bg-warning hover:bg-warning/90 px-6 py-3 font-game text-sm text-black shadow-pixel-orange shadow-pixel transition-all flex items-center justify-center gap-2 active:translate-y-1 active:shadow-none"
+                  className="text-warning font-body text-sm font-bold hover:opacity-80 underline flex items-center gap-1.5 transition-all"
                 >
-                  ⭐ CREATE PERMANENT ACCOUNT
+                  ⭐ New to Quest AI? Sign Up
                 </button>
                 <button
                   onClick={() => navigate('/auth', { state: { mode: 'login' } })}
-                  className="text-white/50 font-body text-xs hover:text-white/70 underline flex items-center gap-1.5 mt-1"
+                  className="text-white font-body text-sm font-bold hover:opacity-80 underline flex items-center gap-1.5 transition-all"
                 >
-                  🔑 Already have an account? Sign in
+                  🔑 Already have an account? Sign In
                 </button>
               </div>
             </motion.div>
