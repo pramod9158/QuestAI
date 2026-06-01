@@ -101,7 +101,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     });
     if (error) return { error: error.message };
-    if (data.user) {
+    // If email confirmation is required, session will be null until confirmed
+    // We'll insert the profile only if we have a valid session
+    if (data.user && data.session) {
       try {
         await supabase.from('profiles').insert({
           id: data.user.id,
@@ -113,10 +115,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           current_streak: 1,
           last_active_date: new Date().toISOString().split('T')[0],
         });
+        await fetchProfile(data.user.id, email);
       } catch (err) {
-        console.warn("Skipped immediate profile pre-creation (it will be auto-created on first login if needed):", err);
+        console.warn("Profile pre-creation failed (will be created on login):", err);
       }
-      await fetchProfile(data.user.id, email);
     }
     return { error: null };
   };

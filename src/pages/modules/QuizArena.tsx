@@ -25,7 +25,7 @@ export default function QuizArena() {
   useEffect(() => {
     if (mode !== 'time-attack' || selected !== null) return;
     if (timeLeft <= 0) { handleAnswer(-1); return; }
-    const t = setTimeout(() => setTimeLeft(t => t - 1), 1000);
+    const t = setTimeout(() => setTimeLeft(prev => prev - 1), 1000);
     return () => clearTimeout(t);
   }, [mode, timeLeft, selected]);
 

@@ -17,7 +17,11 @@ export default function Profile() {
   const [boxReward, setBoxReward] = useState('');
   const [activeTab, setActiveTab] = useState<'overview' | 'badges' | 'settings'>('overview');
 
-  if (!profile) { navigate('/onboarding'); return null; }
+  React.useEffect(() => {
+    if (!profile) navigate('/auth', { replace: true });
+  }, [profile, navigate]);
+
+  if (!profile) return null;
 
   const level = getLevel(profile.xp);
   const xpInfo = getXPForNextLevel(profile.xp);
@@ -37,7 +41,7 @@ export default function Profile() {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate('/onboarding');
+    navigate('/auth');
   };
 
   return (
@@ -55,15 +59,11 @@ export default function Profile() {
           <div>
             <h1 className="text-white font-game text-xl">{profile.username}</h1>
             <p className="text-white/60 font-body text-sm">{profile.zone === 'junior' ? '🚀 Junior Explorer' : '🧠 Future Innovator'}</p>
-            {user ? (
+            {user && (
               <div className="flex items-center gap-1 mt-1">
                 <div className="w-2 h-2 bg-success border border-black" />
                 <span className="text-success font-body text-xs">Connected</span>
               </div>
-            ) : (
-              <button onClick={() => navigate('/auth')} className="text-warning font-body text-xs mt-1 underline">
-                Save progress → Sign Up
-              </button>
             )}
           </div>
         </div>
@@ -187,11 +187,6 @@ export default function Profile() {
           <div className="space-y-4">
             <div className="border-4 border-black bg-pixel-dark p-5 space-y-3">
               <h3 className="text-white font-game text-sm">⚙️ Account</h3>
-              {!user && (
-                <Button variant="primary" fullWidth onClick={() => navigate('/auth')}>
-                  🔑 Create Account (Save Progress)
-                </Button>
-              )}
               <Button variant="danger" fullWidth onClick={handleSignOut} icon={<LogOut className="w-4 h-4" />}>
                 Sign Out / Change User
               </Button>

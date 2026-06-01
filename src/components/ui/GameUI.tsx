@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, Coins } from 'lucide-react';
+import { Zap } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 interface XPToastProps {

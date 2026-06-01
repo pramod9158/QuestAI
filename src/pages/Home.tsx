@@ -29,10 +29,11 @@ export default function Home() {
     setTimeOfDay(h < 12 ? 'Good Morning' : h < 17 ? 'Good Afternoon' : 'Good Evening');
   }, []);
 
-  if (!profile) {
-    navigate('/onboarding');
-    return null;
-  }
+  useEffect(() => {
+    if (!profile) navigate('/auth', { replace: true });
+  }, [profile, navigate]);
+
+  if (!profile) return null;
 
   const level = getLevel(profile.xp);
   const xpInfo = getXPForNextLevel(profile.xp);

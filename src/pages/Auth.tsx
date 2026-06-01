@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
@@ -8,7 +8,7 @@ import { Mail, Lock, User, ArrowLeft } from 'lucide-react';
 export default function Auth() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, profile } = useAuth();
   const [tab, setTab] = useState<'login' | 'signup'>(() => {
     return location.state?.mode === 'signup' ? 'signup' : 'login';
   });
@@ -18,6 +18,11 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (profile) navigate('/', { replace: true });
+  }, [profile, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,7 +36,12 @@ export default function Auth() {
       const zone = location.state?.zone || 'junior';
       const { error } = await signUp(email, password, username, zone);
       if (error) setError(error);
-      else setSuccess('Account created! Check your email to confirm, then log in.');
+      else {
+        setSuccess('✅ Account created! Please check your email to confirm your account, then sign in below.');
+        setTab('login');
+        setEmail(email);
+        setPassword('');
+      }
     }
     setLoading(false);
   };
@@ -42,7 +52,7 @@ export default function Auth() {
         <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-6">
           {/* Back */}
           <button onClick={() => navigate('/onboarding')} className="flex items-center gap-2 text-white/50 hover:text-white font-body text-sm w-fit">
-            <ArrowLeft className="w-4 h-4" /> Back
+            <ArrowLeft className="w-4 h-4" /> Back to Start
           </button>
 
           {/* Logo */}
@@ -100,11 +110,27 @@ export default function Auth() {
             <Button type="submit" variant="primary" size="lg" fullWidth loading={loading}>
               {tab === 'login' ? 'SIGN IN 🔑' : 'CREATE ACCOUNT ⭐'}
             </Button>
-          </form>
 
-          <button onClick={() => navigate('/onboarding')} className="text-white/40 font-body text-xs text-center hover:text-white/70 underline">
-            ← Back to Landing Page
-          </button>
+            <div className="text-center">
+              {tab === 'login' ? (
+                <button
+                  type="button"
+                  onClick={() => setTab('signup')}
+                  className="text-warning font-body text-sm font-bold hover:opacity-80 underline"
+                >
+                  ⭐ New to Quest AI? Sign Up
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setTab('login')}
+                  className="text-white font-body text-sm font-bold hover:opacity-80 underline"
+                >
+                  🔑 Already have an account? Sign In
+                </button>
+              )}
+            </div>
+          </form>
         </motion.div>
       </div>
     </div>
