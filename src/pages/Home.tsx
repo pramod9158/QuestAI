@@ -8,14 +8,14 @@ import { ProgressRing, XPToast } from '@/components/ui/GameUI';
 import { Zap, BookOpen, Swords, Target, Lightbulb, Star, Trophy, Users, ChevronRight } from 'lucide-react';
 
 const MODULE_CARDS = [
-  { path: '/play/around-me', emoji: '🌍', title: 'AI Around Me', desc: 'Discover AI in your world', color: 'bg-blue-game', textColor: 'text-blue-game', glow: 'pixel-glow-blue', rgba: 'rgba(59, 130, 246, 0.15)' },
-  { path: '/play/story', emoji: '⚔️', title: 'Story Adventures', desc: '8 epic quests to solve', color: 'bg-primary', textColor: 'text-primary', glow: 'pixel-glow-purple', rgba: 'rgba(124, 58, 237, 0.15)' },
-  { path: '/play/detective', emoji: '🕵️', title: 'AI Detective', desc: 'Can AI help here?', color: 'bg-success', textColor: 'text-success', glow: 'pixel-glow-success', rgba: 'rgba(16, 185, 129, 0.15)' },
-  { path: '/play/brainstorm', emoji: '💡', title: 'Brainstorm Lab', desc: 'Invent AI solutions', color: 'bg-warning', textColor: 'text-warning', glow: 'pixel-glow-warning', rgba: 'rgba(245, 158, 11, 0.15)' },
-  { path: '/play/idea-generator', emoji: '⚡', title: 'Idea Generator', desc: 'AI power your ideas', color: 'bg-pixel-pink', textColor: 'text-pink-400', glow: 'pixel-glow-pink', rgba: 'rgba(236, 72, 153, 0.15)' },
-  { path: '/play/quiz', emoji: '🎯', title: 'Quiz Arena', desc: 'Test your AI knowledge', color: 'bg-pixel-red', textColor: 'text-red-400', glow: 'pixel-glow-red', rgba: 'rgba(239, 68, 68, 0.15)' },
-  { path: '/play/cards', emoji: '🃏', title: 'AI Cards', desc: 'Collect them all!', color: 'bg-yellow-600', textColor: 'text-yellow-400', glow: 'pixel-glow-orange', rgba: 'rgba(249, 115, 22, 0.15)' },
-  { path: '/play/inventor-hall', emoji: '🏛️', title: 'Inventor Hall', desc: 'Share your inventions', color: 'bg-gray-600', textColor: 'text-gray-300', glow: 'pixel-glow-teal', rgba: 'rgba(20, 184, 166, 0.15)' },
+  { path: '/play/around-me', emoji: '🌍', title: 'AI Around Me', desc: 'Discover AI in your world', color: 'bg-blue-game', textColor: 'text-blue-game', glow: 'pixel-glow-blue', bgSolid: '#1D2A54' },
+  { path: '/play/story', emoji: '⚔️', title: 'Story Adventures', desc: '8 epic quests to solve', color: 'bg-primary', textColor: 'text-primary', glow: 'pixel-glow-purple', bgSolid: '#2D1D54' },
+  { path: '/play/detective', emoji: '🕵️', title: 'AI Detective', desc: 'Can AI help here?', color: 'bg-success', textColor: 'text-success', glow: 'pixel-glow-success', bgSolid: '#1B3D34' },
+  { path: '/play/brainstorm', emoji: '💡', title: 'Brainstorm Lab', desc: 'Invent AI solutions', color: 'bg-warning', textColor: 'text-warning', glow: 'pixel-glow-warning', bgSolid: '#3D2D1B' },
+  { path: '/play/idea-generator', emoji: '⚡', title: 'Idea Generator', desc: 'AI power your ideas', color: 'bg-pixel-pink', textColor: 'text-pink-400', glow: 'pixel-glow-pink', bgSolid: '#3D1B34' },
+  { path: '/play/quiz', emoji: '🎯', title: 'Quiz Arena', desc: 'Test your AI knowledge', color: 'bg-pixel-red', textColor: 'text-red-400', glow: 'pixel-glow-red', bgSolid: '#3D1B1B' },
+  { path: '/play/cards', emoji: '🃏', title: 'AI Cards', desc: 'Collect them all!', color: 'bg-yellow-600', textColor: 'text-yellow-400', glow: 'pixel-glow-orange', bgSolid: '#3D241B' },
+  { path: '/play/inventor-hall', emoji: '🏛️', title: 'Inventor Hall', desc: 'Share your inventions', color: 'bg-gray-600', textColor: 'text-gray-300', glow: 'pixel-glow-teal', bgSolid: '#1B3D3B' },
 ];
 
 export default function Home() {
@@ -83,7 +83,7 @@ export default function Home() {
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2 }}
           onClick={() => navigate('/missions')}
-          className="mt-5 border-4 border-black bg-warning/20 p-4 rounded-3xl flex items-center gap-3 cursor-pointer hover:bg-warning/30 hover:scale-[1.01] active:scale-98 transition-all shadow-[0px_6px_0px_0px_#000000]"
+          className="mt-5 border-4 border-black bg-[#281D0A] p-4 rounded-3xl flex items-center gap-3 cursor-pointer hover:bg-[#38280E] hover:scale-[1.01] active:scale-98 transition-all shadow-[0px_6px_0px_0px_#000000]"
         >
           <span className="text-3xl">🎯</span>
           <div className="flex-1">
@@ -128,7 +128,7 @@ export default function Home() {
           whileHover={{ scale: 1.01 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => navigate('/learn')}
-          className="border-4 border-black bg-blue-game/20 p-4 rounded-3xl flex items-center gap-4 cursor-pointer shadow-[0px_6px_0px_0px_rgba(59,130,246,0.6)] hover:brightness-110 transition-all"
+          className="border-4 border-black bg-[#0D1E3A] p-4 rounded-3xl flex items-center gap-4 cursor-pointer shadow-[0px_6px_0px_0px_rgba(59,130,246,0.6)] hover:brightness-110 transition-all"
         >
           <div className="text-4xl">{CURRICULUM[completedLessons]?.emoji || '📺'}</div>
           <div className="flex-1">
@@ -160,7 +160,7 @@ export default function Home() {
               onClick={() => navigate(mod.path)}
               className={`border-4 border-black p-4 cursor-pointer transition-all pixel-card-promax ${mod.glow}`}
               style={{
-                backgroundImage: `url("data:image/svg+xml,%3Csvg width='32' height='32' viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='0' y='0' width='16' height='16' fill='%237C3AED' fill-opacity='0.03'/%3E%3Crect x='16' y='16' width='16' height='16' fill='%237C3AED' fill-opacity='0.03'/%3E%3C/svg%3E"), linear-gradient(180deg, ${mod.rgba} 0%, #1E1B4B 100%)`
+                backgroundImage: `linear-gradient(180deg, ${mod.bgSolid} 0%, #1E1B4B 100%)`
               }}
             >
               <div className="text-3xl mb-2 filter drop-shadow-[0_4px_6px_rgba(0,0,0,0.4)]">{mod.emoji}</div>
@@ -180,7 +180,7 @@ export default function Home() {
           <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
             {badges.map((b) => (
               <motion.div key={b.id} whileHover={{ scale: 1.1 }} className="flex-shrink-0 flex flex-col items-center gap-1">
-                <div className="w-14 h-14 border-4 border-black bg-primary/30 flex items-center justify-center text-2xl rounded-2xl shadow-[0px_4px_0px_0px_#000000]">
+                <div className="w-14 h-14 border-4 border-black bg-[#241740] flex items-center justify-center text-2xl rounded-2xl shadow-[0px_4px_0px_0px_#000000]">
                   {b.emoji}
                 </div>
                 <span className="text-white/60 font-body text-[9px] text-center max-w-[56px] leading-tight">{b.name}</span>
@@ -200,7 +200,7 @@ export default function Home() {
             Full board <ChevronRight className="w-3 h-3" />
           </button>
         </div>
-        <div className="border-4 border-black bg-success/10 p-4 rounded-3xl shadow-[0px_6px_0px_0px_rgba(16,185,129,0.5)]">
+        <div className="border-4 border-black bg-[#0C2417] p-4 rounded-3xl shadow-[0px_6px_0px_0px_rgba(16,185,129,0.5)]">
           {['🥇 SuperCoder99 — 1,250 XP', '🥈 AIWizard — 980 XP', '🥉 PixelHero — 820 XP'].map((row, i) => (
             <div key={i} className="flex items-center gap-3 py-2 border-b border-white/10 last:border-0">
               <span className="font-body text-white/80 text-sm">{row}</span>

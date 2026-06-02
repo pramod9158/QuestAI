@@ -152,8 +152,8 @@ img {
 
 /* Claymorphic Retro Card */
 .pixel-card, .pixel-card-purple, .pixel-card-blue, .pixel-card-green, .pixel-card-orange {
-  @apply border-4 border-black bg-gradient-to-b from-pixel-dark to-pixel-darker rounded-3xl p-5 transition-all duration-300 shadow-pixel-lg relative overflow-hidden;
-  background-image: var(--background-image-pixel-grid), linear-gradient(180deg, rgba(124, 58, 237, 0.12) 0%, #1E1B4B 100%);
+  @apply border-4 border-black rounded-3xl p-5 transition-all duration-300 shadow-pixel-lg relative overflow-hidden;
+  background-image: linear-gradient(180deg, #1E1B4B 0%, #121036 100%);
   box-shadow: 0px 8px 0px 0px rgba(0, 0, 0, 0.95), inset 0px 3px 0px 0px rgba(255, 255, 255, 0.15);
 }
 
@@ -164,22 +164,22 @@ img {
 
 .pixel-card-purple {
   @apply border-primary;
-  background-image: var(--background-image-pixel-grid), linear-gradient(180deg, rgba(124, 58, 237, 0.2) 0%, #1E1B4B 100%);
+  background-image: linear-gradient(180deg, #2D1D54 0%, #1E1B4B 100%);
 }
 
 .pixel-card-blue {
   @apply border-blue-game;
-  background-image: var(--background-image-pixel-grid), linear-gradient(180deg, rgba(59, 130, 246, 0.2) 0%, #1E1B4B 100%);
+  background-image: linear-gradient(180deg, #1B2D54 0%, #1E1B4B 100%);
 }
 
 .pixel-card-green {
   @apply border-success;
-  background-image: var(--background-image-pixel-grid), linear-gradient(180deg, rgba(16, 185, 129, 0.2) 0%, #1E1B4B 100%);
+  background-image: linear-gradient(180deg, #1B3D34 0%, #1E1B4B 100%);
 }
 
 .pixel-card-orange {
   @apply border-warning;
-  background-image: var(--background-image-pixel-grid), linear-gradient(180deg, rgba(245, 158, 11, 0.2) 0%, #1E1B4B 100%);
+  background-image: linear-gradient(180deg, #3D2D1B 0%, #1E1B4B 100%);
 }
 
 /* Pixel Border Accent */
@@ -311,8 +311,8 @@ img {
 
 /* Pro Max Starry Gradient Card */
 .pixel-card-promax {
-  @apply border-4 border-black bg-gradient-to-b from-pixel-dark to-pixel-darker rounded-3xl transition-all duration-300 shadow-pixel-lg;
-  background-image: var(--background-image-pixel-grid), linear-gradient(180deg, rgba(124, 58, 237, 0.12) 0%, #1E1B4B 100%);
+  @apply border-4 border-black rounded-3xl transition-all duration-300 shadow-pixel-lg;
+  background-image: linear-gradient(180deg, #1E1B4B 0%, #121036 100%);
   box-shadow: 0px 8px 0px 0px rgba(0, 0, 0, 0.95), inset 0px 3px 0px 0px rgba(255, 255, 255, 0.15);
 }
 

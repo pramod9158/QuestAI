@@ -178,7 +178,7 @@ export default function WeeklyMissions() {
       {showXP && <XPToast amount={mission?.xp_reward ?? 80} reason="Mission submitted!" onDone={() => setShowXP(false)} />}
 
       {/* Header */}
-      <div className="bg-gradient-to-b from-primary/30 to-pixel-darker p-5">
+      <div className="bg-gradient-to-b from-[#241740] to-pixel-darker p-5">
         <h1 className="text-white font-game text-xl flex items-center gap-2">🎯 Weekly Missions</h1>
         <p className="text-white/60 font-body text-sm mt-1">Real-world field challenges — earn massive XP!</p>
 
@@ -204,7 +204,7 @@ export default function WeeklyMissions() {
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.08 }}
-                  className={`border-4 border-black p-5 rounded-3xl shadow-[0px_6px_0px_0px_rgba(0,0,0,0.85)] hover:scale-[1.01] transition-all ${done ? 'bg-success/20 border-success shadow-[0px_6px_0px_0px_rgba(16,185,129,0.3)]' : 'bg-pixel-dark hover:shadow-[0px_8px_0px_0px_rgba(0,0,0,1)]'}`}
+                  className={`border-4 border-black p-5 rounded-3xl shadow-[0px_6px_0px_0px_rgba(0,0,0,0.85)] hover:scale-[1.01] transition-all ${done ? 'bg-[#122A1C] border-success shadow-[0px_6px_0px_0px_rgba(16,185,129,0.3)]' : 'bg-pixel-dark hover:shadow-[0px_8px_0px_0px_rgba(0,0,0,1)]'}`}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1">
@@ -237,7 +237,7 @@ export default function WeeklyMissions() {
                     </Button>
                   )}
                   {done && (
-                    <div className="mt-3 bg-success/10 border-2 border-success/30 py-2 text-center rounded-xl">
+                    <div className="mt-3 bg-[#0C2417] border-2 border-success/30 py-2 text-center rounded-xl">
                       <span className="text-success font-game text-[10px]">✅ Mission Completed!</span>
                     </div>
                   )}
@@ -257,7 +257,7 @@ export default function WeeklyMissions() {
             ) : submissions.map((s, i) => {
               const m = WEEKLY_MISSIONS_DATA.find(m => m.id === s.missionId);
               return (
-                <div key={i} className="border-4 border-black bg-success/10 border-success p-4.5 rounded-3xl shadow-[0px_5px_0px_0px_rgba(16,185,129,0.3)]">
+                <div key={i} className="border-4 border-black bg-[#0C2417] border-success p-4.5 rounded-3xl shadow-[0px_5px_0px_0px_rgba(16,185,129,0.3)]">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-xl">{m?.emoji}</span>
                     <div className="flex-1">
@@ -292,7 +292,7 @@ export default function WeeklyMissions() {
               className="w-full max-w-md pixel-card-promax my-auto"
             >
               {/* Header */}
-              <div className="border-b-4 border-black p-4 flex items-center gap-3 bg-pixel-darker/60">
+              <div className="border-b-4 border-black p-4 flex items-center gap-3 bg-pixel-darker">
                 <span className="text-3xl">{mission.emoji}</span>
                 <div>
                   <div className="text-white font-game text-sm">{mission.title}</div>
@@ -301,7 +301,7 @@ export default function WeeklyMissions() {
               </div>
 
               {/* Instructions */}
-              <div className="p-4 border-b-4 border-black bg-primary/10">
+              <div className="p-4 border-b-4 border-black bg-[#181335]">
                 <div className="text-white font-game text-[10px] uppercase text-primary tracking-wider mb-1 flex items-center gap-1">
                   <HelpCircle className="w-3 h-3" /> Step-by-Step Instructions
                 </div>
