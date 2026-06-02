@@ -48,11 +48,11 @@ export default function Profile() {
     <div className="min-h-full bg-pixel-darker pb-6">
       {/* Profile Hero */}
       <div className="relative bg-gradient-to-b from-primary/40 to-pixel-darker p-6 pb-12 overflow-hidden">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 border-l-4 border-b-4 border-black rounded-bl-3xl" />
+        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 border-l-4 border-b-4 border-black" />
         <div className="flex items-center gap-5">
           <div className="relative">
             <PixelAvatar username={profile.username} size={72} />
-            <div className="absolute -bottom-1 -right-1 bg-warning border-2 border-black px-2 py-0.5 rounded-lg font-pixel text-[8px] text-black shadow-[0px_2px_0px_0px_#000000]">
+            <div className="absolute -bottom-1 -right-1 bg-warning border-2 border-black px-1.5 font-pixel text-[8px] text-black">
               LV.{level}
             </div>
           </div>
@@ -61,7 +61,7 @@ export default function Profile() {
             <p className="text-white/60 font-body text-sm">{profile.zone === 'junior' ? '🚀 Junior Explorer' : '🧠 Future Innovator'}</p>
             {user && (
               <div className="flex items-center gap-1 mt-1">
-                <div className="w-2 h-2 bg-success border border-black rounded-full" />
+                <div className="w-2 h-2 bg-success border border-black" />
                 <span className="text-success font-body text-xs">Connected</span>
               </div>
             )}
@@ -75,8 +75,8 @@ export default function Profile() {
           </ProgressRing>
           <div className="flex-1">
             <div className="text-white/60 font-body text-xs mb-1">XP to Level {level + 1}</div>
-            <div className="h-4 bg-black border-2 border-black rounded-full overflow-hidden shadow-[inset_0px_2px_4px_rgba(0,0,0,0.6)]">
-              <motion.div className="h-full bg-gradient-to-r from-warning to-primary rounded-full"
+            <div className="h-4 bg-black border-2 border-black">
+              <motion.div className="h-full bg-gradient-to-r from-warning to-primary"
                 animate={{ width: `${xpInfo.progress}%` }} transition={{ duration: 0.8 }} />
             </div>
             <div className="text-white/50 font-body text-xs mt-1">{xpInfo.current}/{xpInfo.needed} XP</div>
@@ -92,7 +92,7 @@ export default function Profile() {
           { icon: '📚', value: completedLessons, label: 'Lessons' },
           { icon: '🏆', value: badges.length, label: 'Badges' },
         ].map(stat => (
-          <div key={stat.label} className="border-4 border-black bg-pixel-dark p-2 text-center rounded-2xl shadow-[0px_4px_0px_0px_#000000]">
+          <div key={stat.label} className="border-4 border-black bg-pixel-dark p-2 text-center shadow-pixel">
             <div className="text-xl">{stat.icon}</div>
             <div className="text-white font-game text-sm">{stat.value}</div>
             <div className="text-white/40 font-body text-[9px]">{stat.label}</div>
@@ -102,10 +102,10 @@ export default function Profile() {
 
       {/* Tabs */}
       <div className="px-4 mt-5">
-        <div className="flex border-4 border-black rounded-2xl overflow-hidden shadow-[0px_4px_0px_0px_#000000]">
+        <div className="flex border-4 border-black">
           {(['overview', 'badges', 'settings'] as const).map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)}
-              className={`flex-1 py-2 font-game text-[10px] capitalize transition-all duration-100 ${activeTab === tab ? 'bg-primary text-white' : 'bg-pixel-dark text-white/50 hover:text-white'}`}>
+              className={`flex-1 py-2 font-game text-[10px] capitalize transition-colors ${activeTab === tab ? 'bg-primary text-white' : 'bg-pixel-dark text-white/50 hover:text-white'}`}>
               {tab === 'overview' ? '📊 Stats' : tab === 'badges' ? '🏆 Badges' : '⚙️ Settings'}
             </button>
           ))}
@@ -116,7 +116,7 @@ export default function Profile() {
         {activeTab === 'overview' && (
           <div className="space-y-4">
             {/* Achievement Stats */}
-            <div className="border-4 border-black bg-pixel-dark p-5 rounded-3xl shadow-[0px_6px_0px_0px_#000000] space-y-3">
+            <div className="border-4 border-black bg-pixel-dark p-5 shadow-pixel space-y-3">
               <h3 className="text-white font-game text-sm">📊 My Journey</h3>
               {[
                 { emoji: '📺', label: 'Lessons Completed', value: completedLessons },
@@ -133,7 +133,7 @@ export default function Profile() {
             </div>
 
             {/* Mystery Box */}
-            <div className="border-4 border-black bg-primary/20 p-5 rounded-3xl shadow-[0px_6px_0px_0px_rgba(124,58,237,0.4)]">
+            <div className="border-4 border-black bg-primary/20 p-5">
               <h3 className="text-white font-game text-sm mb-4">🎁 Mystery Box</h3>
               <div className="flex flex-col items-center">
                 <MysteryBox onOpen={handleOpenBox} isOpen={openBox} reward={boxReward} />
@@ -148,7 +148,7 @@ export default function Profile() {
             {/* Dashboard Link */}
             <button
               onClick={() => navigate('/dashboard')}
-              className="w-full border-4 border-black bg-blue-game/20 border-blue-game p-4.5 rounded-3xl flex items-center gap-3 text-left hover:bg-blue-game/30 hover:scale-[1.01] transition-all shadow-[0px_6px_0px_0px_rgba(59,130,246,0.5)]"
+              className="w-full border-4 border-black bg-blue-game/20 border-blue-game p-4 flex items-center gap-3 text-left hover:bg-blue-game/30 transition-all"
             >
               <span className="text-3xl">👨‍🏫</span>
               <div>
@@ -185,17 +185,17 @@ export default function Profile() {
 
         {activeTab === 'settings' && (
           <div className="space-y-4">
-            <div className="border-4 border-black bg-pixel-dark p-5 rounded-3xl shadow-[0px_6px_0px_0px_#000000] space-y-3">
+            <div className="border-4 border-black bg-pixel-dark p-5 space-y-3">
               <h3 className="text-white font-game text-sm">⚙️ Account</h3>
               <Button variant="danger" fullWidth onClick={handleSignOut} icon={<LogOut className="w-4 h-4" />}>
                 Sign Out / Change User
               </Button>
             </div>
 
-            <div className="border-4 border-black bg-pixel-dark p-5 rounded-3xl shadow-[0px_6px_0px_0px_#000000] space-y-3">
+            <div className="border-4 border-black bg-pixel-dark p-5 space-y-3">
               <h3 className="text-white font-game text-sm">🎮 Zone</h3>
               <p className="text-white/60 font-body text-xs">Current: {profile.zone === 'junior' ? '🚀 Junior Explorer (6-11)' : '🧠 Future Innovator (12-16)'}</p>
-              <button onClick={() => navigate('/onboarding')} className="w-full border-2 border-white/20 bg-white/5 py-2.5 text-white/70 font-game text-xs rounded-2xl hover:bg-white/10 active:translate-y-0.5 shadow-[0px_3px_0px_0px_rgba(255,255,255,0.05)] active:shadow-none transition-all duration-100">
+              <button onClick={() => navigate('/onboarding')} className="w-full border-2 border-white/20 bg-white/5 py-2 text-white/70 font-body text-sm hover:bg-white/10">
                 Switch Zone
               </button>
             </div>

@@ -53,11 +53,7 @@ export default function AIDetective() {
         <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring' }}>
           <div className="text-8xl text-center">🕵️</div>
         </motion.div>
-        <div className="text-center border-4 border-black p-6 rounded-3xl shadow-[0px_6px_0px_0px_#000000] w-full"
-          style={{
-            backgroundImage: 'linear-gradient(180deg, #1B3D34 0%, #1E1B4B 100%)'
-          }}
-        >
+        <div className="text-center border-4 border-black bg-pixel-dark p-6 shadow-pixel-lg w-full">
           <h2 className="text-white font-game text-xl">Case Files Solved!</h2>
           <p className="text-white/60 font-body text-sm mt-2">You completed all {DETECTIVE_CASES.length} cases</p>
           <div className="text-warning font-pixel text-2xl mt-3">+{totalXP} XP</div>
@@ -75,16 +71,16 @@ export default function AIDetective() {
       {showXP && <XPToast amount={xpAmount} onDone={() => setShowXP(false)} />}
 
       {/* Header */}
-      <div className="bg-gradient-to-b from-[#0C2417] to-pixel-darker p-5">
+      <div className="bg-gradient-to-b from-success/30 to-pixel-darker p-5">
         <button onClick={() => navigate('/play')} className="flex items-center gap-2 text-white/60 hover:text-white mb-3 font-body text-sm">
           <ArrowLeft className="w-4 h-4" /> Back to Play
         </button>
         <h1 className="text-white font-game text-xl flex items-center gap-2">🕵️ AI Detective</h1>
         <p className="text-white/60 font-body text-sm mt-1">Can AI help in this real situation?</p>
         <div className="flex items-center gap-3 mt-3">
-          <div className="flex gap-1.5">
+          <div className="flex gap-1">
             {DETECTIVE_CASES.map((_, i) => (
-              <div key={i} className={`w-2.5 h-2.5 border border-black rounded-full ${i < currentIndex ? 'bg-success' : i === currentIndex ? 'bg-warning animate-pulse' : 'bg-white/20'}`} />
+              <div key={i} className={`w-2 h-2 border border-black ${i < currentIndex ? 'bg-success' : i === currentIndex ? 'bg-warning animate-pulse' : 'bg-white/20'}`} />
             ))}
           </div>
           <span className="text-white/50 font-body text-xs ml-auto">{currentIndex + 1}/{DETECTIVE_CASES.length}</span>
@@ -99,10 +95,7 @@ export default function AIDetective() {
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
-            className="border-4 border-black rounded-3xl shadow-[0px_6px_0px_0px_#000000] overflow-hidden"
-            style={{
-              backgroundImage: 'linear-gradient(180deg, #1B3D34 0%, #1E1B4B 100%)'
-            }}
+            className="border-4 border-black bg-pixel-dark shadow-pixel-lg"
           >
             {/* Scene visualization */}
             <div className="bg-black/30 p-8 text-center border-b-4 border-black">
@@ -125,7 +118,7 @@ export default function AIDetective() {
                 <SpeakButton text={caseData.scenario} />
               </div>
 
-              <div className="mt-4 bg-[#281D0A] border-2 border-warning p-3 rounded-2xl">
+              <div className="mt-4 bg-warning/10 border-2 border-warning p-3">
                 <p className="text-warning font-game text-xs">🔍 Your Detective Question:</p>
                 <p className="text-white font-body text-sm mt-1">"Can AI help solve this problem?"</p>
               </div>
@@ -137,15 +130,18 @@ export default function AIDetective() {
         {!selected ? (
           <div className="space-y-3">
             {(Object.keys(ANSWER_CONFIG) as Answer[]).map(answer => (
-              <Button
+              <motion.button
                 key={answer}
-                variant={answer === 'yes' ? 'success' : answer === 'no' ? 'danger' : 'warning'}
+                whileTap={{ scale: 0.96 }}
                 onClick={() => handleAnswer(answer)}
-                fullWidth
-                size="lg"
+                className={`w-full border-4 border-black py-4 font-game text-sm ${
+                  answer === 'yes' ? 'bg-success text-white shadow-pixel-green' :
+                  answer === 'no' ? 'bg-pixel-red text-white shadow-pixel-red' :
+                  'bg-warning text-black shadow-pixel-orange'
+                } shadow-pixel hover:opacity-90 active:translate-y-1 active:shadow-none transition-all`}
               >
                 {ANSWER_CONFIG[answer].label}
-              </Button>
+              </motion.button>
             ))}
           </div>
         ) : (
@@ -156,8 +152,8 @@ export default function AIDetective() {
               className="space-y-4"
             >
               {/* Verdict */}
-              <div className={`border-4 border-black p-5 text-center rounded-3xl shadow-[0px_4px_0px_0px_rgba(0,0,0,0.85)] ${
-                selected === caseData.canAIHelp ? 'bg-[#122A1C] border-success' : 'bg-[#241740] border-primary'
+              <div className={`border-4 border-black p-5 text-center ${
+                selected === caseData.canAIHelp ? 'bg-success/20 border-success' : 'bg-primary/20 border-primary'
               }`}>
                 <div className="text-4xl mb-2">
                   {selected === caseData.canAIHelp ? '🎯' : '💡'}
@@ -168,11 +164,7 @@ export default function AIDetective() {
               </div>
 
               {/* Explanation Card */}
-              <div className="border-4 border-black p-5 rounded-3xl shadow-[0px_6px_0px_0px_#000000]"
-                style={{
-                  backgroundImage: 'linear-gradient(180deg, #1B3D34 0%, #1E1B4B 100%)'
-                }}
-              >
+              <div className="border-4 border-black bg-pixel-dark p-5 shadow-pixel">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-2xl">
                     {caseData.canAIHelp === 'yes' ? '✅' : caseData.canAIHelp === 'no' ? '❌' : '🤔'}
@@ -184,7 +176,7 @@ export default function AIDetective() {
                 </div>
                 <p className="text-white/80 font-body text-sm leading-relaxed">{caseData.explanation}</p>
                 {selected === caseData.canAIHelp && (
-                  <div className="mt-3 bg-[#281D0A] border-2 border-warning px-3 py-2 text-center rounded-xl">
+                  <div className="mt-3 bg-warning/20 border-2 border-warning px-3 py-2 text-center">
                     <span className="text-warning font-pixel text-[10px]">+{caseData.xp} XP EARNED!</span>
                   </div>
                 )}

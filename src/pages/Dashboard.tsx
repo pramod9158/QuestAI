@@ -35,7 +35,7 @@ export default function Dashboard() {
             <h1 className="text-white font-game text-xl">Parent/Teacher Dashboard</h1>
             <p className="text-white/60 font-body text-sm mt-2">Enter PIN to view progress report</p>
           </div>
-          <div className="border-4 border-black bg-pixel-dark p-6 rounded-3xl space-y-4 shadow-[0px_6px_0px_0px_#000000]">
+          <div className="border-4 border-black bg-pixel-dark p-6 space-y-4">
             <input
               type="password" inputMode="numeric" pattern="[0-9]*"
               value={pin} onChange={e => setPin(e.target.value)}
@@ -83,9 +83,9 @@ export default function Dashboard() {
 
       <div className="px-4 space-y-5 pt-2">
         {/* Summary Card */}
-        <div className="border-4 border-black bg-pixel-dark p-5 rounded-3xl shadow-[0px_6px_0px_0px_#000000]">
+        <div className="border-4 border-black bg-pixel-dark p-5 shadow-pixel">
           <div className="flex items-center gap-4 pb-4 border-b-2 border-white/10">
-            <div className="w-16 h-16 border-4 border-black bg-primary flex items-center justify-center text-3xl rounded-2xl shadow-[0px_3px_0px_0px_rgba(0,0,0,1)]">
+            <div className="w-16 h-16 border-4 border-black bg-primary flex items-center justify-center text-3xl">
               {profile?.username?.charAt(0).toUpperCase()}
             </div>
             <div>
@@ -103,7 +103,7 @@ export default function Dashboard() {
               { emoji: '🏆', label: 'Badges Earned', value: badges.length, max: 10 },
               { emoji: '🔥', label: 'Day Streak', value: profile?.current_streak ?? 0, max: '∞' },
             ].map(stat => (
-              <div key={stat.label} className="bg-white/5 border-2 border-white/10 p-3 rounded-2xl">
+              <div key={stat.label} className="bg-white/5 border-2 border-white/10 p-3">
                 <div className="text-xl mb-1">{stat.emoji}</div>
                 <div className="text-white font-game text-lg">{stat.value}<span className="text-white/30 text-xs">/{stat.max}</span></div>
                 <div className="text-white/50 font-body text-xs">{stat.label}</div>
@@ -114,12 +114,12 @@ export default function Dashboard() {
 
         {/* Badges Earned */}
         {badges.length > 0 && (
-          <div className="border-4 border-black bg-pixel-dark p-5 rounded-3xl shadow-[0px_6px_0px_0px_#000000]">
+          <div className="border-4 border-black bg-pixel-dark p-5">
             <h3 className="text-white font-game text-sm mb-4">🏆 Badges Earned</h3>
             <div className="flex flex-wrap gap-3">
               {badges.map(b => (
                 <div key={b.id} className="flex flex-col items-center gap-1">
-                  <div className="w-12 h-12 border-4 border-black bg-primary/30 flex items-center justify-center text-2xl rounded-2xl shadow-[0px_3px_0px_0px_rgba(0,0,0,1)]">
+                  <div className="w-12 h-12 border-4 border-black bg-primary/30 flex items-center justify-center text-2xl">
                     {b.emoji}
                   </div>
                   <span className="text-white/60 font-body text-[9px] text-center max-w-[48px]">{b.name}</span>
@@ -130,7 +130,7 @@ export default function Dashboard() {
         )}
 
         {/* Teacher Notes */}
-        <div className="border-4 border-warning bg-warning/10 p-5 rounded-3xl shadow-[0px_6px_0px_0px_rgba(245,158,11,0.4)]">
+        <div className="border-4 border-warning bg-warning/10 p-5">
           <h3 className="text-warning font-game text-sm mb-3">📝 Learning Insights</h3>
           <div className="space-y-2">
             {completedLessons >= 3 && <p className="text-white/80 font-body text-sm">✅ Actively engaged with AI curriculum</p>}
@@ -143,7 +143,7 @@ export default function Dashboard() {
         </div>
 
         {/* Certificate */}
-        <div className="border-4 border-black bg-success/10 border-success p-5 rounded-3xl shadow-[0px_6px_0px_0px_rgba(16,185,129,0.4)]">
+        <div className="border-4 border-black bg-success/10 border-success p-5">
           <h3 className="text-white font-game text-sm mb-2">📜 Completion Certificate</h3>
           <p className="text-white/60 font-body text-xs mb-4">Generate a beautiful PDF certificate to share!</p>
           <Button variant="success" fullWidth loading={generating} onClick={generateCertificate} icon={<FileDown className="w-4 h-4" />}>

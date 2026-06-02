@@ -25,12 +25,12 @@ export function XPToast({ amount, reason, onDone }: XPToastProps) {
           transition={{ type: 'spring', stiffness: 400, damping: 20 }}
           className="fixed top-20 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-1 pointer-events-none"
         >
-          <div className="bg-warning border-4 border-black px-6 py-3 rounded-2xl shadow-pixel-lg flex items-center gap-2">
+          <div className="bg-warning border-4 border-black px-6 py-3 shadow-pixel flex items-center gap-2">
             <Zap className="w-5 h-5 text-black" fill="black" />
             <span className="text-black font-pixel text-sm">+{amount} XP!</span>
           </div>
           {reason && (
-            <div className="bg-black/80 px-4 py-1.5 text-white/80 font-body text-xs border-2 border-white/20 rounded-xl">
+            <div className="bg-black/80 px-4 py-1 text-white/80 font-body text-xs border-2 border-white/20">
               {reason}
             </div>
           )}
@@ -53,7 +53,7 @@ export function CoinToast({ amount }: CoinToastProps) {
           exit={{ y: -40, opacity: 0 }}
           className="fixed top-32 left-1/2 -translate-x-1/2 z-50 pointer-events-none"
         >
-          <div className="bg-yellow-400 border-4 border-black px-5 py-2 rounded-2xl shadow-pixel-lg flex items-center gap-2">
+          <div className="bg-yellow-400 border-4 border-black px-5 py-2 shadow-pixel flex items-center gap-2">
             <span className="text-xl">🪙</span>
             <span className="text-black font-pixel text-xs">+{amount} Coins!</span>
           </div>
@@ -69,7 +69,7 @@ export function XPBar({ current, needed, level }: XPBarProps) {
   const pct = Math.min((current / needed) * 100, 100);
   return (
     <div className="flex items-center gap-2">
-      <div className="bg-primary border-2 border-black px-2.5 py-1 text-white font-pixel text-[9px] rounded-lg whitespace-nowrap">
+      <div className="bg-primary border-2 border-black px-2 py-0.5 text-white font-pixel text-[9px] whitespace-nowrap">
         Lv.{level}
       </div>
       <div className="flex-1 xp-bar-track">
@@ -89,7 +89,7 @@ export function XPBar({ current, needed, level }: XPBarProps) {
 interface CoinCounterProps { coins: number; }
 export function CoinCounter({ coins }: CoinCounterProps) {
   return (
-    <div className="flex items-center gap-1 bg-yellow-400/20 border-2 border-yellow-400 px-3 py-1 rounded-2xl shadow-[inset_0px_2px_4px_rgba(245,158,11,0.2)]">
+    <div className="flex items-center gap-1 bg-yellow-400/20 border-2 border-yellow-400 px-2 py-1">
       <span className="text-sm">🪙</span>
       <span className="text-yellow-400 font-pixel text-[10px]">{coins}</span>
     </div>
@@ -103,7 +103,7 @@ export function StreakFlame({ streak }: StreakFlameProps) {
     <motion.div
       animate={streak > 0 ? { scale: [1, 1.1, 1] } : {}}
       transition={{ repeat: Infinity, duration: 1.5 }}
-      className="flex items-center gap-1 bg-orange-500/20 border-2 border-orange-500 px-3 py-1 rounded-2xl shadow-[inset_0px_2px_4px_rgba(249,115,22,0.2)]"
+      className="flex items-center gap-1 bg-orange-500/20 border-2 border-orange-500 px-2 py-1"
     >
       <span className="text-sm">🔥</span>
       <span className="text-orange-400 font-pixel text-[10px]">{streak}d</span>
@@ -120,7 +120,7 @@ export function Badge({ emoji, name, unlocked = true, size = 'md' }: BadgeProps)
       whileHover={{ scale: 1.05 }}
       className={`flex flex-col items-center gap-1 ${unlocked ? '' : 'opacity-40 grayscale'}`}
     >
-      <div className={`${sizes[size]} border-4 border-black flex items-center justify-center ${unlocked ? 'bg-primary/30' : 'bg-gray-700'} rounded-3xl shadow-pixel-lg`}>
+      <div className={`${sizes[size]} border-4 border-black flex items-center justify-center ${unlocked ? 'bg-primary/30' : 'bg-gray-700'} shadow-pixel`}>
         {unlocked ? <span>{emoji}</span> : <span>🔒</span>}
       </div>
       <span className="text-white/70 font-body text-[10px] text-center leading-tight max-w-[64px]">{name}</span>
@@ -162,7 +162,7 @@ export function MysteryBox({ onOpen, isOpen, reward }: MysteryBoxProps) {
         animate={!isOpen ? { y: [0, -5, 0], rotate: [-3, 3, -3] } : { scale: [1, 1.5, 1], rotate: 360 }}
         transition={!isOpen ? { repeat: Infinity, duration: 2 } : { duration: 0.5 }}
         onClick={!isOpen ? onOpen : undefined}
-        className={`w-24 h-24 border-4 border-black flex items-center justify-center text-5xl rounded-3xl shadow-pixel-lg cursor-pointer ${isOpen ? 'bg-yellow-400' : 'bg-primary hover:bg-primary-light'}`}
+        className={`w-24 h-24 border-4 border-black flex items-center justify-center text-5xl shadow-pixel cursor-pointer ${isOpen ? 'bg-yellow-400' : 'bg-primary hover:bg-primary-light'}`}
       >
         {isOpen ? reward || '🎁' : '❓'}
       </motion.div>
@@ -180,7 +180,7 @@ export function PixelAvatar({ username = 'AI', size = 64, colorIndex = 0 }: Pixe
   const initial = username.charAt(0).toUpperCase();
   return (
     <div
-      className="border-4 border-black flex items-center justify-center font-pixel text-white rounded-2xl shadow-pixel select-none"
+      className="border-4 border-black flex items-center justify-center font-pixel text-white shadow-pixel select-none"
       style={{ width: size, height: size, backgroundColor: color, fontSize: size * 0.3 }}
     >
       {initial}
@@ -204,10 +204,10 @@ export function SpeakButton({ text }: SpeakButtonProps) {
     <motion.button
       whileTap={{ scale: 0.9 }}
       onClick={handleSpeak}
-      className={`border-2 border-black px-3 py-1.5 flex items-center gap-1.5 rounded-2xl shadow-[0px_3px_0px_0px_#000000] active:translate-y-0.5 active:shadow-none transition-all duration-100 ${speaking ? 'bg-success text-white' : 'bg-white/10 text-white/70 hover:bg-white/20'}`}
+      className={`border-2 border-black p-2 flex items-center gap-1 ${speaking ? 'bg-success text-white' : 'bg-white/10 text-white/70'}`}
     >
       <span className="text-lg">{speaking ? '🔊' : '🔈'}</span>
-      <span className="font-game text-xs leading-none">{speaking ? 'Stop' : 'Listen'}</span>
+      <span className="font-body text-xs">{speaking ? 'Stop' : 'Listen'}</span>
     </motion.button>
   );
 }

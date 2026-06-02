@@ -67,7 +67,7 @@ export default function BrainstormPlayground() {
       {showXP && <XPToast amount={60} reason="Brainstorm complete!" onDone={() => setShowXP(false)} />}
 
       {/* Header */}
-      <div className="bg-gradient-to-b from-[#281D0A] to-pixel-darker p-5">
+      <div className="bg-gradient-to-b from-warning/30 to-pixel-darker p-5">
         <button onClick={() => navigate('/play')} className="flex items-center gap-2 text-white/60 hover:text-white mb-3 font-body text-sm">
           <ArrowLeft className="w-4 h-4" /> Back to Play
         </button>
@@ -77,7 +77,7 @@ export default function BrainstormPlayground() {
         <div className="flex gap-2 mt-4">
           {['Category', 'Problem', 'Who', 'Idea!'].map((s, i) => (
             <div key={s} className={`flex-1 text-center py-1.5 border-2 border-black font-body text-[10px] transition-all ${
-              i <= step ? 'bg-warning text-black' : 'bg-pixel-dark text-white/40'
+              i <= step ? 'bg-warning text-black' : 'bg-white/10 text-white/40'
             }`}>
               {i + 1}. {s}
             </div>
@@ -97,7 +97,7 @@ export default function BrainstormPlayground() {
                     key={cat.id}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => { setCategory(cat.id); setStep(1); }}
-                    className={`border-4 border-black ${cat.color} p-5 flex flex-col items-center gap-2 rounded-3xl shadow-[0px_6px_0px_0px_rgba(0,0,0,1)] hover:scale-[1.03] hover:-rotate-1 active:translate-y-0.5 active:shadow-none transition-all cursor-pointer`}
+                    className={`border-4 border-black ${cat.color} p-5 flex flex-col items-center gap-2 shadow-pixel hover:opacity-90 active:translate-y-1 transition-all`}
                   >
                     <span className="text-4xl">{cat.emoji}</span>
                     <span className="text-white font-game text-sm">{cat.label}</span>
@@ -111,11 +111,7 @@ export default function BrainstormPlayground() {
           {step === 1 && (
             <motion.div key="prob" initial={{ x: 100, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -100, opacity: 0 }} className="space-y-5">
               <h2 className="text-white font-game text-base">Step 2: What's the Problem? 🔍</h2>
-              <div className="border-4 border-black p-4 flex items-center gap-3"
-                style={{
-                  backgroundImage: 'linear-gradient(180deg, #3D2D1B 0%, #1E1B4B 100%)'
-                }}
-              >
+              <div className="border-4 border-black bg-pixel-dark p-4 flex items-center gap-3">
                 <span className="text-3xl">{CATEGORIES.find(c => c.id === category)?.emoji}</span>
                 <span className="text-white font-game text-sm capitalize">{category}</span>
               </div>
@@ -137,7 +133,7 @@ export default function BrainstormPlayground() {
                 <div className="flex flex-wrap gap-2">
                   {['Always arriving late', 'Too much waste', 'Hard to find information', 'Takes too long', 'No one knows about it'].map(chip => (
                     <button key={chip} onClick={() => setProblem(chip)}
-                      className="border-2 border-black bg-pixel-dark px-3.5 py-2 text-white/80 font-body text-xs rounded-2xl hover:bg-white/10 hover:text-white transition-all shadow-[0px_3px_0px_0px_rgba(0,0,0,0.85)] cursor-pointer">
+                      className="border-2 border-white/20 bg-white/10 px-3 py-1.5 text-white/70 font-body text-xs hover:bg-white/20">
                       {chip}
                     </button>
                   ))}
@@ -161,12 +157,10 @@ export default function BrainstormPlayground() {
                 {AUDIENCE_OPTIONS.map(aud => (
                   <motion.button
                     key={aud}
-                    whileTap={{ scale: 0.96 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => setAudience(aud)}
-                    className={`border-4 border-black p-4 font-game text-sm transition-all rounded-2xl cursor-pointer hover:scale-[1.02] hover:-rotate-1 active:translate-y-0.5 active:shadow-none ${
-                      audience === aud 
-                        ? 'bg-gradient-to-r from-primary to-primary-light text-white shadow-[0px_4px_0px_0px_rgba(0,0,0,1),inset_0px_3px_0px_0px_rgba(255,255,255,0.4)]' 
-                        : 'bg-pixel-dark text-white/70 hover:bg-white/10 shadow-[0px_4px_0px_0px_rgba(0,0,0,0.85)]'
+                    className={`border-4 border-black p-4 font-game text-sm transition-all shadow-pixel ${
+                      audience === aud ? 'bg-primary text-white border-primary-dark' : 'bg-pixel-dark text-white/70 hover:bg-white/5'
                     }`}
                   >
                     {aud}
@@ -199,7 +193,7 @@ export default function BrainstormPlayground() {
 
               <motion.div
                 initial={{ y: 30 }} animate={{ y: 0 }}
-                className="border-4 border-warning bg-[#281D0A] p-6 rounded-3xl shadow-[0px_6px_0px_0px_rgba(245,158,11,0.35)] space-y-4"
+                className="border-4 border-warning bg-warning/10 p-6 shadow-pixel-orange space-y-4"
               >
                 <div className="border-b-2 border-warning/30 pb-3">
                   <div className="text-warning font-body text-xs">🤖 AI Solution Name:</div>

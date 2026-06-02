@@ -39,7 +39,7 @@ export default function LessonPlayer() {
       case 'teachable':
         return (
           <div className="flex flex-col h-full">
-            <p className="text-white/70 font-body text-xs p-3 bg-blue-game/25 border-2 border-black rounded-2xl m-2 shadow-[inset_0px_2px_4px_rgba(0,0,0,0.4)]">
+            <p className="text-white/70 font-body text-xs p-3 bg-blue-game/20 border-b-2 border-black">
               🎮 Try Google's Teachable Machine — train an AI with your webcam!
             </p>
             <iframe
@@ -53,7 +53,7 @@ export default function LessonPlayer() {
       case 'quickdraw':
         return (
           <div className="flex flex-col h-full">
-            <p className="text-white/70 font-body text-xs p-3 bg-success/25 border-2 border-black rounded-2xl m-2 shadow-[inset_0px_2px_4px_rgba(0,0,0,0.4)]">
+            <p className="text-white/70 font-body text-xs p-3 bg-success/20 border-b-2 border-black">
               🎨 Draw something and let AI guess what it is!
             </p>
             <iframe src="https://quickdraw.withgoogle.com" className="flex-1 w-full" title="Quick Draw" />
@@ -80,7 +80,7 @@ export default function LessonPlayer() {
       {showXP && <XPToast amount={lesson.xpReward} reason={`${lesson.title} complete!`} onDone={() => setShowXP(false)} />}
 
       {/* Header */}
-      <div className="bg-pixel-dark border-b-4 border-black px-4 py-3 rounded-b-3xl flex items-center gap-3 shadow-[0px_5px_0px_0px_rgba(0,0,0,0.85)]">
+      <div className="bg-pixel-dark border-b-4 border-black px-4 py-3 flex items-center gap-3">
         <button onClick={() => navigate('/learn')} className="touch-target text-white/60 hover:text-white">
           <ArrowLeft className="w-5 h-5" />
         </button>
@@ -133,7 +133,7 @@ export default function LessonPlayer() {
       </div>
 
       {/* Complete Button */}
-      <div className="border-t-4 border-black p-4 bg-pixel-dark rounded-t-3xl shadow-[0px_-5px_0px_0px_rgba(0,0,0,0.85)]">
+      <div className="border-t-4 border-black p-4 bg-pixel-dark">
         {completed ? (
           <div className="flex items-center justify-center gap-2 py-4">
             <CheckCircle className="w-6 h-6 text-success" />
@@ -182,40 +182,22 @@ function DragDropSandbox() {
       <div className="text-white font-game text-sm text-center">Sort: Smart AI vs Not Smart?</div>
       <div className="grid grid-cols-2 gap-3">
         {items.map(item => (
-          <div key={item} className={`border-4 border-black p-3.5 rounded-3xl shadow-[0px_6px_0px_0px_rgba(0,0,0,1)] transition-all ${sorted[item] === 'smart' ? 'bg-success/20 border-success shadow-[0px_6px_0px_0px_rgba(16,185,129,0.3)]' : sorted[item] === 'dumb' ? 'bg-gray-800 shadow-[0px_6px_0px_0px_rgba(0,0,0,0.5)]' : 'bg-pixel-dark'}`}>
-            <div className="text-white font-game text-xs text-center mb-2.5">{item}</div>
+          <div key={item} className={`border-4 border-black p-3 ${sorted[item] === 'smart' ? 'bg-success/30' : sorted[item] === 'dumb' ? 'bg-gray-700' : 'bg-pixel-dark'}`}>
+            <div className="text-white font-body text-sm text-center mb-2">{item}</div>
             <div className="flex gap-2">
-              <button
-                onClick={() => handleSort(item, 'smart')}
-                className={`flex-1 border-4 border-black py-2 text-xs font-game rounded-2xl transition-all cursor-pointer hover:scale-[1.03] hover:-rotate-1 active:translate-y-0.5 shadow-[0px_3px_0px_0px_#000] active:shadow-none ${
-                  sorted[item] === 'smart'
-                    ? 'bg-gradient-to-r from-success to-success-light text-white shadow-[0px_3px_0px_0px_#000,inset_0px_2px_0px_0px_rgba(255,255,255,0.4)]'
-                    : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white'
-                }`}
-              >
-                Smart 🤖
-              </button>
-              <button
-                onClick={() => handleSort(item, 'dumb')}
-                className={`flex-1 border-4 border-black py-2 text-xs font-game rounded-2xl transition-all cursor-pointer hover:scale-[1.03] hover:-rotate-1 active:translate-y-0.5 shadow-[0px_3px_0px_0px_#000] active:shadow-none ${
-                  sorted[item] === 'dumb'
-                    ? 'bg-gradient-to-r from-pixel-red to-red-400 text-white shadow-[0px_3px_0px_0px_#000,inset_0px_2px_0px_0px_rgba(255,255,255,0.4)]'
-                    : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white'
-                }`}
-              >
-                Not 📦
-              </button>
+              <button onClick={() => handleSort(item, 'smart')} className={`flex-1 border-2 border-black py-1 text-xs font-body ${sorted[item] === 'smart' ? 'bg-success text-white' : 'bg-white/10 text-white/70'}`}>🤖 Smart</button>
+              <button onClick={() => handleSort(item, 'dumb')} className={`flex-1 border-2 border-black py-1 text-xs font-body ${sorted[item] === 'dumb' ? 'bg-gray-600 text-white' : 'bg-white/10 text-white/70'}`}>📦 Not</button>
             </div>
           </div>
         ))}
       </div>
       {Object.keys(sorted).length === items.length && score === null && (
-        <Button variant="primary" size="lg" fullWidth onClick={checkAnswers}>
-          CHECK MY ANSWERS! 🚀
-        </Button>
+        <button onClick={checkAnswers} className="w-full border-4 border-black bg-primary py-3 text-white font-game text-sm">
+          CHECK MY ANSWERS!
+        </button>
       )}
       {score !== null && (
-        <div className="border-4 border-success bg-success/20 p-5 rounded-3xl text-center shadow-[0px_5px_0px_0px_rgba(16,185,129,0.5)]">
+        <div className="border-4 border-success bg-success/20 p-4 text-center">
           <div className="text-3xl mb-2">{score >= 6 ? '🏆' : score >= 4 ? '⭐' : '💪'}</div>
           <div className="text-white font-game text-sm">{score}/{items.length} Correct!</div>
           <div className="text-white/70 font-body text-xs mt-1">{score >= 6 ? 'Amazing! You\'re an AI expert!' : 'Good try! Keep learning!'}</div>
@@ -258,29 +240,21 @@ function QuizSandbox({ lessonId }: { lessonId: string }) {
     <div className="p-4 space-y-4">
       <div className="text-white/60 font-body text-xs">Question {current + 1}/{questions.length}</div>
       <div className="text-white font-game text-sm leading-relaxed">{q.q}</div>
-      <div className="space-y-3">
-        {q.opts.map((opt, i) => {
-          let optionStyles = 'bg-pixel-dark border-black text-white hover:bg-white/10 hover:scale-[1.02] hover:-rotate-0.5 shadow-[0px_6px_0px_0px_rgba(0,0,0,1)]';
-          if (selected !== null) {
-            if (i === q.a) {
-              optionStyles = 'bg-gradient-to-r from-success to-success-light border-black text-white shadow-[0px_4px_0px_0px_#000000,inset_0px_3px_0px_0px_rgba(255,255,255,0.4)]';
-            } else if (i === selected) {
-              optionStyles = 'bg-gradient-to-r from-pixel-red to-red-400 border-black text-white shadow-[0px_4px_0px_0px_#000000,inset_0px_3px_0px_0px_rgba(255,255,255,0.4)]';
-            } else {
-              optionStyles = 'bg-pixel-dark opacity-40 border-black text-white/50 shadow-none pointer-events-none';
-            }
-          }
-          return (
-            <button
-              key={i}
-              onClick={() => handleAnswer(i)}
-              className={`w-full border-4 ${optionStyles} p-4 text-left font-game text-xs transition-all active:translate-y-0.5 active:shadow-none cursor-pointer rounded-2xl`}
-            >
-              <span className="font-pixel text-[10px] text-white/50 mr-2">{String.fromCharCode(65 + i)}.</span>
-              {opt}
-            </button>
-          );
-        })}
+      <div className="space-y-2">
+        {q.opts.map((opt, i) => (
+          <button
+            key={i}
+            onClick={() => handleAnswer(i)}
+            className={`w-full border-4 border-black p-3 text-left font-body text-sm transition-all ${
+              selected === null ? 'bg-pixel-dark text-white hover:bg-white/10' :
+              i === q.a ? 'bg-success text-white' :
+              i === selected ? 'bg-pixel-red text-white' :
+              'bg-pixel-dark text-white/40'
+            }`}
+          >
+            {opt}
+          </button>
+        ))}
       </div>
     </div>
   );

@@ -46,9 +46,9 @@ export default function AIIdeaGenerator() {
   };
 
   const IDEA_COLORS = [
-    { border: 'border-primary', bgSolid: 'linear-gradient(180deg, #2D1D54 0%, #1E1B4B 100%)', badge: 'bg-primary', emoji: '💜' },
-    { border: 'border-blue-game', bgSolid: 'linear-gradient(180deg, #1D2A54 0%, #1E1B4B 100%)', badge: 'bg-blue-game', emoji: '💙' },
-    { border: 'border-success', bgSolid: 'linear-gradient(180deg, #1B3D34 0%, #1E1B4B 100%)', badge: 'bg-success', emoji: '💚' },
+    { border: 'border-primary', bg: 'bg-primary/20', badge: 'bg-primary', emoji: '💜' },
+    { border: 'border-blue-game', bg: 'bg-blue-game/20', badge: 'bg-blue-game', emoji: '💙' },
+    { border: 'border-success', bg: 'bg-success/20', badge: 'bg-success', emoji: '💚' },
   ];
 
   return (
@@ -56,7 +56,7 @@ export default function AIIdeaGenerator() {
       {showXP && <XPToast amount={40} reason="3 AI ideas generated!" onDone={() => setShowXP(false)} />}
 
       {/* Header */}
-      <div className="bg-gradient-to-b from-[#3D1B34] to-pixel-darker p-5">
+      <div className="bg-gradient-to-b from-pixel-pink/30 to-pixel-darker p-5">
         <button onClick={() => navigate('/play')} className="flex items-center gap-2 text-white/60 hover:text-white mb-3 font-body text-sm">
           <ArrowLeft className="w-4 h-4" /> Back to Play
         </button>
@@ -73,11 +73,7 @@ export default function AIIdeaGenerator() {
               <button
                 key={c}
                 onClick={() => setCategory(c)}
-                className={`border-4 border-black px-4 py-2 font-game text-xs uppercase rounded-2xl transition-all cursor-pointer hover:scale-[1.05] hover:-rotate-1 active:scale-95 active:translate-y-0.5 shadow-[0px_4px_0px_0px_#000000] ${
-                  category === c 
-                    ? 'bg-gradient-to-r from-primary to-primary-light text-white shadow-[0px_4px_0px_0px_#000000,inset_0px_3px_0px_0px_rgba(255,255,255,0.4)]' 
-                    : 'bg-pixel-dark text-white/60 hover:text-white hover:bg-white/10'
-                }`}
+                className={`border-2 border-black px-3 py-1.5 font-body text-xs capitalize transition-all ${category === c ? 'bg-primary text-white' : 'bg-white/10 text-white/60 hover:text-white'}`}
               >
                 {c}
               </button>
@@ -104,9 +100,9 @@ export default function AIIdeaGenerator() {
             {QUICK_PROBLEMS.map(p => (
               <motion.button
                 key={p}
-                whileTap={{ scale: 0.96 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => setProblem(p)}
-                className="border-2 border-black bg-pixel-dark px-4 py-2 text-white/80 font-body text-xs rounded-2xl hover:bg-white/10 hover:text-white transition-all text-left shadow-[0px_3px_0px_0px_rgba(0,0,0,0.85)] cursor-pointer"
+                className="border-2 border-white/20 bg-white/5 px-3 py-1.5 text-white/60 font-body text-xs hover:bg-white/15 hover:text-white transition-all text-left"
               >
                 {p}
               </motion.button>
@@ -139,27 +135,23 @@ export default function AIIdeaGenerator() {
                     initial={{ x: 40, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
                     transition={{ delay: i * 0.1 }}
-                    className={`border-4 border-black ${colors.border} p-5 rounded-3xl shadow-[0px_6px_0px_0px_rgba(0,0,0,0.85)] hover:scale-[1.01] transition-all`}
-                    style={{
-                      backgroundImage: colors.bgSolid
-                    }}
+                    className={`border-4 border-black ${colors.bg} ${colors.border} p-5 shadow-pixel`}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-2 mb-2">
-                        <div className={`${colors.badge} border-2 border-black w-7 h-7 flex items-center justify-center font-pixel text-[9px] text-white rounded-lg shadow-[0px_2px_0px_0px_rgba(0,0,0,1)]`}>
+                        <div className={`${colors.badge} border-2 border-black w-7 h-7 flex items-center justify-center font-pixel text-[10px] text-white`}>
                           {i + 1}
                         </div>
                         <h3 className="text-white font-game text-sm leading-tight">{idea.name}</h3>
                       </div>
-                      <Button
-                        size="sm"
-                        variant={savedIdeas.has(i) ? 'success' : 'ghost'}
+                      <motion.button
+                        whileTap={{ scale: 0.9 }}
                         onClick={() => handleSave(i)}
                         disabled={savedIdeas.has(i)}
-                        className="flex-shrink-0"
+                        className={`border-2 border-black px-3 py-1 font-body text-xs flex-shrink-0 ${savedIdeas.has(i) ? 'bg-success text-white' : 'bg-white/10 text-white/70 hover:bg-white/20'}`}
                       >
                         {savedIdeas.has(i) ? '✅ Saved!' : '💾 Save'}
-                      </Button>
+                      </motion.button>
                     </div>
                     <p className="text-white/80 font-body text-sm leading-relaxed">{idea.description}</p>
                   </motion.div>
