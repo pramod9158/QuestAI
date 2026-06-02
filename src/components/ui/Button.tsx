@@ -10,7 +10,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   fullWidth?: boolean;
 }
 
-const variantClasses = {
+const variantClasses: Record<NonNullable<ButtonProps['variant']>, string> = {
   primary: 'btn-primary',
   blue: 'btn-blue',
   success: 'btn-success',
@@ -19,24 +19,34 @@ const variantClasses = {
   ghost: 'btn-ghost',
 };
 
-const sizeClasses = {
-  sm: 'px-3 py-2 text-xs min-h-[40px]',
-  md: 'px-5 py-3 text-sm min-h-[48px]',
-  lg: 'px-6 py-4 text-base min-h-[56px]',
-  xl: 'px-8 py-5 text-lg min-h-[64px]',
+const sizeClasses: Record<NonNullable<ButtonProps['size']>, string> = {
+  sm: 'px-4 py-2 text-sm min-h-[40px]',
+  md: 'px-5 py-3 text-base min-h-[48px]',
+  lg: 'px-7 py-4 text-lg min-h-[56px]',
+  xl: 'px-8 py-5 text-xl min-h-[64px]',
 };
 
 export function Button({
-  variant = 'primary', size = 'md', loading, icon, fullWidth, children, className, disabled, ...props
+  variant = 'primary',
+  size = 'md',
+  loading,
+  icon,
+  fullWidth,
+  children,
+  className,
+  disabled,
+  ...props
 }: ButtonProps) {
   return (
     <motion.button
-      whileTap={{ scale: 0.95 }}
+      whileHover={{ scale: disabled || loading ? 1 : 1.02 }}
+      whileTap={{ scale: disabled || loading ? 1 : 0.97 }}
+      transition={{ type: 'spring', stiffness: 400, damping: 20 }}
       className={cn(
         variantClasses[variant],
         sizeClasses[size],
         fullWidth ? 'w-full' : '',
-        'flex items-center justify-center gap-2 font-game tracking-wide',
+        'flex items-center justify-center gap-2 font-heading font-700 select-none',
         className
       )}
       disabled={disabled || loading}

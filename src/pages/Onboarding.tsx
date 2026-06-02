@@ -9,9 +9,10 @@ const ZONES = [
     emoji: '🚀',
     title: 'Junior Explorer',
     desc: 'Discover AI magic through games, stories & fun!',
-    color: 'bg-blue-game',
-    borderColor: 'border-blue-game',
-    shadowColor: 'shadow-pixel-blue',
+    gradFrom: '#00C2FF',
+    gradTo: '#5B5FFF',
+    glowColor: 'rgba(0,194,255,0.35)',
+    borderColor: 'rgba(0,194,255,0.4)',
   },
   {
     id: 'innovator',
@@ -19,9 +20,10 @@ const ZONES = [
     emoji: '🧠',
     title: 'Future Innovator',
     desc: 'Dive into AI ethics, prompts, and real-world problem solving!',
-    color: 'bg-primary',
-    borderColor: 'border-primary-dark',
-    shadowColor: 'shadow-pixel-purple',
+    gradFrom: '#7F5AF0',
+    gradTo: '#2CB67D',
+    glowColor: 'rgba(127,90,240,0.35)',
+    borderColor: 'rgba(127,90,240,0.4)',
   },
 ];
 
@@ -33,64 +35,100 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="min-h-screen bg-pixel-darker bg-pixel-grid flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div
+      className="min-h-screen flex items-center justify-center p-5 relative overflow-hidden"
+      style={{ background: 'linear-gradient(135deg, #0D0D1A 0%, #1A1040 50%, #0D1A2E 100%)' }}
+    >
+      {/* Ambient orbs */}
+      <div className="gradient-orb gradient-orb-primary" style={{ width: 300, height: 300, top: -80, left: -60, opacity: 0.5 }} />
+      <div className="gradient-orb gradient-orb-mission" style={{ width: 220, height: 220, bottom: -60, right: -50, opacity: 0.4, animationDelay: '-6s' }} />
+      <div className="gradient-orb gradient-orb-xp" style={{ width: 150, height: 150, top: '30%', right: '0%', opacity: 0.2, animationDelay: '-3s' }} />
+
+      <div className="w-full max-w-sm relative z-10">
         <AnimatePresence mode="wait">
-          {/* Zone Selection */}
           <motion.div
             key="zone"
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -40 }}
-            className="flex flex-col items-center gap-6"
+            transition={{ duration: 0.5, ease: 'easeOut' }}
+            className="flex flex-col items-center gap-7"
           >
             {/* Header */}
             <div className="text-center">
               <motion.div
-                animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.1, 1] }}
-                transition={{ repeat: Infinity, duration: 3 }}
-                className="text-8xl mb-4"
+                animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.08, 1] }}
+                transition={{ repeat: Infinity, duration: 3.5, ease: 'easeInOut' }}
+                className="text-8xl mb-5"
               >
                 🤖
               </motion.div>
-              <h1 className="font-pixel text-white text-xl leading-relaxed">AI EXPLORER</h1>
-              <p className="font-body text-white/60 text-sm mt-2">Your AI Learning Adventure Awaits!</p>
+              <h1
+                className="font-heading font-bold text-3xl"
+                style={{
+                  background: 'linear-gradient(135deg, #7F5AF0, #2CB67D)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                }}
+              >
+                QUEST AI
+              </h1>
+              <p className="font-body text-white/50 text-sm mt-2">Your AI Learning Adventure Awaits!</p>
             </div>
 
-            {/* Pixel divider */}
-            <div className="w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent" />
+            {/* Gradient divider */}
+            <div
+              className="w-full h-px"
+              style={{ background: 'linear-gradient(90deg, transparent, rgba(127,90,240,0.6), rgba(44,182,125,0.6), transparent)' }}
+            />
 
-            <p className="font-game text-white text-xl text-center">How old are you?</p>
+            <p className="font-heading font-bold text-white text-xl text-center">How old are you?</p>
 
             <div className="w-full flex flex-col gap-4">
               {ZONES.map((z) => (
                 <motion.button
                   key={z.id}
-                  whileHover={{ scale: 1.02 }}
+                  whileHover={{ scale: 1.02, y: -2 }}
                   whileTap={{ scale: 0.97 }}
                   onClick={() => handleZoneSelect(z.id as 'junior' | 'innovator')}
-                  className={`w-full border-4 border-black ${z.color} p-5 flex items-center gap-4 ${z.shadowColor} shadow-pixel text-left`}
+                  className="w-full p-5 rounded-2xl flex items-center gap-4 text-left cursor-pointer transition-all"
+                  style={{
+                    background: `linear-gradient(135deg, rgba(${z.gradFrom === '#00C2FF' ? '0,194,255' : '127,90,240'},0.18) 0%, rgba(${z.gradTo === '#5B5FFF' ? '91,95,255' : '44,182,125'},0.10) 100%)`,
+                    border: `1px solid ${z.borderColor}`,
+                    boxShadow: `0 8px 30px ${z.glowColor}, inset 0 1px 0 rgba(255,255,255,0.08)`,
+                    backdropFilter: 'blur(16px)',
+                  }}
                 >
-                  <span className="text-5xl">{z.emoji}</span>
+                  <div
+                    className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0"
+                    style={{
+                      background: `linear-gradient(135deg, ${z.gradFrom}, ${z.gradTo})`,
+                      boxShadow: `0 4px 16px ${z.glowColor}`,
+                    }}
+                  >
+                    {z.emoji}
+                  </div>
                   <div>
-                    <div className="text-white font-game text-xl">{z.title}</div>
-                    <div className="text-white/80 font-body text-xs">Ages {z.age}</div>
+                    <div className="text-white font-heading font-bold text-lg">{z.title}</div>
+                    <div className="text-white/50 font-body text-xs mt-0.5">Ages {z.age}</div>
                     <div className="text-white/70 font-body text-sm mt-1">{z.desc}</div>
                   </div>
                 </motion.button>
               ))}
             </div>
 
-            <div className="flex flex-col gap-3 items-center justify-center mt-4">
+            <div className="flex flex-col gap-3 items-center mt-2">
               <button
                 onClick={() => navigate('/auth', { state: { mode: 'signup' } })}
-                className="text-warning font-body text-sm font-bold hover:opacity-80 underline flex items-center gap-1.5 transition-all"
+                className="font-body text-sm font-semibold hover:opacity-80 transition-opacity"
+                style={{ color: '#FFD60A' }}
               >
                 ⭐ New to Quest AI? Sign Up
               </button>
               <button
                 onClick={() => navigate('/auth', { state: { mode: 'login' } })}
-                className="text-white font-body text-sm font-bold hover:opacity-80 underline flex items-center gap-1.5 transition-all"
+                className="text-white/50 font-body text-sm font-semibold hover:text-white transition-colors"
               >
                 🔑 Already have an account? Sign In
               </button>

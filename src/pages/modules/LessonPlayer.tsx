@@ -76,16 +76,19 @@ export default function LessonPlayer() {
   };
 
   return (
-    <div className="min-h-full flex flex-col bg-pixel-darker">
+    <div className="min-h-full flex flex-col">
       {showXP && <XPToast amount={lesson.xpReward} reason={`${lesson.title} complete!`} onDone={() => setShowXP(false)} />}
 
       {/* Header */}
-      <div className="bg-pixel-dark border-b-4 border-black px-4 py-3 flex items-center gap-3">
-        <button onClick={() => navigate('/learn')} className="touch-target text-white/60 hover:text-white">
+      <div
+        className="px-4 py-3 flex items-center gap-3"
+        style={{ background: 'rgba(13,13,26,0.9)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(127,90,240,0.25)' }}
+      >
+        <button onClick={() => navigate('/learn')} className="touch-target text-white/50 hover:text-white transition-colors">
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div className="flex-1 min-w-0">
-          <div className="text-white font-game text-sm truncate">{lesson.title}</div>
+          <div className="font-heading font-bold text-sm text-white truncate">{lesson.title}</div>
           <div className="text-white/40 font-body text-xs">{lesson.subtitle}</div>
         </div>
         <SpeakButton text={lesson.ttsIntro} />
@@ -94,14 +97,18 @@ export default function LessonPlayer() {
       {/* Split Layout: Video + Sandbox */}
       <div className="flex flex-col md:flex-row flex-1" style={{ minHeight: '60vh' }}>
         {/* Video Panel */}
-        <div className="w-full md:w-1/2 flex flex-col border-b-4 md:border-b-0 md:border-r-4 border-black">
-          <div className="bg-black/50 p-2 flex items-center justify-between border-b-2 border-black">
-            <span className="text-white/60 font-body text-xs">📺 Video Lesson</span>
+        <div className="w-full md:w-1/2 flex flex-col" style={{ borderBottom: '1px solid rgba(127,90,240,0.2)' }}>
+          <div
+            className="p-2 flex items-center justify-between"
+            style={{ background: 'rgba(0,0,0,0.4)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}
+          >
+            <span className="text-white/50 font-body text-xs">📺 Video Lesson</span>
             <a
               href={`https://www.youtube.com/watch?v=${lesson.youtubeId}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1 text-blue-game font-body text-xs"
+              className="flex items-center gap-1 font-body text-xs transition-opacity hover:opacity-80"
+              style={{ color: '#00C2FF' }}
             >
               Open <ExternalLink className="w-3 h-3" />
             </a>
@@ -116,15 +123,18 @@ export default function LessonPlayer() {
             />
           </div>
           {/* TTS Intro */}
-          <div className="p-3 bg-primary/10 border-t-2 border-black">
-            <p className="text-white/70 font-body text-xs italic">"{lesson.ttsIntro}"</p>
+          <div className="p-3" style={{ background: 'rgba(127,90,240,0.08)', borderTop: '1px solid rgba(127,90,240,0.2)' }}>
+            <p className="text-white/60 font-body text-xs italic">"{lesson.ttsIntro}"</p>
           </div>
         </div>
 
         {/* Sandbox Panel */}
         <div className="w-full md:w-1/2 flex flex-col" style={{ minHeight: '300px' }}>
-          <div className="bg-black/50 p-2 border-b-2 border-black">
-            <span className="text-white/60 font-body text-xs">🎮 Try It Yourself</span>
+          <div
+            className="p-2"
+            style={{ background: 'rgba(0,0,0,0.4)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}
+          >
+            <span className="text-white/50 font-body text-xs">🎮 Try It Yourself</span>
           </div>
           <div className="flex-1 overflow-auto">
             {sandboxContent()}
@@ -133,11 +143,17 @@ export default function LessonPlayer() {
       </div>
 
       {/* Complete Button */}
-      <div className="border-t-4 border-black p-4 bg-pixel-dark">
+      <div
+        className="p-4"
+        style={{ background: 'rgba(13,13,26,0.9)', backdropFilter: 'blur(16px)', borderTop: '1px solid rgba(255,255,255,0.08)' }}
+      >
         {completed ? (
-          <div className="flex items-center justify-center gap-2 py-4">
-            <CheckCircle className="w-6 h-6 text-success" />
-            <span className="text-success font-game text-sm">Lesson Complete! +{lesson.xpReward} XP earned!</span>
+          <div
+            className="flex items-center justify-center gap-2 py-4 rounded-2xl"
+            style={{ background: 'linear-gradient(135deg, rgba(44,182,125,0.2), rgba(0,194,255,0.12))', border: '1px solid rgba(44,182,125,0.4)' }}
+          >
+            <CheckCircle className="w-6 h-6" style={{ color: '#2CB67D' }} />
+            <span className="font-heading font-bold text-sm" style={{ color: '#2CB67D' }}>Lesson Complete! +{lesson.xpReward} XP earned!</span>
           </div>
         ) : (
           <Button variant="success" size="lg" fullWidth onClick={handleComplete}>
@@ -146,7 +162,7 @@ export default function LessonPlayer() {
         )}
         <button
           onClick={() => navigate('/learn')}
-          className="w-full text-center text-white/40 font-body text-xs mt-2 hover:text-white/70"
+          className="w-full text-center text-white/35 font-body text-xs mt-2 hover:text-white/60 transition-colors"
         >
           ← Back to curriculum
         </button>

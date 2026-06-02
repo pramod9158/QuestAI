@@ -19,7 +19,6 @@ export default function Auth() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // Redirect if already logged in
   useEffect(() => {
     if (profile) navigate('/', { replace: true });
   }, [profile, navigate]);
@@ -37,9 +36,8 @@ export default function Auth() {
       const { error } = await signUp(email, password, username, zone);
       if (error) setError(error);
       else {
-        setSuccess('✅ Account created! Please check your email to confirm your account, then sign in below.');
+        setSuccess('✅ Account created! Please check your email to confirm, then sign in.');
         setTab('login');
-        setEmail(email);
         setPassword('');
       }
     }
@@ -47,90 +45,159 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen bg-pixel-darker bg-pixel-grid flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-6">
+    <div
+      className="min-h-screen flex items-center justify-center p-5 relative overflow-hidden"
+      style={{ background: 'linear-gradient(135deg, #0D0D1A 0%, #1A1040 50%, #0D1A2E 100%)' }}
+    >
+      {/* Ambient orbs */}
+      <div className="gradient-orb gradient-orb-primary" style={{ width: 280, height: 280, top: -80, left: -60, opacity: 0.5 }} />
+      <div className="gradient-orb gradient-orb-mission" style={{ width: 200, height: 200, bottom: -40, right: -40, opacity: 0.4, animationDelay: '-5s' }} />
+      <div className="gradient-orb gradient-orb-xp" style={{ width: 160, height: 160, top: '40%', right: '5%', opacity: 0.25, animationDelay: '-9s' }} />
+
+      <div className="w-full max-w-sm relative z-10">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+          className="flex flex-col gap-6"
+        >
           {/* Back */}
-          <button onClick={() => navigate('/onboarding')} className="flex items-center gap-2 text-white/50 hover:text-white font-body text-sm w-fit">
+          <button
+            onClick={() => navigate('/onboarding')}
+            className="flex items-center gap-2 text-white/40 hover:text-white/70 font-body text-sm w-fit transition-colors"
+          >
             <ArrowLeft className="w-4 h-4" /> Back to Start
           </button>
 
           {/* Logo */}
           <div className="text-center">
-            <div className="text-7xl mb-3">🤖</div>
-            <h1 className="font-pixel text-white text-lg">AI EXPLORER</h1>
+            <motion.div
+              animate={{ rotate: [0, 8, -8, 0] }}
+              transition={{ repeat: Infinity, duration: 4 }}
+              className="text-7xl mb-4"
+            >
+              🤖
+            </motion.div>
+            <h1
+              className="font-heading font-bold text-2xl"
+              style={{
+                background: 'linear-gradient(135deg, #7F5AF0, #2CB67D)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}
+            >
+              QUEST AI
+            </h1>
+            <p className="text-white/40 font-body text-sm mt-1">Your AI Learning Adventure</p>
           </div>
 
-          {/* Tabs */}
-          <div className="flex border-4 border-black">
-            {(['login', 'signup'] as const).map((t) => (
-              <button
-                key={t}
-                onClick={() => setTab(t)}
-                className={`flex-1 py-3 font-game text-sm transition-colors ${tab === t ? 'bg-primary text-white' : 'bg-pixel-dark text-white/50 hover:text-white'}`}
-              >
-                {t === 'login' ? '🔑 Sign In' : '⭐ Sign Up'}
-              </button>
-            ))}
-          </div>
-
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            {tab === 'signup' && (
-              <div>
-                <label className="text-white/70 font-body text-sm mb-1 block flex items-center gap-2">
-                  <User className="w-4 h-4" /> Username
-                </label>
-                <input type="text" value={username} onChange={e => setUsername(e.target.value)}
-                  placeholder="SuperCoder123" className="pixel-input" maxLength={20} required />
-              </div>
-            )}
-            <div>
-              <label className="text-white/70 font-body text-sm mb-1 block flex items-center gap-2">
-                <Mail className="w-4 h-4" /> Email
-              </label>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-                placeholder="explorer@school.com" className="pixel-input" required />
-            </div>
-            <div>
-              <label className="text-white/70 font-body text-sm mb-1 block flex items-center gap-2">
-                <Lock className="w-4 h-4" /> Password
-              </label>
-              <input type="password" value={password} onChange={e => setPassword(e.target.value)}
-                placeholder="••••••••" className="pixel-input" required minLength={6} />
+          {/* Card */}
+          <div
+            className="rounded-2xl p-6"
+            style={{
+              background: 'rgba(255,255,255,0.05)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(127,90,240,0.25)',
+              boxShadow: '0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08)',
+            }}
+          >
+            {/* Tabs */}
+            <div
+              className="flex rounded-xl p-1 mb-6"
+              style={{ background: 'rgba(255,255,255,0.06)' }}
+            >
+              {(['login', 'signup'] as const).map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setTab(t)}
+                  className="flex-1 py-2.5 rounded-xl font-heading font-semibold text-sm transition-all duration-200"
+                  style={tab === t ? {
+                    background: 'linear-gradient(135deg, #7F5AF0, #2CB67D)',
+                    color: 'white',
+                    boxShadow: '0 4px 12px rgba(127,90,240,0.4)',
+                  } : { color: 'rgba(255,255,255,0.45)' }}
+                >
+                  {t === 'login' ? '🔑 Sign In' : '⭐ Sign Up'}
+                </button>
+              ))}
             </div>
 
-            {error && (
-              <div className="bg-pixel-red/20 border-2 border-pixel-red px-4 py-2 text-red-300 font-body text-sm">{error}</div>
-            )}
-            {success && (
-              <div className="bg-success/20 border-2 border-success px-4 py-2 text-green-300 font-body text-sm">{success}</div>
-            )}
-
-            <Button type="submit" variant="primary" size="lg" fullWidth loading={loading}>
-              {tab === 'login' ? 'SIGN IN 🔑' : 'CREATE ACCOUNT ⭐'}
-            </Button>
-
-            <div className="text-center">
-              {tab === 'login' ? (
-                <button
-                  type="button"
-                  onClick={() => setTab('signup')}
-                  className="text-warning font-body text-sm font-bold hover:opacity-80 underline"
-                >
-                  ⭐ New to Quest AI? Sign Up
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setTab('login')}
-                  className="text-white font-body text-sm font-bold hover:opacity-80 underline"
-                >
-                  🔑 Already have an account? Sign In
-                </button>
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+              {tab === 'signup' && (
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-white/60 font-body text-sm flex items-center gap-2">
+                    <User className="w-4 h-4" /> Username
+                  </label>
+                  <input
+                    type="text" value={username} onChange={e => setUsername(e.target.value)}
+                    placeholder="SuperCoder123" className="pixel-input" maxLength={20} required
+                  />
+                </div>
               )}
-            </div>
-          </form>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-white/60 font-body text-sm flex items-center gap-2">
+                  <Mail className="w-4 h-4" /> Email
+                </label>
+                <input
+                  type="email" value={email} onChange={e => setEmail(e.target.value)}
+                  placeholder="explorer@school.com" className="pixel-input" required
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-white/60 font-body text-sm flex items-center gap-2">
+                  <Lock className="w-4 h-4" /> Password
+                </label>
+                <input
+                  type="password" value={password} onChange={e => setPassword(e.target.value)}
+                  placeholder="••••••••" className="pixel-input" required minLength={6}
+                />
+              </div>
+
+              {error && (
+                <div
+                  className="px-4 py-3 rounded-xl font-body text-sm text-red-300"
+                  style={{ background: 'rgba(242,95,76,0.15)', border: '1px solid rgba(242,95,76,0.4)' }}
+                >
+                  {error}
+                </div>
+              )}
+              {success && (
+                <div
+                  className="px-4 py-3 rounded-xl font-body text-sm text-green-300"
+                  style={{ background: 'rgba(44,182,125,0.15)', border: '1px solid rgba(44,182,125,0.4)' }}
+                >
+                  {success}
+                </div>
+              )}
+
+              <Button type="submit" variant="primary" size="lg" fullWidth loading={loading}>
+                {tab === 'login' ? 'Sign In 🔑' : 'Create Account ⭐'}
+              </Button>
+
+              <div className="text-center pt-1">
+                {tab === 'login' ? (
+                  <button
+                    type="button"
+                    onClick={() => setTab('signup')}
+                    className="font-body text-sm font-semibold hover:opacity-80 transition-opacity"
+                    style={{ color: '#FFD60A' }}
+                  >
+                    ⭐ New to Quest AI? Sign Up
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setTab('login')}
+                    className="text-white/60 font-body text-sm font-semibold hover:text-white transition-colors"
+                  >
+                    🔑 Already have an account? Sign In
+                  </button>
+                )}
+              </div>
+            </form>
+          </div>
         </motion.div>
       </div>
     </div>

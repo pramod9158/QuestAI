@@ -5,7 +5,7 @@ import { getLevel, getXPForNextLevel, getEarnedBadges, BADGES } from '@/lib/gami
 import { PixelAvatar, Badge, ProgressRing, MysteryBox } from '@/components/ui/GameUI';
 import { Button } from '@/components/ui/Button';
 import { useNavigate } from 'react-router-dom';
-import { Settings, LogOut, Trophy, Star, Zap, Book } from 'lucide-react';
+import { LogOut, ChevronRight } from 'lucide-react';
 
 const MYSTERY_REWARDS = ['🎩 Cool Hat', '🦺 Explorer Vest', '🌈 Rainbow Trail', '⚡ Lightning Effect', '🔮 Magic Orb', '🎯 Target Shield'];
 
@@ -27,11 +27,8 @@ export default function Profile() {
   const xpInfo = getXPForNextLevel(profile.xp);
   const badges = getEarnedBadges(profile.xp, profile.current_streak);
   const lockedBadges = BADGES.filter(b => !badges.find(eb => eb.id === b.id));
-
   const completedLessons = profile.completed_lessons?.length || 0;
   const completedQuests = profile.completed_quests?.length || 0;
-  const submissions = JSON.parse(localStorage.getItem('mission_submissions') || '[]').length;
-  const inventions = JSON.parse(localStorage.getItem('guest_inventions') || '[]').length;
 
   const handleOpenBox = () => {
     const r = MYSTERY_REWARDS[Math.floor(Math.random() * MYSTERY_REWARDS.length)];
@@ -44,97 +41,175 @@ export default function Profile() {
     navigate('/auth');
   };
 
+  const TABS = [
+    { key: 'overview', label: '📊 Stats' },
+    { key: 'badges', label: '🏆 Badges' },
+    { key: 'settings', label: '⚙️ Settings' },
+  ] as const;
+
   return (
-    <div className="min-h-full bg-pixel-darker pb-6">
-      {/* Profile Hero */}
-      <div className="relative bg-gradient-to-b from-primary/40 to-pixel-darker p-6 pb-12 overflow-hidden">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 border-l-4 border-b-4 border-black" />
-        <div className="flex items-center gap-5">
+    <div className="min-h-full pb-8">
+      {/* Hero */}
+      <div className="relative px-5 pt-6 pb-14 overflow-hidden">
+        <div className="gradient-orb gradient-orb-primary" style={{ width: 220, height: 220, top: -60, right: -60, opacity: 0.45 }} />
+        <div className="gradient-orb gradient-orb-accent" style={{ width: 150, height: 150, bottom: 0, left: -30, opacity: 0.3, animationDelay: '-5s' }} />
+
+        <div className="relative flex items-center gap-5">
+          {/* Avatar with glow ring */}
           <div className="relative">
-            <PixelAvatar username={profile.username} size={72} />
-            <div className="absolute -bottom-1 -right-1 bg-warning border-2 border-black px-1.5 font-pixel text-[8px] text-black">
+            <div
+              className="absolute inset-0 rounded-2xl"
+              style={{
+                background: 'linear-gradient(135deg, #7F5AF0, #2CB67D)',
+                padding: 3,
+                borderRadius: 18,
+                filter: 'blur(0px)',
+                boxShadow: '0 0 24px rgba(127,90,240,0.6)',
+              }}
+            />
+            <div style={{ position: 'relative' }}>
+              <PixelAvatar username={profile.username} size={76} colorIndex={level % 6} />
+            </div>
+            {/* Level badge */}
+            <div
+              className="absolute -bottom-2 -right-2 px-2 py-0.5 rounded-lg font-heading font-bold text-xs text-gray-900"
+              style={{ background: 'linear-gradient(135deg, #FFD60A, #FF9F1C)', boxShadow: '0 2px 8px rgba(255,214,10,0.6)' }}
+            >
               LV.{level}
             </div>
           </div>
+
           <div>
-            <h1 className="text-white font-game text-xl">{profile.username}</h1>
-            <p className="text-white/60 font-body text-sm">{profile.zone === 'junior' ? '🚀 Junior Explorer' : '🧠 Future Innovator'}</p>
+            <h1 className="font-heading font-bold text-2xl text-white">{profile.username}</h1>
+            <p className="text-white/50 font-body text-sm mt-0.5">
+              {profile.zone === 'junior' ? '🚀 Junior Explorer' : '🧠 Future Innovator'}
+            </p>
             {user && (
-              <div className="flex items-center gap-1 mt-1">
-                <div className="w-2 h-2 bg-success border border-black" />
-                <span className="text-success font-body text-xs">Connected</span>
+              <div className="flex items-center gap-1.5 mt-2">
+                <div className="w-2 h-2 rounded-full" style={{ background: '#2CB67D', boxShadow: '0 0 6px rgba(44,182,125,0.8)' }} />
+                <span className="font-body text-xs" style={{ color: '#2CB67D' }}>Connected</span>
               </div>
             )}
           </div>
         </div>
 
         {/* XP Progress */}
-        <div className="mt-5 flex items-center gap-3">
-          <ProgressRing progress={xpInfo.progress} size={60} color="#F59E0B">
-            <span className="text-white font-pixel text-[8px]">{Math.round(xpInfo.progress)}%</span>
+        <div className="relative mt-6 flex items-center gap-4">
+          <ProgressRing progress={xpInfo.progress} size={58}>
+            <span className="font-heading font-bold text-xs text-white">{Math.round(xpInfo.progress)}%</span>
           </ProgressRing>
           <div className="flex-1">
-            <div className="text-white/60 font-body text-xs mb-1">XP to Level {level + 1}</div>
-            <div className="h-4 bg-black border-2 border-black">
-              <motion.div className="h-full bg-gradient-to-r from-warning to-primary"
-                animate={{ width: `${xpInfo.progress}%` }} transition={{ duration: 0.8 }} />
+            <div className="text-white/50 font-body text-xs mb-1.5">XP to Level {level + 1}</div>
+            <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.1)' }}>
+              <motion.div
+                className="h-full rounded-full"
+                style={{ background: 'linear-gradient(90deg, #FFD60A, #FF9F1C)', boxShadow: '0 0 8px rgba(255,214,10,0.6)' }}
+                animate={{ width: `${xpInfo.progress}%` }}
+                transition={{ duration: 0.8 }}
+              />
             </div>
-            <div className="text-white/50 font-body text-xs mt-1">{xpInfo.current}/{xpInfo.needed} XP</div>
+            <div className="text-white/40 font-body text-xs mt-1">{xpInfo.current}/{xpInfo.needed} XP</div>
           </div>
         </div>
       </div>
 
       {/* Stats Strip */}
-      <div className="px-4 -mt-6 grid grid-cols-4 gap-2 z-10 relative">
+      <div className="px-5 -mt-8 grid grid-cols-4 gap-2 relative z-10">
         {[
-          { icon: '⚡', value: profile.xp, label: 'XP' },
-          { icon: '🔥', value: profile.current_streak, label: 'Streak' },
-          { icon: '📚', value: completedLessons, label: 'Lessons' },
-          { icon: '🏆', value: badges.length, label: 'Badges' },
+          { icon: '⚡', value: profile.xp, label: 'XP', grad: ['#FFD60A', '#FF9F1C'] },
+          { icon: '🔥', value: profile.current_streak, label: 'Streak', grad: ['#FF8906', '#F25F4C'] },
+          { icon: '📚', value: completedLessons, label: 'Lessons', grad: ['#00C2FF', '#5B5FFF'] },
+          { icon: '🏆', value: badges.length, label: 'Badges', grad: ['#7F5AF0', '#2CB67D'] },
         ].map(stat => (
-          <div key={stat.label} className="border-4 border-black bg-pixel-dark p-2 text-center shadow-pixel">
-            <div className="text-xl">{stat.icon}</div>
-            <div className="text-white font-game text-sm">{stat.value}</div>
-            <div className="text-white/40 font-body text-[9px]">{stat.label}</div>
+          <div
+            key={stat.label}
+            className="p-2 rounded-xl text-center"
+            style={{
+              background: `linear-gradient(135deg, rgba(127,90,240,0.15), rgba(44,182,125,0.08))`,
+              border: '1px solid rgba(255,255,255,0.1)',
+              backdropFilter: 'blur(8px)',
+            }}
+          >
+            <div className="text-xl mb-0.5">{stat.icon}</div>
+            <div
+              className="font-heading font-bold text-sm"
+              style={{ background: `linear-gradient(135deg, ${stat.grad[0]}, ${stat.grad[1]})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
+            >
+              {stat.value}
+            </div>
+            <div className="text-white/35 font-body text-[9px] mt-0.5">{stat.label}</div>
           </div>
         ))}
       </div>
 
       {/* Tabs */}
-      <div className="px-4 mt-5">
-        <div className="flex border-4 border-black">
-          {(['overview', 'badges', 'settings'] as const).map(tab => (
-            <button key={tab} onClick={() => setActiveTab(tab)}
-              className={`flex-1 py-2 font-game text-[10px] capitalize transition-colors ${activeTab === tab ? 'bg-primary text-white' : 'bg-pixel-dark text-white/50 hover:text-white'}`}>
-              {tab === 'overview' ? '📊 Stats' : tab === 'badges' ? '🏆 Badges' : '⚙️ Settings'}
+      <div className="px-5 mt-5">
+        <div
+          className="flex rounded-xl p-1"
+          style={{ background: 'rgba(255,255,255,0.06)' }}
+        >
+          {TABS.map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className="flex-1 py-2 rounded-xl font-heading font-semibold text-xs transition-all duration-200"
+              style={activeTab === tab.key ? {
+                background: 'linear-gradient(135deg, #7F5AF0, #2CB67D)',
+                color: 'white',
+                boxShadow: '0 4px 12px rgba(127,90,240,0.4)',
+              } : { color: 'rgba(255,255,255,0.45)' }}
+            >
+              {tab.label}
             </button>
           ))}
         </div>
       </div>
 
-      <div className="px-4 mt-4">
+      <div className="px-5 mt-4 space-y-4">
         {activeTab === 'overview' && (
           <div className="space-y-4">
-            {/* Achievement Stats */}
-            <div className="border-4 border-black bg-pixel-dark p-5 shadow-pixel space-y-3">
-              <h3 className="text-white font-game text-sm">📊 My Journey</h3>
+            {/* Journey Stats */}
+            <div
+              className="p-5 rounded-2xl space-y-3"
+              style={{
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                backdropFilter: 'blur(12px)',
+              }}
+            >
+              <h3 className="font-heading font-bold text-sm text-white">📊 My Journey</h3>
               {[
-                { emoji: '📺', label: 'Lessons Completed', value: completedLessons },
-                { emoji: '⚔️', label: 'Quests Solved', value: completedQuests },
-                { emoji: '🎯', label: 'Missions Submitted', value: submissions },
-                { emoji: '💡', label: 'Inventions Created', value: inventions },
-                { emoji: '🪙', label: 'Coins Earned', value: profile.coins ?? 0 },
-              ].map(item => (
-                <div key={item.label} className="flex items-center justify-between border-b border-white/10 pb-2 last:border-0 last:pb-0">
+                { emoji: '📺', label: 'Lessons Completed', value: completedLessons, grad: ['#00C2FF', '#5B5FFF'] },
+                { emoji: '⚔️', label: 'Quests Solved', value: completedQuests, grad: ['#7F5AF0', '#2CB67D'] },
+                { emoji: '🪙', label: 'Coins Earned', value: profile.coins ?? 0, grad: ['#FFD60A', '#FF9F1C'] },
+                { emoji: '🏆', label: 'Badges Earned', value: badges.length, grad: ['#FF8906', '#F25F4C'] },
+              ].map((item, i) => (
+                <div
+                  key={item.label}
+                  className="flex items-center justify-between py-2 border-b last:border-0"
+                  style={{ borderColor: 'rgba(255,255,255,0.07)' }}
+                >
                   <span className="text-white/70 font-body text-sm">{item.emoji} {item.label}</span>
-                  <span className="text-white font-game text-sm">{item.value}</span>
+                  <span
+                    className="font-heading font-bold text-sm"
+                    style={{ background: `linear-gradient(135deg, ${item.grad[0]}, ${item.grad[1]})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
+                  >
+                    {item.value}
+                  </span>
                 </div>
               ))}
             </div>
 
             {/* Mystery Box */}
-            <div className="border-4 border-black bg-primary/20 p-5">
-              <h3 className="text-white font-game text-sm mb-4">🎁 Mystery Box</h3>
+            <div
+              className="p-5 rounded-2xl"
+              style={{
+                background: 'linear-gradient(135deg, rgba(127,90,240,0.15), rgba(44,182,125,0.08))',
+                border: '1px solid rgba(127,90,240,0.3)',
+                backdropFilter: 'blur(12px)',
+              }}
+            >
+              <h3 className="font-heading font-bold text-sm text-white mb-4">🎁 Mystery Box</h3>
               <div className="flex flex-col items-center">
                 <MysteryBox onOpen={handleOpenBox} isOpen={openBox} reward={boxReward} />
               </div>
@@ -146,35 +221,53 @@ export default function Profile() {
             </div>
 
             {/* Dashboard Link */}
-            <button
+            <motion.button
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => navigate('/dashboard')}
-              className="w-full border-4 border-black bg-blue-game/20 border-blue-game p-4 flex items-center gap-3 text-left hover:bg-blue-game/30 transition-all"
+              className="w-full p-4 rounded-2xl flex items-center gap-3 text-left transition-all"
+              style={{
+                background: 'linear-gradient(135deg, rgba(0,194,255,0.15), rgba(91,95,255,0.08))',
+                border: '1px solid rgba(0,194,255,0.3)',
+                backdropFilter: 'blur(12px)',
+              }}
             >
               <span className="text-3xl">👨‍🏫</span>
               <div>
-                <div className="text-white font-game text-sm">Parent/Teacher Dashboard</div>
-                <div className="text-white/60 font-body text-xs">View progress & download certificate</div>
+                <div className="font-heading font-bold text-sm text-white">Parent/Teacher Dashboard</div>
+                <div className="text-white/50 font-body text-xs">View progress & download certificate</div>
               </div>
-            </button>
+              <ChevronRight className="w-4 h-4 text-white/30 ml-auto" />
+            </motion.button>
           </div>
         )}
 
         {activeTab === 'badges' && (
-          <div className="space-y-4">
-            <div className="text-white/60 font-body text-xs">{badges.length}/{BADGES.length} badges earned</div>
-            {/* Earned */}
+          <div className="space-y-5">
+            <div
+              className="px-3 py-2 rounded-xl inline-block"
+              style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)' }}
+            >
+              <span className="font-body text-xs text-white/60">{badges.length}/{BADGES.length} badges earned</span>
+            </div>
+
             {badges.length > 0 && (
               <div>
-                <h3 className="text-success font-game text-sm mb-3">✅ Earned</h3>
+                <h3
+                  className="font-heading font-bold text-sm mb-3"
+                  style={{ color: '#2CB67D' }}
+                >
+                  ✅ Earned
+                </h3>
                 <div className="grid grid-cols-4 gap-4">
                   {badges.map(b => <Badge key={b.id} emoji={b.emoji} name={b.name} unlocked={true} />)}
                 </div>
               </div>
             )}
-            {/* Locked */}
+
             {lockedBadges.length > 0 && (
               <div>
-                <h3 className="text-white/40 font-game text-sm mb-3">🔒 Locked</h3>
+                <h3 className="font-heading font-bold text-sm mb-3 text-white/35">🔒 Locked</h3>
                 <div className="grid grid-cols-4 gap-4">
                   {lockedBadges.map(b => <Badge key={b.id} emoji={b.emoji} name={b.name} unlocked={false} />)}
                 </div>
@@ -185,23 +278,33 @@ export default function Profile() {
 
         {activeTab === 'settings' && (
           <div className="space-y-4">
-            <div className="border-4 border-black bg-pixel-dark p-5 space-y-3">
-              <h3 className="text-white font-game text-sm">⚙️ Account</h3>
+            <div
+              className="p-5 rounded-2xl space-y-3"
+              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(12px)' }}
+            >
+              <h3 className="font-heading font-bold text-sm text-white">⚙️ Account</h3>
               <Button variant="danger" fullWidth onClick={handleSignOut} icon={<LogOut className="w-4 h-4" />}>
                 Sign Out / Change User
               </Button>
             </div>
 
-            <div className="border-4 border-black bg-pixel-dark p-5 space-y-3">
-              <h3 className="text-white font-game text-sm">🎮 Zone</h3>
-              <p className="text-white/60 font-body text-xs">Current: {profile.zone === 'junior' ? '🚀 Junior Explorer (6-11)' : '🧠 Future Innovator (12-16)'}</p>
-              <button onClick={() => navigate('/onboarding')} className="w-full border-2 border-white/20 bg-white/5 py-2 text-white/70 font-body text-sm hover:bg-white/10">
+            <div
+              className="p-5 rounded-2xl space-y-3"
+              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(12px)' }}
+            >
+              <h3 className="font-heading font-bold text-sm text-white">🎮 Zone</h3>
+              <p className="text-white/50 font-body text-xs">Current: {profile.zone === 'junior' ? '🚀 Junior Explorer (6-11)' : '🧠 Future Innovator (12-16)'}</p>
+              <button
+                onClick={() => navigate('/onboarding')}
+                className="w-full py-2.5 rounded-xl text-white/60 font-body text-sm hover:text-white transition-colors"
+                style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}
+              >
                 Switch Zone
               </button>
             </div>
 
             <div className="text-center text-white/20 font-body text-xs mt-4">
-              AI Explorer v1.0 • Built for India 🇮🇳
+              Quest AI v1.0 • Built for India 🇮🇳
             </div>
           </div>
         )}
