@@ -51,7 +51,7 @@ export async function generateAIIdeas(problem: string, category: string): Promis
   if (GEMINI_API_KEY && GEMINI_API_KEY !== 'your_gemini_api_key_from_aistudio') {
     try {
       const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
       const prompt = `You are a friendly AI educator for children aged 6-16 in India. 
 A student has described a real-world problem: "${problem}" in the category: "${category}".
@@ -87,7 +87,7 @@ export async function generateBrainstormIdea(
   if (GEMINI_API_KEY && GEMINI_API_KEY !== 'your_gemini_api_key_from_aistudio') {
     try {
       const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
       const prompt = `You are a creative AI educator for children in India.
 A student wants to solve this problem:
@@ -129,7 +129,7 @@ export async function generateMissionSuggestions(
   if (GEMINI_API_KEY && GEMINI_API_KEY !== 'your_gemini_api_key_from_aistudio') {
     try {
       const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
       const prompt = `You are a helpful and friendly AI assistant for an educational platform teaching AI to children (aged 6-16).
 The child is working on a weekly mission: "${missionTitle}".
@@ -193,7 +193,7 @@ export async function evaluateMissionSubmission(
   if (GEMINI_API_KEY && GEMINI_API_KEY !== 'your_gemini_api_key_from_aistudio') {
     try {
       const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
       const prompt = `You are a supportive, encouraging, and friendly AI educator. 
 A student has submitted an observation for a weekly challenge.
