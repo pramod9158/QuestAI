@@ -114,10 +114,79 @@ Create one exciting AI project idea. Respond ONLY with a JSON object:
     }
   }
 
-  // Simulated fallback
-  const catIdeas = FALLBACK_IDEAS[category.toLowerCase()] || FALLBACK_IDEAS['school'];
-  const pick = catIdeas[Math.floor(Math.random() * catIdeas.length)];
-  return { ...pick, innovation_score: Math.floor(Math.random() * 30) + 65 };
+  // Simulated fallback: smart keyword matching
+  const probLower = problem.toLowerCase();
+  let name = '';
+  let description = '';
+  
+  if (category.toLowerCase() === 'sports') {
+    if (probLower.includes('hour') || probLower.includes('short') || probLower.includes('time') || probLower.includes('duration') || probLower.includes('period')) {
+      name = "Smart Scheduler AI";
+      description = `AI analyzes student schedules and physical activity needs to automatically allocate and optimize sports periods for maximum active play.`;
+    } else if (probLower.includes('score') || probLower.includes('stat') || probLower.includes('match') || probLower.includes('run')) {
+      name = "Smart Scoreboard";
+      description = `AI automatically tracks scores, player stats, and highlights during local cricket or football matches.`;
+    } else {
+      name = "Cricket Coach AI";
+      description = `AI analyzes your batting stance using your phone camera and gives tips to improve your game!`;
+    }
+  } else if (category.toLowerCase() === 'school') {
+    if (probLower.includes('homework') || probLower.includes('study') || probLower.includes('learn')) {
+      name = "Smart Homework Helper";
+      description = `An AI that understands your weak subjects and creates personalized exercises just for you!`;
+    } else if (probLower.includes('noise') || probLower.includes('loud') || probLower.includes('sound')) {
+      name = "Classroom Noise Monitor";
+      description = `AI detects when classroom noise is too high and gently reminds students, helping teachers stay focused.`;
+    } else {
+      name = "Lost Item Finder";
+      description = `Take a photo of your school bag — AI tracks which books you packed so you never forget homework!`;
+    }
+  } else if (category.toLowerCase() === 'home') {
+    if (probLower.includes('electricity') || probLower.includes('power') || probLower.includes('save') || probLower.includes('light')) {
+      name = "Smart Electricity Saver";
+      description = `AI learns your family's daily routine and automatically turns off lights and fans in empty rooms.`;
+    } else if (probLower.includes('food') || probLower.includes('waste') || probLower.includes('fridge') || probLower.includes('eat')) {
+      name = "Food Waste Reducer";
+      description = `AI tracks food in your fridge and suggests recipes using ingredients before they go bad.`;
+    } else {
+      name = "Family Safety Guard";
+      description = `AI doorbell recognizes family members and alerts you on your phone when strangers approach.`;
+    }
+  } else if (category.toLowerCase() === 'environment') {
+    if (probLower.includes('water') || probLower.includes('plant') || probLower.includes('soil')) {
+      name = "Plant Water Reminder";
+      description = `AI monitors soil moisture and reminds you when your plants need watering — no more dead plants!`;
+    } else if (probLower.includes('fire') || probLower.includes('forest') || probLower.includes('burn')) {
+      name = "Forest Fire Early Warning";
+      description = `AI analyzes satellite images to spot forest fires before they spread, alerting firefighters.`;
+    } else {
+      name = "River Pollution Detector";
+      description = `AI-powered sensors in rivers detect pollution levels and alert authorities immediately.`;
+    }
+  } else if (category.toLowerCase() === 'transport') {
+    if (probLower.includes('bus') || probLower.includes('late') || probLower.includes('route') || probLower.includes('map')) {
+      name = "Smart Bus Tracker";
+      description = `AI predicts when the school bus will arrive based on traffic patterns and sends alerts to your phone.`;
+    } else if (probLower.includes('traffic') || probLower.includes('jam') || probLower.includes('road')) {
+      name = "Traffic Flow Optimizer";
+      description = `AI analyzes traffic near school gates and suggests the best pickup/drop-off times.`;
+    } else {
+      name = "Safe Route Finder";
+      description = `AI maps the safest walking routes to school, avoiding dangerous crossings and heavy traffic.`;
+    }
+  } else {
+    // Pick the category fallback
+    const catIdeas = FALLBACK_IDEAS[category.toLowerCase()] || FALLBACK_IDEAS['school'];
+    const pick = catIdeas[0];
+    name = pick.name;
+    description = pick.description;
+  }
+
+  return {
+    name,
+    description,
+    innovation_score: Math.floor(Math.random() * 20) + 75
+  };
 }
 
 // Generate real-time hints and suggestions for weekly missions based on the current draft
