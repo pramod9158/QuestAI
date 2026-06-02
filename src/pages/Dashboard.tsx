@@ -3,10 +3,11 @@ import { motion } from 'framer-motion';
 import { useCurrentProfile } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/Button';
 import { getLevel, getEarnedBadges } from '@/lib/gamification';
-import { FileDown, ArrowLeft } from 'lucide-react';
+import { FileDown, ArrowLeft, MessageSquare, Sparkles, Send } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { generateParentAssistantResponse } from '@/lib/gemini';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -25,6 +26,59 @@ export default function Dashboard() {
 
   const badges = profile ? getEarnedBadges(profile.xp, profile.current_streak) : [];
   const level = profile ? getLevel(profile.xp) : 1;
+
+  // AI Parent Companion chat states
+  const [chatInput, setChatInput] = useState('');
+  const [chatMessages, setChatMessages] = useState<{ role: 'user' | 'assistant'; text: string }[]>([
+    { role: 'assistant', text: `Hi there! I am your QuestAI Parent Companion. Ask me anything about ${profile?.username || 'your child'}'s progress, strengths, or inventions!` }
+  ]);
+  const [sendingChat, setSendingChat] = useState(false);
+
+  const handleSendChat = async (messageText?: string) => {
+    const textToSend = messageText || chatInput;
+    if (!textToSend.trim() || sendingChat) return;
+
+    // Append user message
+    const newMessages = [...chatMessages, { role: 'user' as const, text: textToSend }];
+    setChatMessages(newMessages);
+    if (!messageText) setChatInput('');
+    setSendingChat(true);
+
+    // Prepare student data payload
+    const rawSubs = JSON.parse(localStorage.getItem('mission_submissions') || '[]');
+    const rawInventions = JSON.parse(localStorage.getItem('guest_inventions') || '[]');
+    const formattedSubs = rawSubs.map((s: any) => ({
+      text: s.text,
+      score: s.score || 100,
+      feedback: s.feedback || ''
+    }));
+    const formattedInventions = rawInventions.map((i: any) => ({
+      name: i.name,
+      description: i.description,
+      innovation_score: i.innovation_score || 80
+    }));
+
+    const studentData = {
+      username: profile?.username || 'Student',
+      level,
+      xp: profile?.xp || 0,
+      completedLessons,
+      completedQuests,
+      completedMissions: submissions,
+      inventions: formattedInventions,
+      observations: formattedSubs,
+      streak: profile?.current_streak || 0
+    };
+
+    try {
+      const response = await generateParentAssistantResponse(studentData, textToSend);
+      setChatMessages(prev => [...prev, { role: 'assistant', text: response }]);
+    } catch (err) {
+      setChatMessages(prev => [...prev, { role: 'assistant', text: "Sorry, I had trouble analyzing the progress right now. Please try again." }]);
+    } finally {
+      setSendingChat(false);
+    }
+  };
 
   if (!pinVerified) {
     return (
@@ -190,6 +244,88 @@ export default function Dashboard() {
           <Button variant="success" fullWidth loading={generating} onClick={generateCertificate} icon={<FileDown className="w-4 h-4" />}>
             Download PDF Certificate
           </Button>
+        </div>
+
+        {/* QuestAI Parent Companion Chat */}
+        <div
+          className="p-5 rounded-2xl space-y-4"
+          style={{ background: 'linear-gradient(135deg, rgba(127,90,240,0.15), rgba(0,196,255,0.08))', border: '1px solid rgba(127,90,240,0.3)', backdropFilter: 'blur(12px)' }}
+        >
+          <div className="flex items-center gap-2">
+            <MessageSquare className="w-5 h-5 text-primary" />
+            <h3 className="font-heading font-bold text-sm text-white flex items-center gap-1.5">
+              🤖 QuestAI Parent Companion <span className="bg-primary/20 text-primary-light text-[8px] font-heading px-1.5 py-0.5 rounded border border-primary/30 uppercase tracking-wider">AI Coach</span>
+            </h3>
+          </div>
+          
+          <p className="text-white/60 font-body text-xs leading-relaxed">
+            Get instant AI insights about your child's lessons, observations, inventions, and personalized learning tips.
+          </p>
+
+          {/* Chat Messages */}
+          <div className="space-y-3 bg-black/30 border border-white/5 rounded-xl p-3 max-h-60 overflow-y-auto">
+            {chatMessages.map((msg, index) => (
+              <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <div
+                  className={`p-3 rounded-xl max-w-[85%] text-xs font-body leading-relaxed ${
+                    msg.role === 'user'
+                      ? 'bg-primary text-white rounded-tr-none'
+                      : 'bg-white/10 text-white/90 rounded-tl-none border border-white/5'
+                  }`}
+                >
+                  {msg.role === 'assistant' && (
+                    <span className="text-[8px] font-heading text-primary-light block mb-1 uppercase tracking-wider">🤖 QuestAI Assistant</span>
+                  )}
+                  {msg.text}
+                </div>
+              </div>
+            ))}
+            {sendingChat && (
+              <div className="flex justify-start">
+                <div className="bg-white/10 p-3 rounded-xl rounded-tl-none border border-white/5 text-xs text-white/50 font-body flex items-center gap-1">
+                  <Sparkles className="w-3.5 h-3.5 text-primary animate-spin" /> Thinking...
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Quick Suggestion Chips */}
+          <div className="flex flex-wrap gap-2">
+            {[
+              { label: "📋 Summarize progress", query: "Summarize my child's learning progress and current report." },
+              { label: "💡 Recommend next steps", query: "What are some areas my child can improve in, and what should they study next?" },
+              { label: "✨ Highlight child's creativity", query: "What are some creative inventions or observations my child submitted?" }
+            ].map((chip) => (
+              <button
+                key={chip.label}
+                disabled={sendingChat}
+                onClick={() => handleSendChat(chip.query)}
+                className="text-[10px] font-body bg-white/5 hover:bg-white/10 text-white/70 hover:text-white px-2.5 py-1 rounded-full border border-white/10 hover:border-primary/40 transition-all cursor-pointer animate-none"
+              >
+                {chip.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Chat Input */}
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSendChat()}
+              placeholder="Ask anything about their progress..."
+              disabled={sendingChat}
+              className="flex-1 bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-white/30 focus:outline-none focus:border-primary/50"
+            />
+            <button
+              onClick={() => handleSendChat()}
+              disabled={sendingChat || !chatInput.trim()}
+              className="bg-primary hover:bg-primary-light text-white p-2 rounded-xl transition-colors disabled:opacity-40 disabled:hover:bg-primary flex items-center justify-center cursor-pointer"
+            >
+              <Send className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
 

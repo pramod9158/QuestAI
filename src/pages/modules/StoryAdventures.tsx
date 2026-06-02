@@ -5,8 +5,9 @@ import { STORY_QUESTS } from '@/data/curriculum';
 import { Button } from '@/components/ui/Button';
 import { XPToast } from '@/components/ui/GameUI';
 import { useAuth } from '@/contexts/AuthContext';
-import { Lock, Star, ChevronRight, ArrowLeft } from 'lucide-react';
+import { Lock, Star, ChevronRight, ArrowLeft, Zap } from 'lucide-react';
 import { SpeakButton } from '@/components/ui/GameUI';
+import { evaluateStoryReflection } from '@/lib/gemini';
 
 const QUEST_STEPS = {
   canteen: [
@@ -32,6 +33,45 @@ export default function StoryAdventures() {
   const [currentStep, setCurrentStep] = useState(0);
   const [showXP, setShowXP] = useState(false);
   const completedQuests = profile?.completed_quests || [];
+
+  // Interactive Reflection states
+  const [reflectionText, setReflectionText] = useState('');
+  const [evaluatingReflection, setEvaluatingReflection] = useState(false);
+  const [reflectionFeedback, setReflectionFeedback] = useState<string | null>(null);
+  const [reflectionBonusXp, setReflectionBonusXp] = useState(0);
+
+  const handleSubmitReflection = async () => {
+    if (!selectedQuest || !reflectionText.trim() || evaluatingReflection) return;
+    setEvaluatingReflection(true);
+
+    const steps = QUEST_STEPS[selectedQuest as keyof typeof QUEST_STEPS];
+    const step = steps[currentStep];
+    const quest = STORY_QUESTS.find(q => q.id === selectedQuest)!;
+
+    try {
+      const res = await evaluateStoryReflection(quest.title, step.question || '', reflectionText);
+
+      // Update XP
+      const currentProfileXP = isGuest ? (guestProfile?.xp ?? 0) : (profile?.xp ?? 0);
+      await updateProfile({
+        xp: currentProfileXP + res.bonusXp
+      });
+
+      setReflectionFeedback(res.feedback);
+      setReflectionBonusXp(res.bonusXp);
+    } catch (err) {
+      console.error('Failed to evaluate reflection:', err);
+    } finally {
+      setEvaluatingReflection(false);
+    }
+  };
+
+  const handleNextStep = () => {
+    setReflectionText('');
+    setReflectionFeedback(null);
+    setReflectionBonusXp(0);
+    setCurrentStep(s => s + 1);
+  };
 
   const handleQuestComplete = async (questId: string, xpReward: number) => {
     if (!completedQuests.includes(questId)) {
@@ -67,7 +107,7 @@ export default function StoryAdventures() {
 
         {/* Quest Header */}
         <div className="bg-gradient-to-b from-primary/40 to-pixel-darker p-5">
-          <button onClick={() => { setSelectedQuest(null); setCurrentStep(0); }} className="flex items-center gap-2 text-white/60 hover:text-white font-body text-sm mb-3">
+          <button onClick={() => { setSelectedQuest(null); setCurrentStep(0); handleNextStep(); }} className="flex items-center gap-2 text-white/60 hover:text-white font-body text-sm mb-3">
             <ArrowLeft className="w-4 h-4" /> Quest Map
           </button>
           <h1 className="text-white font-game text-lg">{quest.title}</h1>
@@ -105,9 +145,43 @@ export default function StoryAdventures() {
               </div>
 
               {step.question && (
-                <div className="border-4 border-warning bg-warning/10 p-4">
-                  <p className="text-warning font-game text-xs">🤔 Think about it:</p>
-                  <p className="text-white font-body text-sm mt-1">{step.question}</p>
+                <div className="border-4 border-warning bg-warning/10 p-4 space-y-3">
+                  <div>
+                    <p className="text-warning font-game text-xs">🤔 Think about it:</p>
+                    <p className="text-white font-body text-sm mt-1">{step.question}</p>
+                  </div>
+                  {reflectionFeedback ? (
+                    <div className="border-2 border-black bg-black/40 p-3 relative mt-2 rounded">
+                      <div className="absolute -top-2.5 left-3 bg-primary text-black font-game text-[8px] px-1.5 py-0.5 border border-black">
+                        🤖 AI Tutor Feedback
+                      </div>
+                      <p className="text-white/95 font-body text-xs leading-relaxed mt-1">
+                        {reflectionFeedback}
+                      </p>
+                      <div className="text-[10px] font-game text-warning mt-2 flex items-center gap-1">
+                        <Zap className="w-3.5 h-3.5 text-warning animate-bounce" /> +{reflectionBonusXp} XP Awarded!
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <textarea
+                        value={reflectionText}
+                        onChange={(e) => setReflectionText(e.target.value)}
+                        placeholder="Write down your thoughts or suggestions here..."
+                        className="pixel-input h-20 resize-none text-xs"
+                      />
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        fullWidth
+                        loading={evaluatingReflection}
+                        disabled={reflectionText.trim().length < 5}
+                        onClick={handleSubmitReflection}
+                      >
+                        🧠 Submit Reflection for Feedback
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -118,12 +192,12 @@ export default function StoryAdventures() {
                     <div className="text-white font-game text-lg">Quest Complete!</div>
                     <div className="text-warning font-pixel text-sm mt-1">+{quest.xpReward} XP Earned!</div>
                   </div>
-                  <Button variant="success" fullWidth onClick={() => { handleQuestComplete(quest.id, quest.xpReward); setSelectedQuest(null); setCurrentStep(0); }}>
+                  <Button variant="success" fullWidth onClick={() => { handleQuestComplete(quest.id, quest.xpReward); setSelectedQuest(null); setCurrentStep(0); handleNextStep(); }}>
                     Claim Reward & Return! 🗺️
                   </Button>
                 </div>
               ) : (
-                <Button variant="primary" fullWidth onClick={() => setCurrentStep(s => s + 1)}>
+                <Button variant="primary" fullWidth onClick={handleNextStep}>
                   Continue the Story <ChevronRight className="w-4 h-4" />
                 </Button>
               )}

@@ -317,3 +317,127 @@ Do not include any formatting, markdown, or other text outside the JSON object.`
   };
 }
 
+// Generate parent dashboard assistant response
+export async function generateParentAssistantResponse(
+  studentData: {
+    username: string;
+    level: number;
+    xp: number;
+    completedLessons: number;
+    completedQuests: number;
+    completedMissions: number;
+    inventions: { name: string; description: string; innovation_score: number }[];
+    observations: { text: string; score: number; feedback: string }[];
+    streak: number;
+  },
+  parentMessage: string
+): Promise<string> {
+  if (GEMINI_API_KEY && GEMINI_API_KEY !== 'your_gemini_api_key_from_aistudio') {
+    try {
+      const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+      const prompt = `You are a friendly, encouraging, and knowledgeable AI educational counselor at QuestAI, a platform that teaches AI and design thinking to children.
+A parent wants to know about their child's progress. Here is the child's data:
+- Name: ${studentData.username}
+- Current Level: ${studentData.level}
+- Total XP: ${studentData.xp}
+- Lessons completed: ${studentData.completedLessons}/12
+- Story Adventures completed: ${studentData.completedQuests}/8
+- Weekly Field Missions completed: ${studentData.completedMissions}/4
+- Daily streak: ${studentData.streak} days
+- Brainstormed Inventions: ${JSON.stringify(studentData.inventions || [])}
+- Submitted Real-world Observations: ${JSON.stringify(studentData.observations || [])}
+
+The parent asks: "${parentMessage}"
+
+Give a warm, personalized, and insightful response (max 4-5 sentences or a short bulleted list) in simple, supportive English.
+Acknowledge their child's accomplishments (especially highlight any cool inventions or observations they submitted!).
+Suggest 1 specific activity or next step they can do on the platform to continue learning.`;
+
+      const result = await model.generateContent(prompt);
+      return result.response.text().trim();
+    } catch (err) {
+      console.warn('Gemini API failed to generate parent dashboard response:', err);
+    }
+  }
+
+  // Local fallback summaries
+  const msg = parentMessage.toLowerCase();
+  const child = studentData.username || "your child";
+  const inventionsCount = studentData.inventions?.length || 0;
+  const observationsCount = studentData.observations?.length || 0;
+  
+  if (msg.includes("summarize") || msg.includes("progress") || msg.includes("report") || msg.includes("how is")) {
+    return `Hello! ${child} is doing fantastic on QuestAI. They have reached Level ${studentData.level} with ${studentData.xp} XP! They completed ${studentData.completedLessons} lessons and ${studentData.completedQuests} Story Adventures. They've also submitted ${observationsCount} field observations and dreamed up ${inventionsCount} cool AI inventions! I suggest they try more Weekly Field Missions next to put their knowledge into practice!`;
+  }
+  if (msg.includes("invention") || msg.includes("creative") || msg.includes("strengths") || msg.includes("invent")) {
+    if (inventionsCount > 0) {
+      const topInvention = studentData.inventions[0];
+      return `QuestAI encourages creativity, and ${child} shows great innovation! They brainstormed "${topInvention.name}": ${topInvention.description}. This project has an innovation score of ${topInvention.innovation_score}%! They are great at connecting AI solutions to real-world problems.`;
+    }
+    return `${child} is building strong analytical skills by completing lessons. To boost their creativity, encourage them to visit the 'Brainstorm Playground' module, where they can build their own AI inventions!`;
+  }
+  // Generic response
+  return `Hello! ${child} has earned ${studentData.xp} XP and is currently at Level ${studentData.level}. They have completed ${studentData.completedLessons} lessons, ${studentData.completedQuests} story adventures, and ${observationsCount} missions. Encourage them to keep logging in daily to maintain their ${studentData.streak}-day streak! Let me know if you want to know about their specific inventions or observations.`;
+}
+
+// Evaluate a child's reflection on story adventures
+export async function evaluateStoryReflection(
+  questTitle: string,
+  questionText: string,
+  reflectionText: string
+): Promise<{ feedback: string; bonusXp: number }> {
+  if (GEMINI_API_KEY && GEMINI_API_KEY !== 'your_gemini_api_key_from_aistudio') {
+    try {
+      const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+      const prompt = `You are a supportive, high-energy robot tutor companion for children learning AI.
+The child is doing a story adventure quest titled "${questTitle}".
+They just read a scenario and were asked: "${questionText}".
+The child typed this reflection: "${reflectionText}"
+
+Evaluate their reflection. Be extremely encouraging and positive.
+1. Provide a kid-friendly validation message (max 15-20 words). Acknowledge something they said.
+2. Decide a bonus XP (between 5 and 15) depending on the effort and quality of the response.
+
+Respond ONLY with a JSON object. Format:
+{
+  "feedback": "<friendly validation message>",
+  "bonusXp": <number between 5 and 15>
+}
+Do not include any formatting, markdown, or other text outside the JSON object.`;
+
+      const result = await model.generateContent(prompt);
+      const text = result.response.text().trim();
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const evalResult = JSON.parse(jsonMatch[0]);
+        if (evalResult.feedback && typeof evalResult.bonusXp === 'number') {
+          return {
+            feedback: evalResult.feedback,
+            bonusXp: evalResult.bonusXp
+          };
+        }
+      }
+    } catch (err) {
+      console.warn('Gemini API failed to evaluate story reflection:', err);
+    }
+  }
+
+  // Fallback
+  const cleanText = reflectionText.trim();
+  const wordCount = cleanText.split(/\s+/).filter(Boolean).length;
+  if (wordCount < 3) {
+    return {
+      feedback: "Nice try! Try writing a bit more about how you would solve this next time!",
+      bonusXp: 5
+    };
+  }
+  return {
+    feedback: "Spot on! That is a very creative way to think about this problem and use smart tech!",
+    bonusXp: 10
+  };
+}
+
