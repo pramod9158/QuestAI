@@ -183,10 +183,10 @@ export default function WeeklyMissions() {
         <p className="text-white/60 font-body text-sm mt-1">Real-world field challenges — earn massive XP!</p>
 
         {/* Tabs */}
-        <div className="flex mt-4 border-4 border-black">
+        <div className="flex mt-4 border-4 border-black rounded-2xl overflow-hidden shadow-[0px_4px_0px_0px_#000000]">
           {(['missions', 'submissions'] as const).map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)}
-              className={`flex-1 py-2 font-game text-xs capitalize transition-colors ${activeTab === tab ? 'bg-primary text-white' : 'bg-pixel-dark text-white/50 hover:text-white'}`}>
+              className={`flex-1 py-2 font-game text-xs capitalize transition-all duration-100 ${activeTab === tab ? 'bg-primary text-white' : 'bg-pixel-dark text-white/50 hover:text-white'}`}>
               {tab === 'missions' ? '🎯 Active Missions' : '📋 My Submissions'}
             </button>
           ))}
@@ -204,7 +204,7 @@ export default function WeeklyMissions() {
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.08 }}
-                  className={`border-4 border-black p-5 shadow-pixel ${done ? 'bg-success/20 border-success' : 'bg-pixel-dark'}`}
+                  className={`border-4 border-black p-5 rounded-3xl shadow-[0px_6px_0px_0px_rgba(0,0,0,0.85)] hover:scale-[1.01] transition-all ${done ? 'bg-success/20 border-success shadow-[0px_6px_0px_0px_rgba(16,185,129,0.3)]' : 'bg-pixel-dark hover:shadow-[0px_8px_0px_0px_rgba(0,0,0,1)]'}`}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1">
@@ -212,10 +212,10 @@ export default function WeeklyMissions() {
                         <span className="text-2xl">{m.emoji}</span>
                         <div>
                           <div className="text-white font-game text-sm">{m.title}</div>
-                          <span className={`text-xs font-body border border-black px-2 py-0.5 ${
-                            m.difficulty === 'Easy' ? 'bg-success/30 text-green-300' :
-                            m.difficulty === 'Medium' ? 'bg-warning/30 text-yellow-300' :
-                            'bg-pixel-red/30 text-red-300'
+                          <span className={`text-[10px] font-game border-2 border-black px-2 py-0.5 rounded-xl shadow-[0px_2px_0px_0px_#000000] inline-block w-fit ${
+                            m.difficulty === 'Easy' ? 'bg-success text-white' :
+                            m.difficulty === 'Medium' ? 'bg-warning text-black' :
+                            'bg-pixel-red text-white'
                           }`}>
                             {m.difficulty}
                           </span>
@@ -237,8 +237,8 @@ export default function WeeklyMissions() {
                     </Button>
                   )}
                   {done && (
-                    <div className="mt-3 bg-success/10 border-t-2 border-success/30 pt-2 text-center">
-                      <span className="text-success font-body text-xs">✅ Mission Completed!</span>
+                    <div className="mt-3 bg-success/10 border-2 border-success/30 py-2 text-center rounded-xl">
+                      <span className="text-success font-game text-[10px]">✅ Mission Completed!</span>
                     </div>
                   )}
                 </motion.div>
@@ -257,16 +257,16 @@ export default function WeeklyMissions() {
             ) : submissions.map((s, i) => {
               const m = WEEKLY_MISSIONS_DATA.find(m => m.id === s.missionId);
               return (
-                <div key={i} className="border-4 border-black bg-success/10 border-success p-4">
+                <div key={i} className="border-4 border-black bg-success/10 border-success p-4.5 rounded-3xl shadow-[0px_5px_0px_0px_rgba(16,185,129,0.3)]">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-xl">{m?.emoji}</span>
                     <div className="flex-1">
                       <div className="text-white font-game text-sm">{m?.title}</div>
                       <div className="text-white/50 font-body text-xs">{new Date(s.submittedAt).toLocaleDateString()}</div>
                     </div>
-                    <span className="bg-success border-2 border-black text-white font-pixel text-[9px] px-2 py-1">+{s.xp} XP</span>
+                    <span className="bg-success border-2 border-black text-white font-pixel text-[8px] px-2.5 py-1 rounded-lg shadow-[0px_2px_0px_0px_rgba(0,0,0,1)]">+{s.xp} XP</span>
                   </div>
-                  <div className="bg-black/20 border-l-4 border-success p-3">
+                  <div className="bg-black/25 border-l-4 border-success p-3 rounded-r-2xl rounded-l-sm">
                     <p className="text-white/80 font-body text-sm italic">"{s.text}"</p>
                   </div>
                 </div>
@@ -289,10 +289,10 @@ export default function WeeklyMissions() {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="w-full max-w-md border-4 border-black bg-pixel-dark my-auto shadow-pixel-lg"
+              className="w-full max-w-md pixel-card-promax my-auto"
             >
               {/* Header */}
-              <div className="border-b-4 border-black p-4 flex items-center gap-3 bg-pixel-darker">
+              <div className="border-b-4 border-black p-4 flex items-center gap-3 bg-pixel-darker/60">
                 <span className="text-3xl">{mission.emoji}</span>
                 <div>
                   <div className="text-white font-game text-sm">{mission.title}</div>
@@ -324,12 +324,12 @@ export default function WeeklyMissions() {
                   </label>
                   <textarea value={text} onChange={e => setText(e.target.value)}
                     placeholder="Provide your detailed observation here..."
-                    className="pixel-input h-28 resize-none text-xs" maxLength={500} />
+                    className="pixel-input h-28 resize-none text-xs focus:ring-2 focus:ring-primary/40" maxLength={500} />
                   <div className="text-right text-white/30 font-body text-xs mt-1">{text.length}/500</div>
                 </div>
 
                 {/* Validation Checklist */}
-                <div className="border-2 border-black bg-pixel-darker p-3">
+                <div className={`border-2 border-black bg-pixel-darker p-3.5 rounded-2xl transition-all duration-300 shadow-[inset_0px_2px_4px_rgba(0,0,0,0.5)] ${validation.isValid ? 'border-success/40' : ''}`}>
                   <div className="text-white/50 font-game text-[9px] uppercase tracking-wider mb-2">AI Verification Checklist</div>
                   <div className="space-y-1.5">
                     {validation.requirements.map((req, index) => (
@@ -339,7 +339,7 @@ export default function WeeklyMissions() {
                         ) : (
                           <XCircle className="w-3.5 h-3.5 text-pixel-red flex-shrink-0 mt-0.5 opacity-60" />
                         )}
-                        <span className={`text-[10px] font-body transition-colors leading-tight ${req.done ? 'text-white' : 'text-white/40'}`}>
+                        <span className={`text-[10px] font-body transition-colors leading-tight ${req.done ? 'text-white font-semibold' : 'text-white/40'}`}>
                           {req.label}
                         </span>
                       </div>
@@ -349,8 +349,15 @@ export default function WeeklyMissions() {
 
                 {/* Submit / Cancel Buttons */}
                 <div className="flex gap-3 pt-2">
-                  <Button variant="ghost" onClick={() => { setSelectedMission(null); setText(''); }}>Cancel</Button>
-                  <Button variant="success" fullWidth loading={submitting} disabled={!validation.isValid} onClick={handleSubmit}>
+                  <Button variant="ghost" onClick={() => { setSelectedMission(null); setText(''); }} className="flex-1">Cancel</Button>
+                  <Button
+                    variant="success"
+                    fullWidth
+                    loading={submitting}
+                    disabled={!validation.isValid}
+                    onClick={handleSubmit}
+                    className={validation.isValid ? 'animate-pulse-glow-pro flex-[2]' : 'flex-[2]'}
+                  >
                     Submit Mission! 🚀
                   </Button>
                 </div>

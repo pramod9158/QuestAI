@@ -75,7 +75,7 @@ export default function QuizArena() {
       <div className="px-4 pt-6 space-y-4">
         <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
           onClick={() => { setMode('time-attack'); setTimeLeft(15); }}
-          className="border-4 border-pixel-red bg-pixel-red/20 p-6 cursor-pointer shadow-pixel-red"
+          className="border-4 border-pixel-red bg-pixel-red/20 p-6 rounded-3xl cursor-pointer shadow-[0px_6px_0px_0px_#EF4444] transition-all hover:scale-[1.01]"
         >
           <div className="flex items-center gap-4">
             <Timer className="w-12 h-12 text-red-400" />
@@ -88,7 +88,7 @@ export default function QuizArena() {
         </motion.div>
         <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
           onClick={() => setMode('casual')}
-          className="border-4 border-success bg-success/20 p-6 cursor-pointer shadow-pixel-green"
+          className="border-4 border-success bg-success/20 p-6 rounded-3xl cursor-pointer shadow-[0px_6px_0px_0px_#10B981] transition-all hover:scale-[1.01]"
         >
           <div className="flex items-center gap-4">
             <Trophy className="w-12 h-12 text-green-400" />
@@ -112,7 +112,7 @@ export default function QuizArena() {
           {pct === 100 ? 'PERFECT SCORE!' : pct >= 70 ? 'Great Job!' : pct >= 40 ? 'Good Try!' : 'Keep Learning!'}
         </h2>
       </motion.div>
-      <div className="w-full border-4 border-black bg-pixel-dark p-6 shadow-pixel space-y-4">
+      <div className="w-full border-4 border-black bg-pixel-dark p-6 rounded-3xl shadow-[0px_6px_0px_0px_rgba(0,0,0,0.85)] space-y-4">
         <div className="flex justify-between">
           <span className="text-white/60 font-body text-sm">Correct:</span>
           <span className="text-success font-game text-base">{score}/{questions.length}</span>
@@ -130,7 +130,7 @@ export default function QuizArena() {
           <div className="text-white/50 font-body text-xs mb-2">Answer Review:</div>
           <div className="flex flex-wrap gap-2">
             {questions.map((q, i) => (
-              <div key={i} className={`w-8 h-8 border-2 border-black flex items-center justify-center font-pixel text-[9px] ${answers[i] === q.correct ? 'bg-success' : 'bg-pixel-red'}`}>
+              <div key={i} className={`w-8 h-8 border-2 border-black flex items-center justify-center font-pixel text-[9px] rounded-lg shadow-[0px_2px_0px_0px_rgba(0,0,0,1)] ${answers[i] === q.correct ? 'bg-success' : 'bg-pixel-red'}`}>
                 {i + 1}
               </div>
             ))}
@@ -144,23 +144,23 @@ export default function QuizArena() {
   return (
     <div className="min-h-full bg-pixel-darker flex flex-col">
       {/* Quiz Header */}
-      <div className={`p-4 border-b-4 border-black ${mode === 'time-attack' ? 'bg-pixel-red/30' : 'bg-success/20'}`}>
+      <div className={`p-4 border-b-4 border-black rounded-b-3xl shadow-[0px_5px_0px_0px_rgba(0,0,0,0.85)] ${mode === 'time-attack' ? 'bg-pixel-red/30' : 'bg-success/20'}`}>
         <div className="flex items-center justify-between">
           <span className="text-white font-body text-sm">{currentQ + 1}/{questions.length}</span>
           <span className="text-white font-game text-sm">{mode === 'time-attack' ? '⚡ Time Attack' : '😊 Casual'}</span>
           <span className="text-warning font-pixel text-[10px]">+{xpEarned} XP</span>
         </div>
         {/* Progress bar */}
-        <div className="mt-2 h-2 bg-black border border-black">
-          <div className="h-full bg-primary transition-all duration-300" style={{ width: `${(currentQ / questions.length) * 100}%` }} />
+        <div className="mt-2 h-3 bg-black/60 border border-black rounded-full overflow-hidden">
+          <div className="h-full bg-primary transition-all duration-300 rounded-full" style={{ width: `${(currentQ / questions.length) * 100}%` }} />
         </div>
         {/* Timer */}
         {mode === 'time-attack' && (
           <div className="mt-2 flex items-center gap-2">
             <Timer className="w-4 h-4 text-red-400" />
-            <div className="flex-1 h-3 bg-black border border-black">
+            <div className="flex-1 h-4.5 bg-black/60 border border-black rounded-full overflow-hidden">
               <motion.div
-                className="h-full bg-pixel-red"
+                className="h-full bg-pixel-red rounded-full"
                 animate={{ width: `${(timeLeft / 15) * 100}%` }}
                 transition={{ duration: 0.3 }}
               />
@@ -174,7 +174,7 @@ export default function QuizArena() {
       <div className="flex-1 p-5 flex flex-col gap-5">
         <AnimatePresence mode="wait">
           <motion.div key={currentQ} initial={{ x: 60, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -60, opacity: 0 }}>
-            <div className="border-4 border-black bg-pixel-dark p-5 shadow-pixel">
+            <div className="border-4 border-black bg-pixel-dark p-5.5 rounded-3xl shadow-[0px_6px_0px_0px_#000000]">
               <div className="text-4xl text-center mb-4">{q.emoji}</div>
               <p className="text-white font-game text-base text-center leading-relaxed">{q.question}</p>
             </div>
@@ -184,18 +184,22 @@ export default function QuizArena() {
         {/* Options */}
         <div className="space-y-3">
           {q.options.map((opt, i) => {
-            let bg = 'bg-pixel-dark hover:bg-white/5';
+            let optionStyles = 'bg-pixel-dark border-black text-white hover:bg-white/10 hover:scale-[1.02] hover:-rotate-0.5 shadow-[0px_6px_0px_0px_rgba(0,0,0,1)]';
             if (selected !== null) {
-              if (i === q.correct) bg = 'bg-success border-success';
-              else if (i === selected) bg = 'bg-pixel-red border-pixel-red';
-              else bg = 'bg-pixel-dark opacity-40';
+              if (i === q.correct) {
+                optionStyles = 'bg-gradient-to-r from-success to-success-light border-black text-white shadow-[0px_4px_0px_0px_#000000,inset_0px_3px_0px_0px_rgba(255,255,255,0.4)]';
+              } else if (i === selected) {
+                optionStyles = 'bg-gradient-to-r from-pixel-red to-red-400 border-black text-white shadow-[0px_4px_0px_0px_#000000,inset_0px_3px_0px_0px_rgba(255,255,255,0.4)]';
+              } else {
+                optionStyles = 'bg-pixel-dark opacity-40 border-black text-white/50 shadow-none pointer-events-none';
+              }
             }
             return (
               <motion.button
                 key={i}
                 whileTap={selected === null ? { scale: 0.97 } : {}}
                 onClick={() => handleAnswer(i)}
-                className={`w-full border-4 border-black ${bg} p-4 text-left font-body text-sm text-white transition-all shadow-pixel active:translate-y-1 active:shadow-none`}
+                className={`w-full border-4 ${optionStyles} p-4 text-left font-game text-xs transition-all active:translate-y-0.5 active:shadow-none cursor-pointer rounded-2xl`}
               >
                 <span className="font-pixel text-[10px] text-white/50 mr-2">{String.fromCharCode(65 + i)}.</span>
                 {opt}
@@ -208,7 +212,7 @@ export default function QuizArena() {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`border-4 border-black p-3 text-center ${selected === q.correct ? 'bg-success/20 border-success' : 'bg-primary/20'}`}
+            className={`border-4 border-black p-4 rounded-2xl text-center shadow-[0px_4px_0px_0px_rgba(0,0,0,0.85)] ${selected === q.correct ? 'bg-success/20 border-success' : 'bg-primary/20'}`}
           >
             <span className="text-white font-game text-sm">
               {selected === q.correct ? '✅ Correct! +' + (mode === 'time-attack' ? q.xp + Math.max(0, timeLeft) : q.xp) + ' XP!' : '💡 The answer was: ' + q.options[q.correct]}

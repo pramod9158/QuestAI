@@ -62,12 +62,12 @@ export default function Auth() {
           </div>
 
           {/* Tabs */}
-          <div className="flex border-4 border-black">
+          <div className="flex border-4 border-black rounded-2xl overflow-hidden shadow-[0px_4px_0px_0px_#000000]">
             {(['login', 'signup'] as const).map((t) => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
-                className={`flex-1 py-3 font-game text-sm transition-colors ${tab === t ? 'bg-primary text-white' : 'bg-pixel-dark text-white/50 hover:text-white'}`}
+                className={`flex-1 py-3 font-game text-sm transition-all duration-100 ${tab === t ? 'bg-primary text-white' : 'bg-pixel-dark text-white/50 hover:text-white'}`}
               >
                 {t === 'login' ? '🔑 Sign In' : '⭐ Sign Up'}
               </button>
@@ -101,10 +101,10 @@ export default function Auth() {
             </div>
 
             {error && (
-              <div className="bg-pixel-red/20 border-2 border-pixel-red px-4 py-2 text-red-300 font-body text-sm">{error}</div>
+              <div className="bg-pixel-red/20 border-2 border-pixel-red px-4 py-2.5 text-red-300 font-body text-sm rounded-2xl">{error}</div>
             )}
             {success && (
-              <div className="bg-success/20 border-2 border-success px-4 py-2 text-green-300 font-body text-sm">{success}</div>
+              <div className="bg-success/20 border-2 border-success px-4 py-2.5 text-green-300 font-body text-sm rounded-2xl">{success}</div>
             )}
 
             <Button type="submit" variant="primary" size="lg" fullWidth loading={loading}>

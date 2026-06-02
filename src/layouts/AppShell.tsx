@@ -35,12 +35,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <motion.div
             initial={{ y: -40 }}
             animate={{ y: 0 }}
-            className="sticky top-0 z-40 bg-pixel-darker/95 backdrop-blur border-b-4 border-black px-4 py-2 flex flex-col gap-1"
+            className="sticky top-0 z-40 bg-pixel-darker/95 backdrop-blur border-b-4 border-black rounded-b-3xl px-4 py-3 flex flex-col gap-1.5 shadow-[0px_6px_0px_0px_rgba(0,0,0,1)]"
           >
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1">
-                <span className="text-lg">🤖</span>
-                <span className="text-white font-pixel text-[10px]">AI EXPLORER</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xl">🤖</span>
+                <span className="text-white font-pixel text-[9px] tracking-wide">AI EXPLORER</span>
               </div>
               <div className="flex items-center gap-2">
                 <StreakFlame streak={profile.current_streak ?? 0} />
@@ -69,22 +69,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
         {/* Bottom Navigation */}
         {!hideNav && (
-          <nav className="sticky bottom-0 z-40 bg-pixel-darker border-t-4 border-black pb-safe">
-            <div className="flex items-center justify-around px-2">
+          <nav className="sticky bottom-0 z-40 bg-pixel-darker border-t-4 border-black rounded-t-3xl pb-safe shadow-[0px_-6px_0px_0px_rgba(0,0,0,1)]">
+            <div className="flex items-center justify-around px-2 py-1">
               {NAV_ITEMS.map(({ path, label, icon: Icon }) => {
                 const isActive = path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
                 return (
                   <NavLink key={path} to={path} className={`nav-tab ${isActive ? 'active' : ''}`}>
                     <motion.div
-                      animate={isActive ? { scale: [1, 1.2, 1] } : {}}
+                      animate={isActive ? { scale: [1, 1.15, 1] } : {}}
                       transition={{ duration: 0.2 }}
                     >
-                      <div className={`relative p-2 ${isActive ? 'bg-primary border-2 border-black' : ''}`}>
-                        <Icon className="w-5 h-5" />
+                      <div className={`relative p-2.5 transition-all ${isActive ? 'bg-gradient-to-r from-primary to-primary-light border-2 border-black rounded-2xl shadow-[0px_3px_0px_0px_#000000] text-white' : 'text-white/60 hover:text-white hover:scale-105'}`}>
+                        <Icon className="w-4 h-4" />
                         {isActive && (
                           <motion.div
                             layoutId="nav-active"
-                            className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-warning border border-black"
+                            className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-warning border border-black rounded-full"
                           />
                         )}
                       </div>

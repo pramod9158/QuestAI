@@ -77,9 +77,9 @@ export default function AIAroundMe() {
         <h1 className="text-white font-game text-xl flex items-center gap-2">🌍 AI Around Me</h1>
         <p className="text-white/60 font-body text-sm mt-1">Swipe cards — Is this AI or not?</p>
         <div className="flex items-center gap-3 mt-3">
-          <div className="flex gap-1">
+          <div className="flex gap-1.5">
             {SWIPE_CARDS.map((_, i) => (
-              <div key={i} className={`w-2 h-2 border border-black ${i < currentIndex ? 'bg-success' : i === currentIndex ? 'bg-warning' : 'bg-white/20'}`} />
+              <div key={i} className={`w-2.5 h-2.5 border border-black rounded-full ${i < currentIndex ? 'bg-success' : i === currentIndex ? 'bg-warning' : 'bg-white/20'}`} />
             ))}
           </div>
           <span className="text-white/50 font-body text-xs">{currentIndex + 1}/{SWIPE_CARDS.length}</span>
@@ -99,7 +99,7 @@ export default function AIAroundMe() {
             animate={{ x: 0, opacity: 1, rotate: 0 }}
             exit={{ x: -200, opacity: 0, rotate: -5 }}
             transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-            className="w-full border-4 border-black bg-pixel-dark shadow-pixel-lg"
+            className="w-full border-4 border-black bg-pixel-dark rounded-3xl shadow-[0px_6px_0px_0px_#000000] overflow-hidden"
           >
             {/* Card front */}
             <div className="p-8 text-center">
@@ -143,7 +143,7 @@ export default function AIAroundMe() {
             <Button variant="success" size="lg" fullWidth onClick={() => handleAnswer(true)}>
               🤖 YES, AI!
             </Button>
-            <Button variant="ghost" size="lg" fullWidth onClick={() => handleAnswer(false)}>
+            <Button variant="danger" size="lg" fullWidth onClick={() => handleAnswer(false)}>
               📦 NOT AI
             </Button>
           </div>

@@ -71,7 +71,7 @@ export default function Leaderboard() {
             >
               <PixelAvatar username={entries[1]?.username} size={48} colorIndex={1} />
               <div className="text-white font-body text-xs text-center truncate w-full">{entries[1]?.username}</div>
-              <div className="w-full border-4 border-black bg-gray-400/30 flex flex-col items-center justify-center py-4 h-24">
+              <div className="w-full border-4 border-black bg-gray-400/30 flex flex-col items-center justify-center py-4 h-24 rounded-t-2xl shadow-[0px_4px_0px_0px_#000000]">
                 <div className="text-3xl">🥈</div>
                 <div className="text-white font-pixel text-[8px]">{entries[1]?.xp} XP</div>
               </div>
@@ -84,7 +84,7 @@ export default function Leaderboard() {
                 <PixelAvatar username={entries[0]?.username} size={56} colorIndex={0} />
               </motion.div>
               <div className="text-white font-body text-xs text-center truncate w-full">{entries[0]?.username}</div>
-              <div className="w-full border-4 border-yellow-500 bg-yellow-500/30 flex flex-col items-center justify-center py-4 h-32 animate-pulse-glow">
+              <div className="w-full border-4 border-yellow-500 bg-yellow-500/30 flex flex-col items-center justify-center py-4 h-32 rounded-t-2xl shadow-[0px_6px_0px_0px_#F59E0B] animate-pulse-glow">
                 <div className="text-4xl">🥇</div>
                 <div className="text-warning font-pixel text-[8px]">{entries[0]?.xp} XP</div>
               </div>
@@ -95,7 +95,7 @@ export default function Leaderboard() {
             >
               <PixelAvatar username={entries[2]?.username} size={48} colorIndex={2} />
               <div className="text-white font-body text-xs text-center truncate w-full">{entries[2]?.username}</div>
-              <div className="w-full border-4 border-orange-600 bg-orange-600/20 flex flex-col items-center justify-center py-4 h-20">
+              <div className="w-full border-4 border-orange-600 bg-orange-600/20 flex flex-col items-center justify-center py-4 h-20 rounded-t-2xl shadow-[0px_3px_0px_0px_rgba(249,115,22,0.5)]">
                 <div className="text-3xl">🥉</div>
                 <div className="text-orange-400 font-pixel text-[8px]">{entries[2]?.xp} XP</div>
               </div>
@@ -112,7 +112,7 @@ export default function Leaderboard() {
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: i * 0.05 }}
-            className={`border-4 border-black p-3 flex items-center gap-3 ${i < 3 ? RANK_COLORS[i] : 'bg-pixel-dark'}`}
+            className={`border-4 border-black p-3 rounded-2xl flex items-center gap-3 shadow-[0px_4px_0px_0px_#000000] transition-all hover:scale-[1.01] hover:shadow-[0px_6px_0px_0px_#000000] ${i < 3 ? RANK_COLORS[i] : 'bg-pixel-dark'}`}
           >
             <div className="text-xl w-8 text-center">{i < 3 ? RANK_BADGES[i] : `#${i + 1}`}</div>
             <PixelAvatar username={entry.username} size={40} colorIndex={i} />

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { AI_CARDS_DATA } from '@/data/curriculum';
 import { SpeakButton } from '@/components/ui/GameUI';
 import { Lock, Star, ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
 
 const RARITY_COLORS = {
   common: { border: 'border-gray-400', badge: 'bg-gray-500', label: 'COMMON' },
@@ -28,9 +29,9 @@ export default function AICards() {
         <h1 className="text-white font-game text-xl flex items-center gap-2">🃏 AI Cards</h1>
         <p className="text-white/60 font-body text-sm mt-1">Collect all 7 AI hero cards!</p>
         <div className="flex items-center gap-2 mt-3">
-          <div className="flex gap-1">
+          <div className="flex gap-1.5">
             {AI_CARDS_DATA.map((c, i) => (
-              <div key={i} className={`w-4 h-4 border-2 border-black ${unlockedIds.includes(c.id) ? 'bg-warning' : 'bg-white/20'}`} />
+              <div key={i} className={`w-4 h-4 border-2 border-black rounded-md ${unlockedIds.includes(c.id) ? 'bg-warning' : 'bg-white/20'}`} />
             ))}
           </div>
           <span className="text-warning font-pixel text-[10px]">{unlockedIds.length}/{AI_CARDS_DATA.length} COLLECTED</span>
@@ -50,7 +51,7 @@ export default function AICards() {
               whileHover={isUnlocked ? { scale: 1.03 } : {}}
               whileTap={isUnlocked ? { scale: 0.97 } : {}}
               onClick={() => isUnlocked && setViewCard(card)}
-              className={`relative border-4 border-black shadow-pixel cursor-pointer ${isUnlocked ? rarity.border : 'border-gray-600'}`}
+              className={`relative border-4 border-black rounded-3xl shadow-[0px_5px_0px_0px_rgba(0,0,0,0.85)] cursor-pointer overflow-hidden transition-all duration-100 ${isUnlocked ? rarity.border : 'border-gray-600'}`}
               style={{ aspectRatio: '2/3' }}
             >
               {/* Card Background */}
@@ -61,7 +62,7 @@ export default function AICards() {
 
               {/* Rarity badge */}
               {isUnlocked && (
-                <div className={`absolute top-2 right-2 ${rarity.badge} border-2 border-black px-1.5 py-0.5 font-pixel text-[7px] text-white z-10`}>
+                <div className={`absolute top-2 right-2 ${rarity.badge} border-2 border-black px-2 py-0.5 rounded-lg font-pixel text-[7px] text-white z-10 shadow-[0px_2px_0px_0px_#000000]`}>
                   {rarity.label}
                 </div>
               )}
@@ -118,7 +119,7 @@ export default function AICards() {
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25 }}
               onClick={e => e.stopPropagation()}
-              className="w-full max-w-md border-4 border-black bg-pixel-dark shadow-pixel-lg"
+              className="w-full max-w-md border-4 border-black bg-pixel-dark rounded-3xl shadow-[0px_6px_0px_0px_#000000] overflow-hidden"
             >
               {/* Card header */}
               <div className={`${viewCard.color} border-b-4 border-black p-6 flex flex-col items-center gap-3`}>
@@ -126,7 +127,7 @@ export default function AICards() {
                   {viewCard.emoji}
                 </motion.div>
                 <div className="text-white font-game text-xl">{viewCard.title}</div>
-                <div className={`${RARITY_COLORS[viewCard.rarity as keyof typeof RARITY_COLORS].badge} border-2 border-black px-3 py-1 font-pixel text-[9px] text-white`}>
+                <div className={`${RARITY_COLORS[viewCard.rarity as keyof typeof RARITY_COLORS].badge} border-2 border-black px-3 py-1 font-pixel text-[9px] text-white rounded-xl shadow-[0px_2px_0px_0px_#000000]`}>
                   {RARITY_COLORS[viewCard.rarity as keyof typeof RARITY_COLORS].label}
                 </div>
               </div>
@@ -141,16 +142,16 @@ export default function AICards() {
                   <div className="text-white/50 font-body text-xs mb-1">⚡ AI Superpower:</div>
                   <div className="text-primary font-game text-sm">{viewCard.ai_power}</div>
                 </div>
-                <div className="border-2 border-warning bg-warning/10 p-3">
+                <div className="border-2 border-warning bg-warning/10 p-3.5 rounded-2xl shadow-[inset_0px_2px_4px_rgba(245,158,11,0.2)]">
                   <div className="text-warning font-body text-xs mb-1">🌟 Fun Fact:</div>
                   <div className="text-white/80 font-body text-sm italic">{viewCard.fun_fact}</div>
                 </div>
 
                 <div className="flex gap-3">
                   <SpeakButton text={`${viewCard.title}. ${viewCard.fun_fact}`} />
-                  <button onClick={() => setViewCard(null)} className="flex-1 border-4 border-black bg-white/10 py-3 text-white font-game text-sm">
+                  <Button variant="ghost" onClick={() => setViewCard(null)} className="flex-1">
                     Close ✕
-                  </button>
+                  </Button>
                 </div>
               </div>
             </motion.div>

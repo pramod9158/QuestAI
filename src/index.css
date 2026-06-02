@@ -111,76 +111,91 @@ img {
   image-rendering: auto;
 }
 
-/* Pixel Button Base */
+/* Claymorphic Retro Button Base */
 .btn-pixel, .btn-primary, .btn-blue, .btn-success, .btn-warning, .btn-danger, .btn-ghost {
-  @apply relative font-game font-bold rounded-none border-4 border-black
-         transition-all duration-75 select-none cursor-pointer
-         active:translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed;
+  @apply relative font-game font-bold rounded-2xl border-4 border-black
+         transition-all duration-150 select-none cursor-pointer
+         hover:scale-[1.03] hover:-rotate-1 active:scale-95 active:translate-y-0.5
+         disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none;
+  box-shadow: 0px 6px 0px 0px #000000, inset 0px 4px 0px 0px rgba(255, 255, 255, 0.4);
 }
 
 .btn-primary {
-  @apply bg-primary text-white border-black shadow-pixel-purple
-         hover:bg-primary-light active:shadow-none;
+  @apply bg-gradient-to-r from-primary to-primary-light text-white;
+  box-shadow: 0px 6px 0px 0px #000000, 0 0 15px rgba(124, 58, 237, 0.3), inset 0px 4px 0px 0px rgba(255, 255, 255, 0.4);
 }
 
 .btn-blue {
-  @apply bg-blue-game text-white border-black shadow-pixel-blue
-         hover:bg-blue-light active:shadow-none;
+  @apply bg-gradient-to-r from-blue-game to-blue-light text-white;
+  box-shadow: 0px 6px 0px 0px #000000, 0 0 15px rgba(59, 130, 246, 0.3), inset 0px 4px 0px 0px rgba(255, 255, 255, 0.4);
 }
 
 .btn-success {
-  @apply bg-success text-white border-black shadow-pixel-green
-         hover:bg-success-light active:shadow-none;
+  @apply bg-gradient-to-r from-success to-success-light text-white;
+  box-shadow: 0px 6px 0px 0px #000000, 0 0 15px rgba(16, 185, 129, 0.3), inset 0px 4px 0px 0px rgba(255, 255, 255, 0.4);
 }
 
 .btn-warning {
-  @apply bg-warning text-black border-black shadow-pixel-orange
-         hover:bg-warning-light active:shadow-none;
+  @apply bg-gradient-to-r from-warning to-warning-light text-black;
+  box-shadow: 0px 6px 0px 0px #000000, 0 0 15px rgba(245, 158, 11, 0.3), inset 0px 4px 0px 0px rgba(255, 255, 255, 0.5);
 }
 
 .btn-danger {
-  @apply bg-pixel-red text-white border-black shadow-pixel-red
-         hover:opacity-90 active:shadow-none;
+  @apply bg-gradient-to-r from-pixel-red to-red-400 text-white;
+  box-shadow: 0px 6px 0px 0px #000000, 0 0 15px rgba(239, 68, 68, 0.3), inset 0px 4px 0px 0px rgba(255, 255, 255, 0.4);
 }
 
 .btn-ghost {
-  @apply bg-white/10 text-white border-white/30 shadow-none
-         hover:bg-white/20 active:shadow-none;
+  @apply bg-white/10 text-white border-white/20;
+  box-shadow: 0px 4px 0px 0px rgba(0, 0, 0, 0.5), inset 0px 2px 0px 0px rgba(255, 255, 255, 0.1);
 }
 
-/* Pixel Card */
+/* Claymorphic Retro Card */
 .pixel-card, .pixel-card-purple, .pixel-card-blue, .pixel-card-green, .pixel-card-orange {
-  @apply border-4 border-black bg-pixel-dark shadow-pixel-lg rounded-none;
+  @apply border-4 border-black bg-gradient-to-b from-pixel-dark to-pixel-darker rounded-3xl p-5 transition-all duration-300 shadow-pixel-lg relative overflow-hidden;
+  background-image: var(--background-image-pixel-grid), linear-gradient(180deg, rgba(124, 58, 237, 0.12) 0%, #1E1B4B 100%);
+  box-shadow: 0px 8px 0px 0px rgba(0, 0, 0, 0.95), inset 0px 3px 0px 0px rgba(255, 255, 255, 0.15);
+}
+
+.pixel-card:hover, .pixel-card-purple:hover, .pixel-card-blue:hover, .pixel-card-green:hover, .pixel-card-orange:hover {
+  box-shadow: 0px 10px 0px 0px rgba(0, 0, 0, 1), 0 0 25px rgba(124, 58, 237, 0.35);
+  transform: translateY(-2px);
 }
 
 .pixel-card-purple {
-  @apply border-primary-dark bg-primary/20;
+  @apply border-primary;
+  background-image: var(--background-image-pixel-grid), linear-gradient(180deg, rgba(124, 58, 237, 0.2) 0%, #1E1B4B 100%);
 }
 
 .pixel-card-blue {
-  @apply border-blue-game bg-blue-game/20;
+  @apply border-blue-game;
+  background-image: var(--background-image-pixel-grid), linear-gradient(180deg, rgba(59, 130, 246, 0.2) 0%, #1E1B4B 100%);
 }
 
 .pixel-card-green {
-  @apply border-success-dark bg-success/20;
+  @apply border-success;
+  background-image: var(--background-image-pixel-grid), linear-gradient(180deg, rgba(16, 185, 129, 0.2) 0%, #1E1B4B 100%);
 }
 
 .pixel-card-orange {
-  @apply border-warning-dark bg-warning/20;
+  @apply border-warning;
+  background-image: var(--background-image-pixel-grid), linear-gradient(180deg, rgba(245, 158, 11, 0.2) 0%, #1E1B4B 100%);
 }
 
 /* Pixel Border Accent */
 .pixel-border {
-  @apply border-4 border-black outline outline-2 outline-white/20;
+  @apply border-4 border-black rounded-3xl outline outline-2 outline-white/10;
 }
 
-/* XP Bar */
+/* Claymorphic XP Bar */
 .xp-bar-track {
-  @apply w-full h-4 bg-black border-2 border-black rounded-none;
+  @apply w-full h-5 bg-black/60 border-2 border-black rounded-full overflow-hidden;
+  box-shadow: inset 0px 2px 4px rgba(0, 0, 0, 0.6);
 }
 
 .xp-bar-fill {
-  @apply h-full bg-gradient-to-r from-primary to-blue-game transition-all duration-500;
+  @apply h-full bg-gradient-to-r from-primary via-primary-light to-blue-game rounded-full transition-all duration-500;
+  box-shadow: inset 0px 2px 0px rgba(255, 255, 255, 0.3);
 }
 
 /* Bottom Nav */
@@ -204,36 +219,46 @@ img {
   @apply min-w-[48px] min-h-[48px] flex items-center justify-center;
 }
 
-/* Quest Node */
+/* Claymorphic Quest Node */
 .quest-node, .quest-node-locked, .quest-node-active, .quest-node-done {
   @apply w-16 h-16 border-4 border-black flex items-center justify-center
-         text-2xl cursor-pointer transition-all duration-200 shadow-pixel
-         hover:scale-110 active:scale-95;
+         text-2xl cursor-pointer transition-all duration-200 rounded-2xl;
+  box-shadow: 0px 5px 0px 0px #000000, inset 0px 3px 0px 0px rgba(255, 255, 255, 0.4);
+}
+
+.quest-node:hover, .quest-node-active:hover, .quest-node-done:hover {
+  @apply scale-105;
+  box-shadow: 0px 6px 0px 0px #000000, 0 0 15px rgba(124, 58, 237, 0.4), inset 0px 3px 0px 0px rgba(255, 255, 255, 0.4);
 }
 
 .quest-node-locked {
-  @apply bg-gray-600 text-gray-400;
+  @apply bg-gray-600 text-gray-400 cursor-not-allowed;
+  box-shadow: 0px 4px 0px 0px #000000;
 }
 
 .quest-node-active {
   @apply bg-warning text-black animate-pulse-glow;
+  box-shadow: 0px 5px 0px 0px #000000, 0 0 15px rgba(245, 158, 11, 0.5), inset 0px 3px 0px 0px rgba(255, 255, 255, 0.5);
 }
 
 .quest-node-done {
   @apply bg-success text-white;
+  box-shadow: 0px 5px 0px 0px #000000, 0 0 15px rgba(16, 185, 129, 0.5), inset 0px 3px 0px 0px rgba(255, 255, 255, 0.4);
 }
 
-/* Pixel Input */
+/* Claymorphic Input */
 .pixel-input {
-  @apply w-full border-4 border-black bg-white/10 text-white font-body
-         px-4 py-3 rounded-none placeholder-white/40 focus:outline-none
-         focus:border-primary focus:bg-white/15 transition-all duration-200;
+  @apply w-full border-4 border-black bg-black/40 text-white font-body rounded-2xl
+         px-4 py-3 placeholder-white/40 focus:outline-none
+         focus:border-primary focus:bg-black/50 transition-all duration-200;
+  box-shadow: inset 0px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 /* Badge */
 .badge-pill {
-  @apply inline-flex items-center gap-1 px-3 py-1 border-2 border-black
-         font-game text-xs font-bold;
+  @apply inline-flex items-center gap-1 px-3 py-1 border-2 border-black rounded-xl
+         font-game text-xs font-bold bg-pixel-dark;
+  box-shadow: 0px 3px 0px 0px #000000;
 }
 
 /* Scrollbar hidden */
@@ -266,3 +291,86 @@ img {
 .pt-safe {
   padding-top: env(safe-area-inset-top, 16px);
 }
+
+/* ============================================================
+   🏆 UI UX PRO MAX PREMIUM STYLING ADDITIONS
+   ============================================================ */
+
+/* Pro Max Glowing Gradient Button */
+.btn-pixel-promax {
+  @apply relative font-game font-bold rounded-2xl border-4 border-black
+         text-white bg-gradient-to-r from-primary to-blue-game
+         transition-all duration-150 select-none cursor-pointer
+         hover:scale-[1.03] hover:rotate-1 hover:brightness-110 active:scale-95 active:translate-y-0.5;
+  box-shadow: 0px 6px 0px 0px #000000, 0 0 15px rgba(124, 58, 237, 0.4), inset 0px 4px 0px 0px rgba(255, 255, 255, 0.4);
+}
+
+.btn-pixel-promax:disabled {
+  @apply opacity-50 cursor-not-allowed transform-none hover:scale-100 hover:rotate-0 hover:brightness-100;
+}
+
+/* Pro Max Starry Gradient Card */
+.pixel-card-promax {
+  @apply border-4 border-black bg-gradient-to-b from-pixel-dark to-pixel-darker rounded-3xl transition-all duration-300 shadow-pixel-lg;
+  background-image: var(--background-image-pixel-grid), linear-gradient(180deg, rgba(124, 58, 237, 0.12) 0%, #1E1B4B 100%);
+  box-shadow: 0px 8px 0px 0px rgba(0, 0, 0, 0.95), inset 0px 3px 0px 0px rgba(255, 255, 255, 0.15);
+}
+
+.pixel-card-promax:hover {
+  box-shadow: 0px 10px 0px 0px rgba(0, 0, 0, 1), 0 0 25px rgba(124, 58, 237, 0.35);
+  transform: translateY(-2px);
+}
+
+/* Premium Claymorphic Accents (Double-Borders & Glows) */
+.pixel-glow-blue {
+  box-shadow: 4px 4px 0px 0px #1D4ED8, 0 0 20px rgba(59, 130, 246, 0.45);
+}
+
+.pixel-glow-purple {
+  box-shadow: 4px 4px 0px 0px #5B21B6, 0 0 20px rgba(124, 58, 237, 0.45);
+}
+
+.pixel-glow-success {
+  box-shadow: 4px 4px 0px 0px #047857, 0 0 20px rgba(16, 185, 129, 0.45);
+}
+
+.pixel-glow-warning {
+  box-shadow: 4px 4px 0px 0px #D97706, 0 0 20px rgba(245, 158, 11, 0.45);
+}
+
+.pixel-glow-pink {
+  box-shadow: 4px 4px 0px 0px #BE185D, 0 0 20px rgba(236, 72, 153, 0.45);
+}
+
+.pixel-glow-red {
+  box-shadow: 4px 4px 0px 0px #991B1B, 0 0 20px rgba(239, 68, 68, 0.45);
+}
+
+.pixel-glow-orange {
+  box-shadow: 4px 4px 0px 0px #C2410C, 0 0 20px rgba(249, 115, 22, 0.45);
+}
+
+.pixel-glow-teal {
+  box-shadow: 4px 4px 0px 0px #0F766E, 0 0 20px rgba(20, 184, 166, 0.45);
+}
+
+.pixel-glow-violet {
+  box-shadow: 4px 4px 0px 0px #6D28D9, 0 0 20px rgba(139, 92, 246, 0.45);
+}
+
+/* Floating animation for primary interactive buttons */
+.animate-pulse-glow-pro {
+  animation: pulseGlowPro 2.5s ease-in-out infinite;
+}
+
+@keyframes pulseGlowPro {
+  0%, 100% {
+    box-shadow: 4px 4px 0px 0px #5B21B6, 0 0 8px rgba(124, 58, 237, 0.4);
+    transform: translateY(0);
+  }
+  50% {
+    box-shadow: 4px 4px 0px 0px #5B21B6, 0 0 24px rgba(124, 58, 237, 0.8), 0 0 40px rgba(59, 130, 246, 0.4);
+    transform: translateY(-3px);
+  }
+}
+

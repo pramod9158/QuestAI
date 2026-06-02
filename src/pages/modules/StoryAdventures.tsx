@@ -73,7 +73,7 @@ export default function StoryAdventures() {
           <h1 className="text-white font-game text-lg">{quest.title}</h1>
           <div className="flex gap-1 mt-3">
             {steps.map((_, i) => (
-              <div key={i} className={`flex-1 h-2 border-2 border-black ${i <= currentStep ? 'bg-primary' : 'bg-white/20'}`} />
+              <div key={i} className={`flex-1 h-2.5 border-2 border-black rounded-full ${i <= currentStep ? 'bg-primary' : 'bg-white/20'}`} />
             ))}
           </div>
         </div>
@@ -96,7 +96,7 @@ export default function StoryAdventures() {
                 {step.emoji}
               </motion.div>
 
-              <div className="border-4 border-black bg-pixel-dark p-5 shadow-pixel">
+              <div className="border-4 border-black bg-pixel-dark p-5 rounded-3xl shadow-[0px_6px_0px_0px_#000000]">
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="text-white font-game text-base">{step.title}</h2>
                   <SpeakButton text={step.content} />
@@ -105,7 +105,7 @@ export default function StoryAdventures() {
               </div>
 
               {step.question && (
-                <div className="border-4 border-warning bg-warning/10 p-4">
+                <div className="border-4 border-warning bg-warning/10 p-4.5 rounded-3xl shadow-[0px_6px_0px_0px_rgba(245,158,11,0.35)]">
                   <p className="text-warning font-game text-xs">🤔 Think about it:</p>
                   <p className="text-white font-body text-sm mt-1">{step.question}</p>
                 </div>
@@ -113,7 +113,7 @@ export default function StoryAdventures() {
 
               {isDone ? (
                 <div className="space-y-3">
-                  <div className="border-4 border-success bg-success/20 p-5 text-center">
+                  <div className="border-4 border-success bg-success/20 p-6.5 rounded-3xl text-center shadow-[0px_6px_0px_0px_rgba(16,185,129,0.35)]">
                     <div className="text-5xl mb-2">🏆</div>
                     <div className="text-white font-game text-lg">Quest Complete!</div>
                     <div className="text-warning font-pixel text-sm mt-1">+{quest.xpReward} XP Earned!</div>
@@ -156,13 +156,9 @@ export default function StoryAdventures() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.06 }}
               onClick={() => !isLocked && setSelectedQuest(quest.id)}
-              className={`border-4 border-black p-4 flex items-center gap-4 ${
-                isDone ? 'bg-success/20 border-success cursor-pointer' :
-                isLocked ? 'bg-white/5 opacity-50 cursor-not-allowed' :
-                'bg-pixel-dark cursor-pointer shadow-pixel hover:bg-white/5'
-              }`}
+              className={`border-4 border-black p-4.5 rounded-3xl flex items-center gap-4 transition-all shadow-[0px_6px_0px_0px_rgba(0,0,0,0.85)] hover:scale-[1.01] hover:-translate-y-0.5 ${isDone ? 'bg-success/20 border-success shadow-[0px_6px_0px_0px_rgba(16,185,129,0.3)] cursor-pointer' : isLocked ? 'bg-white/5 opacity-50 cursor-not-allowed' : 'bg-pixel-dark cursor-pointer hover:bg-white/5 hover:shadow-[0px_8px_0px_0px_rgba(0,0,0,1)]'}`}
             >
-              <div className={`w-16 h-16 border-4 border-black flex items-center justify-center text-3xl flex-shrink-0 ${
+              <div className={`w-16 h-16 border-4 border-black flex items-center justify-center text-3xl flex-shrink-0 rounded-2xl shadow-[0px_3px_0px_0px_rgba(0,0,0,1)] ${
                 isDone ? 'bg-success' : isLocked ? 'bg-gray-700' : 'bg-primary/30 animate-pulse-glow'
               }`}>
                 {isLocked ? <Lock className="w-7 h-7 text-gray-400" /> : quest.emoji}

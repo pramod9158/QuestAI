@@ -67,7 +67,7 @@ export default function InventorHall() {
         <h1 className="text-white font-game text-xl flex items-center gap-2">🏛️ Inventor Hall</h1>
         <p className="text-white/60 font-body text-sm mt-1">Showcase of brilliant AI inventions by young explorers!</p>
 
-        <div className="flex mt-4 border-4 border-black">
+        <div className="flex mt-4 border-4 border-black rounded-2xl overflow-hidden shadow-[0px_4px_0px_0px_#000000]">
           {(['hall', 'mine'] as const).map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)}
               className={`flex-1 py-2 font-game text-xs transition-colors ${activeTab === tab ? 'bg-primary text-white' : 'bg-pixel-dark text-white/50 hover:text-white'}`}>
@@ -91,10 +91,10 @@ export default function InventorHall() {
           </div>
         ) : displayList.map((inv, i) => (
           <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
-            className="border-4 border-black bg-pixel-dark p-5 shadow-pixel"
+            className="border-4 border-black bg-pixel-dark p-5 rounded-3xl shadow-[0px_6px_0px_0px_rgba(0,0,0,0.85)] hover:scale-[1.01] hover:-translate-y-0.5 transition-all"
           >
             <div className="flex items-start justify-between gap-3 mb-3">
-              <div className={`${CATEGORY_COLORS[inv.category] || 'bg-gray-600'} border-2 border-black px-2 py-0.5 font-body text-xs text-white capitalize`}>
+              <div className={`${CATEGORY_COLORS[inv.category] || 'bg-gray-600'} border-2 border-black px-2.5 py-0.5 font-game text-[9px] text-white capitalize rounded-xl shadow-[0px_2px_0px_0px_#000]`}>
                 {inv.category}
               </div>
               <div className="flex items-center gap-1">
@@ -119,8 +119,8 @@ export default function InventorHall() {
                 <span>Innovation Score</span>
                 <span>{inv.innovation_score}/100</span>
               </div>
-              <div className="h-2 bg-black border border-black">
-                <div className="h-full bg-gradient-to-r from-primary to-warning" style={{ width: `${inv.innovation_score}%` }} />
+              <div className="h-3 bg-black/60 border-2 border-black rounded-full overflow-hidden shadow-[inset_0px_1px_3px_rgba(0,0,0,0.5)]">
+                <div className="h-full bg-gradient-to-r from-primary to-warning rounded-full" style={{ width: `${inv.innovation_score}%` }} />
               </div>
             </div>
           </motion.div>

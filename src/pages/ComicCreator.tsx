@@ -90,10 +90,12 @@ export default function ComicCreator() {
                 <motion.div
                   key={i}
                   onClick={() => setCurrentPanel(i)}
-                  className={`flex-1 h-8 border-2 border-black cursor-pointer flex items-center justify-center font-pixel text-[8px] transition-all ${
-                    i < currentPanel ? 'bg-success text-white' :
-                    i === currentPanel ? 'bg-primary text-white animate-pulse' :
-                    'bg-white/10 text-white/40'
+                  className={`flex-1 h-9 border-4 border-black cursor-pointer flex items-center justify-center font-pixel text-[10px] rounded-full shadow-[0px_3px_0px_0px_#000] active:translate-y-0.5 active:shadow-none transition-all hover:scale-105 select-none ${
+                    i < currentPanel 
+                      ? 'bg-gradient-to-r from-success to-success-light text-white shadow-[0px_3px_0px_0px_#000,inset_0px_2px_0px_0px_rgba(255,255,255,0.4)]' 
+                      : i === currentPanel 
+                      ? 'bg-gradient-to-r from-primary to-primary-light text-white animate-pulse shadow-[0px_3px_0px_0px_#000,inset_0px_2px_0px_0px_rgba(255,255,255,0.4)]' 
+                      : 'bg-white/10 text-white/40 border-white/20 shadow-none'
                   }`}
                 >
                   {panelChoices[i] ? '✓' : i + 1}
@@ -104,12 +106,12 @@ export default function ComicCreator() {
             {/* Current Panel */}
             <AnimatePresence mode="wait">
               <motion.div key={currentPanel} initial={{ x: 60, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -60, opacity: 0 }}>
-                <div className="border-4 border-primary bg-primary/10 p-5 mb-4 shadow-pixel-purple">
+                <div className="border-4 border-primary bg-primary/10 p-5 mb-4 rounded-3xl shadow-[0px_6px_0px_0px_rgba(124,58,237,0.4)]">
                   <div className="text-3xl text-center mb-3">{['🌍', '😟', '🤖', '⚡', '💡', '🏆'][currentPanel]}</div>
                   <h2 className="text-white font-game text-base text-center">{PANEL_PROMPTS[currentPanel].title}</h2>
                   <p className="text-white/60 font-body text-sm text-center mt-1">{PANEL_PROMPTS[currentPanel].prompt}</p>
                   {panelChoices[currentPanel] && (
-                    <div className="mt-3 bg-success/20 border-2 border-success p-2 text-center">
+                    <div className="mt-3 bg-success/20 border-2 border-success p-2 rounded-xl text-center shadow-[inset_0px_1px_3px_rgba(0,0,0,0.2)]">
                       <span className="text-white font-game text-sm">{PANEL_EMOJIS[panelChoices[currentPanel]]} {panelChoices[currentPanel]}</span>
                     </div>
                   )}
@@ -119,10 +121,12 @@ export default function ComicCreator() {
                   {PANEL_PROMPTS[currentPanel].keywords.map(kw => (
                     <motion.button
                       key={kw}
-                      whileTap={{ scale: 0.95 }}
+                      whileTap={{ scale: 0.96 }}
                       onClick={() => handleKeyword(kw)}
-                      className={`border-4 border-black p-3 text-center font-body text-sm transition-all ${
-                        panelChoices[currentPanel] === kw ? 'bg-primary text-white shadow-pixel-purple' : 'bg-pixel-dark text-white/80 hover:bg-white/10'
+                      className={`border-4 border-black p-3.5 rounded-3xl text-center font-game text-xs transition-all cursor-pointer hover:scale-[1.02] hover:-rotate-1 active:translate-y-0.5 active:shadow-none ${
+                        panelChoices[currentPanel] === kw 
+                          ? 'bg-gradient-to-r from-primary to-primary-light text-white shadow-[0px_5px_0px_0px_#000,inset_0px_3px_0px_0px_rgba(255,255,255,0.4)]' 
+                          : 'bg-pixel-dark text-white/80 hover:bg-white/10 shadow-[0px_5px_0px_0px_rgba(0,0,0,0.85)]'
                       }`}
                     >
                       <span className="text-xl block mb-1">{PANEL_EMOJIS[kw] || '⭐'}</span>
@@ -144,7 +148,7 @@ export default function ComicCreator() {
         ) : (
           // Comic Preview
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
-            <div className="text-center border-4 border-warning bg-warning/10 p-5 shadow-pixel-orange">
+            <div className="text-center border-4 border-warning bg-warning/10 p-5 rounded-3xl shadow-[0px_6px_0px_0px_rgba(245,158,11,0.4)]">
               <div className="text-5xl mb-2">🎉</div>
               <h2 className="text-white font-game text-lg">Your Comic is Ready!</h2>
             </div>
@@ -152,7 +156,7 @@ export default function ComicCreator() {
             {/* Comic Grid Preview */}
             <div className="grid grid-cols-2 gap-3">
               {PANEL_PROMPTS.map((panel, i) => (
-                <div key={i} className="border-4 border-black bg-pixel-dark p-3 aspect-square flex flex-col items-center justify-center gap-2">
+                <div key={i} className="border-4 border-black bg-pixel-dark p-3 aspect-square flex flex-col items-center justify-center gap-2 rounded-2xl shadow-[0px_4px_0px_0px_rgba(0,0,0,0.85)]">
                   <div className="text-4xl">{PANEL_EMOJIS[panelChoices[i]] || '⭐'}</div>
                   <div className="text-white font-game text-[9px] text-center leading-tight">{panel.title}</div>
                   <div className="text-white/60 font-body text-[9px] text-center">{panelChoices[i]}</div>

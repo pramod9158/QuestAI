@@ -73,7 +73,11 @@ export default function AIIdeaGenerator() {
               <button
                 key={c}
                 onClick={() => setCategory(c)}
-                className={`border-2 border-black px-3 py-1.5 font-body text-xs capitalize transition-all ${category === c ? 'bg-primary text-white' : 'bg-white/10 text-white/60 hover:text-white'}`}
+                className={`border-4 border-black px-4 py-2 font-game text-xs uppercase rounded-2xl transition-all cursor-pointer hover:scale-[1.05] hover:-rotate-1 active:scale-95 active:translate-y-0.5 shadow-[0px_4px_0px_0px_#000000] ${
+                  category === c 
+                    ? 'bg-gradient-to-r from-primary to-primary-light text-white shadow-[0px_4px_0px_0px_#000000,inset_0px_3px_0px_0px_rgba(255,255,255,0.4)]' 
+                    : 'bg-pixel-dark text-white/60 hover:text-white hover:bg-white/10'
+                }`}
               >
                 {c}
               </button>
@@ -100,9 +104,9 @@ export default function AIIdeaGenerator() {
             {QUICK_PROBLEMS.map(p => (
               <motion.button
                 key={p}
-                whileTap={{ scale: 0.95 }}
+                whileTap={{ scale: 0.96 }}
                 onClick={() => setProblem(p)}
-                className="border-2 border-white/20 bg-white/5 px-3 py-1.5 text-white/60 font-body text-xs hover:bg-white/15 hover:text-white transition-all text-left"
+                className="border-2 border-black bg-pixel-dark px-4 py-2 text-white/80 font-body text-xs rounded-2xl hover:bg-white/10 hover:text-white transition-all text-left shadow-[0px_3px_0px_0px_rgba(0,0,0,0.85)] cursor-pointer"
               >
                 {p}
               </motion.button>
@@ -135,23 +139,24 @@ export default function AIIdeaGenerator() {
                     initial={{ x: 40, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
                     transition={{ delay: i * 0.1 }}
-                    className={`border-4 border-black ${colors.bg} ${colors.border} p-5 shadow-pixel`}
+                    className={`border-4 border-black ${colors.bg} ${colors.border} p-5 rounded-3xl shadow-[0px_6px_0px_0px_rgba(0,0,0,0.85)] hover:scale-[1.01] transition-all`}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-2 mb-2">
-                        <div className={`${colors.badge} border-2 border-black w-7 h-7 flex items-center justify-center font-pixel text-[10px] text-white`}>
+                        <div className={`${colors.badge} border-2 border-black w-7 h-7 flex items-center justify-center font-pixel text-[9px] text-white rounded-lg shadow-[0px_2px_0px_0px_rgba(0,0,0,1)]`}>
                           {i + 1}
                         </div>
                         <h3 className="text-white font-game text-sm leading-tight">{idea.name}</h3>
                       </div>
-                      <motion.button
-                        whileTap={{ scale: 0.9 }}
+                      <Button
+                        size="sm"
+                        variant={savedIdeas.has(i) ? 'success' : 'ghost'}
                         onClick={() => handleSave(i)}
                         disabled={savedIdeas.has(i)}
-                        className={`border-2 border-black px-3 py-1 font-body text-xs flex-shrink-0 ${savedIdeas.has(i) ? 'bg-success text-white' : 'bg-white/10 text-white/70 hover:bg-white/20'}`}
+                        className="flex-shrink-0"
                       >
                         {savedIdeas.has(i) ? '✅ Saved!' : '💾 Save'}
-                      </motion.button>
+                      </Button>
                     </div>
                     <p className="text-white/80 font-body text-sm leading-relaxed">{idea.description}</p>
                   </motion.div>
