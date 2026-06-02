@@ -119,3 +119,148 @@ Create one exciting AI project idea. Respond ONLY with a JSON object:
   const pick = catIdeas[Math.floor(Math.random() * catIdeas.length)];
   return { ...pick, innovation_score: Math.floor(Math.random() * 30) + 65 };
 }
+
+// Generate real-time hints and suggestions for weekly missions based on the current draft
+export async function generateMissionSuggestions(
+  missionTitle: string,
+  missionGoal: string,
+  currentDraft: string
+): Promise<string[]> {
+  if (GEMINI_API_KEY && GEMINI_API_KEY !== 'your_gemini_api_key_from_aistudio') {
+    try {
+      const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+      const prompt = `You are a helpful and friendly AI assistant for an educational platform teaching AI to children (aged 6-16).
+The child is working on a weekly mission: "${missionTitle}".
+The mission goal is: "${missionGoal}".
+The child has written this draft observation so far: "${currentDraft || '(Empty draft - child is looking for where to start)'}".
+
+Generate exactly 3 short, kid-friendly hints, ideas, or suggestions to help the child write a detailed and correct observation.
+Each hint should be brief (max 15 words) and encourage critical thinking.
+Respond ONLY with a JSON array of 3 strings. Example format:
+["Think about how the face recognition on your parents' phone checks their eyes and face.", "Look around the kitchen: is there a smart refrigerator or microwave?", "Check your smart TV recommendations on YouTube or Netflix."]
+Do not include any formatting, explanation, markdown, or other text outside the JSON array.`;
+
+      const result = await model.generateContent(prompt);
+      const text = result.response.text().trim();
+      const jsonMatch = text.match(/\[[\s\S]*\]/);
+      if (jsonMatch) {
+        const suggestions = JSON.parse(jsonMatch[0]);
+        if (Array.isArray(suggestions) && suggestions.length > 0) {
+          return suggestions;
+        }
+      }
+    } catch (err) {
+      console.warn('Gemini API failed to generate suggestions:', err);
+    }
+  }
+
+  // Fallback suggestions based on mission title
+  if (missionTitle.includes('Home')) {
+    return [
+      "Check if your phone uses Face ID or fingerprint to unlock.",
+      "Think about YouTube or Netflix showing videos they think you will like.",
+      "Look for smart speakers like Alexa, Siri, or Google Assistant."
+    ];
+  } else if (missionTitle.includes('Time')) {
+    return [
+      "Observe the queue/line at the school canteen or library.",
+      "Think about waiting for the school bus or sitting in traffic.",
+      "Consider how a booking app or predictive timetable could tell you when to go."
+    ];
+  } else if (missionTitle.includes('Problem')) {
+    return [
+      "Look for local issues like overflowing trash bins or water leaks.",
+      "Notice dark streetlights or potholes on your way home.",
+      "Think about how smart cameras or sensors could alert the local authorities."
+    ];
+  } else {
+    return [
+      "Think about what computers, apps, or websites the adult uses every day.",
+      "Ask them if they use spreadsheets, email, or digital records for tracking.",
+      "Ask them if any smart technology helps speed up their daily tasks."
+    ];
+  }
+}
+
+// Evaluate a child's mission submission and return score + feedback
+export async function evaluateMissionSubmission(
+  missionTitle: string,
+  missionGoal: string,
+  submissionText: string
+): Promise<{ score: number; feedback: string; passed: boolean }> {
+  if (GEMINI_API_KEY && GEMINI_API_KEY !== 'your_gemini_api_key_from_aistudio') {
+    try {
+      const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+      const prompt = `You are a supportive, encouraging, and friendly AI educator. 
+A student has submitted an observation for a weekly challenge.
+- Mission Title: "${missionTitle}"
+- Mission Goal: "${missionGoal}"
+- Student's Submission: "${submissionText}"
+
+Evaluate the student's submission. Be understanding and generous, but ensure they actually attempted the challenge (not just typed random letters/spam or empty text).
+1. Assign a score between 30 and 100:
+   - 90-100: Excellent, detailed observation covering key aspects correctly.
+   - 70-89: Good job, but could have added a bit more details or examples.
+   - 50-69: Fair attempt, but lacks depth or misses key points of the goal.
+   - 30-49: Incomplete, highly repetitive, spam, or random keyboard keys.
+2. Write a warm, kid-friendly feedback note (2-3 sentences max) in simple, positive English:
+   - Praise their specific effort.
+   - Explain what they did well.
+   - If they scored less than 95, gently suggest one thing they can add or look for next time to make it even better.
+
+Respond ONLY with a JSON object. Format:
+{
+  "score": <number>,
+  "feedback": "<feedback string>",
+  "passed": <true/false depending on if score is >= 50>
+}
+Do not include any formatting, markdown, or other text outside the JSON object.`;
+
+      const result = await model.generateContent(prompt);
+      const text = result.response.text().trim();
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const evalResult = JSON.parse(jsonMatch[0]);
+        if (typeof evalResult.score === 'number' && evalResult.feedback) {
+          return {
+            score: evalResult.score,
+            feedback: evalResult.feedback,
+            passed: evalResult.score >= 50
+          };
+        }
+      }
+    } catch (err) {
+      console.warn('Gemini API failed to evaluate submission:', err);
+    }
+  }
+
+  // Fallback: evaluate using basic length & keyword presence (simple heuristic)
+  const text = submissionText.trim();
+  const wordCount = text.split(/\s+/).length;
+  const isSpam = /(.)\1{4,}/.test(text.toLowerCase()) || /^(xyz|abc|test|qwerty|asdf)/.test(text.toLowerCase());
+
+  if (text.length < 15 || wordCount < 3 || isSpam) {
+    return {
+      score: 35,
+      feedback: "Keep trying! Please write a bit more about what you observed. Avoid using random letters or spam.",
+      passed: false
+    };
+  } else if (text.length < 35) {
+    return {
+      score: 65,
+      feedback: "Nice try! You've started listing some observations. Try adding more details and explaining how technology helps.",
+      passed: true
+    };
+  } else {
+    return {
+      score: 95,
+      feedback: "Fantastic work! Your observation is detailed, relevant, and demonstrates a great understanding of the weekly challenge.",
+      passed: true
+    };
+  }
+}
+

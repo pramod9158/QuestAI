@@ -5,9 +5,18 @@ import { XPToast } from '@/components/ui/GameUI';
 import { WEEKLY_MISSIONS_DATA } from '@/data/curriculum';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { FileText, CheckCircle, XCircle, Zap, ArrowLeft, HelpCircle } from 'lucide-react';
+import { FileText, CheckCircle, XCircle, Zap, ArrowLeft, HelpCircle, Sparkles } from 'lucide-react';
+import { generateMissionSuggestions, evaluateMissionSubmission } from '@/lib/gemini';
 
-interface Submission { missionId: number; text: string; status: string; xp: number; submittedAt: string; }
+interface Submission { 
+  missionId: number; 
+  text: string; 
+  status: string; 
+  xp: number; 
+  submittedAt: string; 
+  score?: number; 
+  feedback?: string; 
+}
 
 const MISSION_HELPERS: Record<number, { goal: string; examples: string; validationDesc: string }> = {
   1: {
@@ -129,53 +138,156 @@ export default function WeeklyMissions() {
     return JSON.parse(localStorage.getItem('mission_submissions') || '[]');
   });
 
+  // AI Suggestions states
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+
+  // AI Evaluation states
+  const [evaluationResult, setEvaluationResult] = useState<{
+    score: number;
+    feedback: string;
+    earnedXp: number;
+  } | null>(null);
+  const [showGradeCard, setShowGradeCard] = useState(false);
+
+  const resetAIStates = () => {
+    setSuggestions([]);
+    setLoadingSuggestions(false);
+    setEvaluationResult(null);
+    setShowGradeCard(false);
+  };
+
+  const handleGetSuggestions = async () => {
+    if (!mission) return;
+    setLoadingSuggestions(true);
+    try {
+      const goalText = MISSION_HELPERS[mission.id]?.goal || mission.description;
+      const res = await generateMissionSuggestions(mission.title, goalText, text);
+      setSuggestions(res);
+    } catch (error) {
+      console.error('Failed to fetch suggestions:', error);
+    } finally {
+      setLoadingSuggestions(false);
+    }
+  };
+
+  const handleApplySuggestion = (suggestion: string) => {
+    if (text.trim() === '') {
+      setText(suggestion);
+    } else {
+      setText(prev => `${prev.trim()} ${suggestion}`);
+    }
+  };
+
+
   const mission = WEEKLY_MISSIONS_DATA.find(m => m.id === selectedMission);
   const isSubmitted = (id: number) => submissions.some(s => s.missionId === id);
 
   const validation = mission ? validateSubmission(mission.id, text) : { isValid: false, requirements: [] };
 
+  const [toastXP, setToastXP] = useState(80);
+
   const handleSubmit = async () => {
     if (!mission || !validation.isValid) return;
     setSubmitting(true);
-    const submission: Submission = {
-      missionId: mission.id,
-      text,
-      status: 'approved',
-      xp: mission.xp_reward,
-      submittedAt: new Date().toISOString(),
-    };
+    
+    const goalText = MISSION_HELPERS[mission.id]?.goal || mission.description;
+    
+    try {
+      const evalResult = await evaluateMissionSubmission(mission.title, goalText, text);
+      const earnedXp = Math.max(20, Math.round((evalResult.score / 100) * mission.xp_reward));
+      
+      const submission: Submission = {
+        missionId: mission.id,
+        text,
+        status: evalResult.passed ? 'approved' : 'pending',
+        xp: earnedXp,
+        submittedAt: new Date().toISOString(),
+        score: evalResult.score,
+        feedback: evalResult.feedback
+      };
 
-    if (user) {
-      await supabase.from('mission_submissions').insert({
-        user_id: user.id,
-        mission_id: mission.id,
-        text_observation: text,
+      if (user) {
+        await supabase.from('mission_submissions').insert({
+          user_id: user.id,
+          mission_id: mission.id,
+          text_observation: text,
+          status: evalResult.passed ? 'approved' : 'pending',
+          earned_xp: earnedXp,
+        });
+        
+        await updateProfile({
+          xp: (profile?.xp ?? 0) + earnedXp
+        });
+      } else if (isGuest) {
+        await updateProfile({
+          xp: (guestProfile?.xp ?? 0) + earnedXp
+        });
+      }
+
+      const newSubs = [...submissions, submission];
+      setSubmissions(newSubs);
+      localStorage.setItem('mission_submissions', JSON.stringify(newSubs));
+      
+      setToastXP(earnedXp);
+      setEvaluationResult({
+        score: evalResult.score,
+        feedback: evalResult.feedback,
+        earnedXp
+      });
+      setShowGradeCard(true);
+    } catch (error) {
+      console.warn('Gemini evaluation failed, falling back to full score:', error);
+      const earnedXp = mission.xp_reward;
+      
+      const submission: Submission = {
+        missionId: mission.id,
+        text,
         status: 'approved',
-        earned_xp: mission.xp_reward,
-      });
-      // Add XP to profile in Supabase & local state
-      await updateProfile({
-        xp: (profile?.xp ?? 0) + mission.xp_reward
-      });
-    } else if (isGuest) {
-      // Add XP to guest profile in local state & localStorage
-      await updateProfile({
-        xp: (guestProfile?.xp ?? 0) + mission.xp_reward
-      });
-    }
+        xp: earnedXp,
+        submittedAt: new Date().toISOString(),
+        score: 100,
+        feedback: "Excellent! Your submission met all checklist criteria and was approved successfully."
+      };
 
-    const newSubs = [...submissions, submission];
-    setSubmissions(newSubs);
-    localStorage.setItem('mission_submissions', JSON.stringify(newSubs));
-    setShowXP(true);
-    setSubmitting(false);
-    setSelectedMission(null);
-    setText('');
+      if (user) {
+        await supabase.from('mission_submissions').insert({
+          user_id: user.id,
+          mission_id: mission.id,
+          text_observation: text,
+          status: 'approved',
+          earned_xp: earnedXp,
+        });
+        
+        await updateProfile({
+          xp: (profile?.xp ?? 0) + earnedXp
+        });
+      } else if (isGuest) {
+        await updateProfile({
+          xp: (guestProfile?.xp ?? 0) + earnedXp
+        });
+      }
+
+      const newSubs = [...submissions, submission];
+      setSubmissions(newSubs);
+      localStorage.setItem('mission_submissions', JSON.stringify(newSubs));
+      
+      setToastXP(earnedXp);
+      setEvaluationResult({
+        score: 100,
+        feedback: "Excellent! Your submission met all checklist criteria and was approved successfully.",
+        earnedXp
+      });
+      setShowGradeCard(true);
+    } finally {
+      setSubmitting(false);
+    }
   };
+
 
   return (
     <div className="min-h-full bg-pixel-darker pb-6">
-      {showXP && <XPToast amount={mission?.xp_reward ?? 80} reason="Mission submitted!" onDone={() => setShowXP(false)} />}
+      {showXP && <XPToast amount={toastXP} reason="Mission submitted!" onDone={() => setShowXP(false)} />}
 
       {/* Header */}
       <div className="bg-gradient-to-b from-primary/30 to-pixel-darker p-5">
@@ -264,12 +376,26 @@ export default function WeeklyMissions() {
                       <div className="text-white font-game text-sm">{m?.title}</div>
                       <div className="text-white/50 font-body text-xs">{new Date(s.submittedAt).toLocaleDateString()}</div>
                     </div>
-                    <span className="bg-success border-2 border-black text-white font-pixel text-[9px] px-2 py-1">+{s.xp} XP</span>
+                    <div className="flex flex-col items-end gap-1">
+                      <span className="bg-success border-2 border-black text-white font-pixel text-[9px] px-2 py-1">+{s.xp} XP</span>
+                      {s.score !== undefined && (
+                        <span className="bg-primary/20 border border-primary/40 text-primary-light font-pixel text-[8px] px-1">
+                          Score: {s.score}%
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="bg-black/20 border-l-4 border-success p-3">
                     <p className="text-white/80 font-body text-sm italic">"{s.text}"</p>
                   </div>
+                  {s.feedback && (
+                    <div className="mt-2 text-[10px] font-body bg-black/30 border-l-4 border-primary p-2 text-white/70">
+                      <strong className="text-primary font-game text-[8px] block mb-0.5">🤖 AI Feedback:</strong>
+                      {s.feedback}
+                    </div>
+                  )}
                 </div>
+
               );
             })}
           </div>
@@ -300,61 +426,169 @@ export default function WeeklyMissions() {
                 </div>
               </div>
 
-              {/* Instructions */}
-              <div className="p-4 border-b-4 border-black bg-primary/10">
-                <div className="text-white font-game text-[10px] uppercase text-primary tracking-wider mb-1 flex items-center gap-1">
-                  <HelpCircle className="w-3 h-3" /> Step-by-Step Instructions
-                </div>
-                <p className="text-white font-body text-xs font-semibold leading-relaxed">
-                  {MISSION_HELPERS[mission.id]?.goal}
-                </p>
-                <div className="mt-2 text-white/70 font-body text-[11px] leading-relaxed">
-                  <strong className="text-warning">💡 Examples:</strong> {MISSION_HELPERS[mission.id]?.examples}
-                </div>
-                <div className="mt-2 text-white/50 font-body text-[10px] leading-relaxed border-t border-white/5 pt-1">
-                  <strong className="text-white/70">⚙️ How it is validated:</strong> {MISSION_HELPERS[mission.id]?.validationDesc}
-                </div>
-              </div>
-
-              {/* Input & Live Checklist */}
-              <div className="p-5 space-y-4">
-                <div>
-                  <label className="text-white/70 font-body text-xs mb-2 block flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-primary" /> Your Observation:
-                  </label>
-                  <textarea value={text} onChange={e => setText(e.target.value)}
-                    placeholder="Provide your detailed observation here..."
-                    className="pixel-input h-28 resize-none text-xs" maxLength={500} />
-                  <div className="text-right text-white/30 font-body text-xs mt-1">{text.length}/500</div>
-                </div>
-
-                {/* Validation Checklist */}
-                <div className="border-2 border-black bg-pixel-darker p-3">
-                  <div className="text-white/50 font-game text-[9px] uppercase tracking-wider mb-2">AI Verification Checklist</div>
-                  <div className="space-y-1.5">
-                    {validation.requirements.map((req, index) => (
-                      <div key={index} className="flex items-start gap-2">
-                        {req.done ? (
-                          <CheckCircle className="w-3.5 h-3.5 text-success flex-shrink-0 mt-0.5" />
-                        ) : (
-                          <XCircle className="w-3.5 h-3.5 text-pixel-red flex-shrink-0 mt-0.5 opacity-60" />
-                        )}
-                        <span className={`text-[10px] font-body transition-colors leading-tight ${req.done ? 'text-white' : 'text-white/40'}`}>
-                          {req.label}
-                        </span>
-                      </div>
-                    ))}
+              {showGradeCard && evaluationResult ? (
+                /* Report Card View */
+                <motion.div
+                  initial={{ scale: 0.95, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="p-6 space-y-6 text-center"
+                >
+                  <div className="space-y-1">
+                    <span className="text-4xl">🏆</span>
+                    <h3 className="text-white font-game text-sm uppercase tracking-wide">Mission Evaluated!</h3>
+                    <p className="text-white/50 font-body text-[10px]">QuestAI Evaluator Results</p>
                   </div>
-                </div>
 
-                {/* Submit / Cancel Buttons */}
-                <div className="flex gap-3 pt-2">
-                  <Button variant="ghost" onClick={() => { setSelectedMission(null); setText(''); }}>Cancel</Button>
-                  <Button variant="success" fullWidth loading={submitting} disabled={!validation.isValid} onClick={handleSubmit}>
-                    Submit Mission! 🚀
+                  {/* Circular / Large Score Badge */}
+                  <div className="relative w-32 h-32 mx-auto flex flex-col items-center justify-center border-8 border-black bg-pixel-darker rounded-full shadow-[0_0_15px_rgba(34,197,94,0.3)]">
+                    <div className="text-[9px] font-game text-white/40 uppercase tracking-widest">Score</div>
+                    <div className="text-3xl font-game text-success animate-pulse">
+                      {evaluationResult.score}%
+                    </div>
+                    <div className="text-[10px] font-body text-white/60 mt-1">
+                      Grade: {
+                        evaluationResult.score >= 90 ? 'A+' :
+                        evaluationResult.score >= 80 ? 'A' :
+                        evaluationResult.score >= 70 ? 'B' :
+                        evaluationResult.score >= 50 ? 'C' : 'D'
+                      }
+                    </div>
+                  </div>
+
+                  {/* XP Reward Banner */}
+                  <div className="border-4 border-black bg-warning/10 p-3 flex items-center justify-center gap-3">
+                    <Zap className="w-6 h-6 text-warning animate-bounce" />
+                    <div className="text-left">
+                      <div className="text-warning font-game text-xs">+{evaluationResult.earnedXp} XP Awarded</div>
+                      <div className="text-white/50 font-body text-[9px]">Added to your profile</div>
+                    </div>
+                  </div>
+
+                  {/* AI Feedback Bubble */}
+                  <div className="border-4 border-black bg-black/40 p-4 text-left relative mt-2">
+                    <div className="absolute -top-3 left-4 bg-primary text-black font-game text-[8px] px-2 py-0.5 border-2 border-black">
+                      🤖 AI Feedback
+                    </div>
+                    <p className="text-white/90 font-body text-xs leading-relaxed mt-1">
+                      {evaluationResult.feedback}
+                    </p>
+                  </div>
+
+                  {/* Claim Button */}
+                  <Button
+                    variant="success"
+                    fullWidth
+                    onClick={() => {
+                      setSelectedMission(null);
+                      setText('');
+                      setShowXP(true);
+                      resetAIStates();
+                    }}
+                  >
+                    Claim Rewards & Return! 🎒
                   </Button>
-                </div>
-              </div>
+                </motion.div>
+              ) : (
+                /* Edit / Input View */
+                <>
+                  {/* Instructions */}
+                  <div className="p-4 border-b-4 border-black bg-primary/10">
+                    <div className="text-white font-game text-[10px] uppercase text-primary tracking-wider mb-1 flex items-center gap-1">
+                      <HelpCircle className="w-3 h-3" /> Step-by-Step Instructions
+                    </div>
+                    <p className="text-white font-body text-xs font-semibold leading-relaxed">
+                      {MISSION_HELPERS[mission.id]?.goal}
+                    </p>
+                    <div className="mt-2 text-white/70 font-body text-[11px] leading-relaxed">
+                      <strong className="text-warning">💡 Examples:</strong> {MISSION_HELPERS[mission.id]?.examples}
+                    </div>
+                    <div className="mt-2 text-white/50 font-body text-[10px] leading-relaxed border-t border-white/5 pt-1">
+                      <strong className="text-white/70">⚙️ How it is validated:</strong> {MISSION_HELPERS[mission.id]?.validationDesc}
+                    </div>
+                  </div>
+
+                  {/* Input & Live Checklist */}
+                  <div className="p-5 space-y-4">
+                    <div>
+                      <label className="text-white/70 font-body text-xs mb-2 block flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-primary" /> Your Observation:
+                      </label>
+                      <textarea value={text} onChange={e => setText(e.target.value)}
+                        placeholder="Provide your detailed observation here..."
+                        className="pixel-input h-28 resize-none text-xs" maxLength={500} />
+                      <div className="flex justify-between items-center mt-1">
+                        <button
+                          type="button"
+                          onClick={handleGetSuggestions}
+                          disabled={loadingSuggestions}
+                          className="flex items-center gap-1 text-primary hover:text-primary-light text-[9px] font-game bg-primary/10 hover:bg-primary/20 px-2 py-1 border border-primary/20 rounded transition-all"
+                        >
+                          <Sparkles className="w-3 h-3 animate-pulse" />
+                          {loadingSuggestions ? 'Asking Gemini...' : '💡 Ask Gemini for suggestions'}
+                        </button>
+                        <div className="text-white/30 font-body text-xs">{text.length}/500</div>
+                      </div>
+                    </div>
+
+                    {/* Suggestions list */}
+                    {suggestions.length > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="border-2 border-primary bg-primary/5 p-3 space-y-2 relative"
+                      >
+                        <div className="absolute -top-2.5 right-3 bg-primary text-black font-game text-[8px] px-1.5 py-0.5 border border-black rounded">
+                          Gemini Suggestions
+                        </div>
+                        <div className="text-[9px] font-body text-white/50 mb-1">
+                          Click any hint below to add it to your observation:
+                        </div>
+                        <div className="space-y-1">
+                          {suggestions.map((sug, idx) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() => handleApplySuggestion(sug)}
+                              className="w-full text-left bg-black/30 hover:bg-black/50 border border-white/10 hover:border-primary/45 p-2 text-[10px] font-body text-white/80 hover:text-white transition-all flex items-start gap-1"
+                            >
+                              <span className="text-primary font-bold">•</span>
+                              <span>{sug}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* Validation Checklist */}
+                    <div className="border-2 border-black bg-pixel-darker p-3">
+                      <div className="text-white/50 font-game text-[9px] uppercase tracking-wider mb-2">AI Verification Checklist</div>
+                      <div className="space-y-1.5">
+                        {validation.requirements.map((req, index) => (
+                          <div key={index} className="flex items-start gap-2">
+                            {req.done ? (
+                              <CheckCircle className="w-3.5 h-3.5 text-success flex-shrink-0 mt-0.5" />
+                            ) : (
+                              <XCircle className="w-3.5 h-3.5 text-pixel-red flex-shrink-0 mt-0.5 opacity-60" />
+                            )}
+                            <span className={`text-[10px] font-body transition-colors leading-tight ${req.done ? 'text-white' : 'text-white/40'}`}>
+                              {req.label}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Submit / Cancel Buttons */}
+                    <div className="flex gap-3 pt-2">
+                      <Button variant="ghost" onClick={() => { setSelectedMission(null); setText(''); resetAIStates(); }}>Cancel</Button>
+                      <Button variant="success" fullWidth loading={submitting} disabled={!validation.isValid} onClick={handleSubmit}>
+                        Submit Mission! 🚀
+                      </Button>
+                    </div>
+                  </div>
+                </>
+              )}
+
             </motion.div>
           </motion.div>
         )}
