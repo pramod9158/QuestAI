@@ -51,7 +51,7 @@ export async function generateAIIdeas(problem: string, category: string): Promis
   if (GEMINI_API_KEY && GEMINI_API_KEY !== 'your_gemini_api_key_from_aistudio') {
     try {
       const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
       const prompt = `You are a friendly AI educator for children aged 6-16 in India. 
 A student has described a real-world problem: "${problem}" in the category: "${category}".
@@ -87,7 +87,7 @@ export async function generateBrainstormIdea(
   if (GEMINI_API_KEY && GEMINI_API_KEY !== 'your_gemini_api_key_from_aistudio') {
     try {
       const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
       const prompt = `You are a creative AI educator for children in India.
 A student wants to solve this problem:
@@ -129,7 +129,7 @@ export async function generateMissionSuggestions(
   if (GEMINI_API_KEY && GEMINI_API_KEY !== 'your_gemini_api_key_from_aistudio') {
     try {
       const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
       const prompt = `You are a helpful and friendly AI assistant for an educational platform teaching AI to children (aged 6-16).
 The child is working on a weekly mission: "${missionTitle}".
@@ -193,7 +193,7 @@ export async function evaluateMissionSubmission(
   if (GEMINI_API_KEY && GEMINI_API_KEY !== 'your_gemini_api_key_from_aistudio') {
     try {
       const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
       const prompt = `You are a supportive, encouraging, and friendly AI educator. 
 A student has submitted an observation for a weekly challenge.
@@ -240,27 +240,80 @@ Do not include any formatting, markdown, or other text outside the JSON object.`
 
   // Fallback: evaluate using basic length & keyword presence (simple heuristic)
   const text = submissionText.trim();
-  const wordCount = text.split(/\s+/).length;
-  const isSpam = /(.)\1{4,}/.test(text.toLowerCase()) || /^(xyz|abc|test|qwerty|asdf)/.test(text.toLowerCase());
+  const lowerText = text.toLowerCase();
+  
+  // URL check: strip URLs and check if there's sufficient non-URL text
+  const urlRegex = /https?:\/\/[^\s]+/gi;
+  const textWithoutUrls = text.replace(urlRegex, '').trim();
+  const cleanWordCount = textWithoutUrls.split(/\s+/).filter(Boolean).length;
+  
+  const isSpam = /(.)\1{4,}/.test(lowerText) || /^(xyz|abc|test|qwerty|asdf)/.test(lowerText);
 
-  if (text.length < 15 || wordCount < 3 || isSpam) {
+  // If the clean content is too short, or only a URL was submitted
+  if (textWithoutUrls.length < 15 || cleanWordCount < 3 || isSpam) {
     return {
       score: 35,
-      feedback: "Keep trying! Please write a bit more about what you observed. Avoid using random letters or spam.",
+      feedback: "Keep trying! Please write a bit more about what you observed. Avoid using random letters, spam, or only links.",
       passed: false
     };
-  } else if (text.length < 35) {
-    return {
-      score: 65,
-      feedback: "Nice try! You've started listing some observations. Try adding more details and explaining how technology helps.",
-      passed: true
-    };
-  } else {
-    return {
-      score: 95,
-      feedback: "Fantastic work! Your observation is detailed, relevant, and demonstrates a great understanding of the weekly challenge.",
-      passed: true
-    };
   }
+
+  let score = 75;
+  let feedback = "Nice try! You've started listing some observations. Try adding more details and explaining how technology helps.";
+  
+  if (missionTitle.includes("Home") || missionGoal.includes("home")) {
+    const keywords = ['phone', 'mobile', 'camera', 'face id', 'fingerprint', 'alexa', 'siri', 'assistant', 'speaker', 'tv', 'television', 'refrigerator', 'fridge', 'vacuum', 'robot', 'youtube', 'netflix', 'spotify', 'light', 'bulb', 'ac', 'conditioner', 'smart', 'ai', 'algorithm', 'app', 'feed', 'recommend'];
+    const matchedCount = keywords.filter(kw => lowerText.includes(kw)).length;
+    if (matchedCount >= 2 && textWithoutUrls.length >= 35) {
+      score = 95;
+      feedback = "Fantastic work! Your observation is detailed, relevant, and demonstrates a great understanding of your home's AI features.";
+    } else if (matchedCount < 2) {
+      score = 45;
+      feedback = "Almost there! Make sure you mention at least 2 smart/AI features or devices around your home and why they are smart.";
+    }
+  } else if (missionTitle.includes("Time") || missionGoal.includes("waiting")) {
+    const scenarios = ['queue', 'line', 'wait', 'bus', 'traffic', 'canteen', 'lunch', 'library', 'counter', 'gate', 'office', 'register', 'store', 'shop'];
+    const aiSolutions = ['predict', 'optimize', 'schedule', 'app', 'alert', 'route', 'camera', 'sensor', 'automated', 'time', 'manage'];
+    const hasScenario = scenarios.some(kw => lowerText.includes(kw));
+    const hasSolution = aiSolutions.some(kw => lowerText.includes(kw));
+    if (hasScenario && hasSolution && textWithoutUrls.length >= 35) {
+      score = 95;
+      feedback = "Fantastic work! You identified waiting areas and proposed an intelligent AI solution to optimize the time.";
+    } else {
+      score = 45;
+      feedback = "Try to explain where people wait (like canteen or bus stop) and how AI or smart apps can help predict or reduce that wait time.";
+    }
+  } else if (missionTitle.includes("Problem") || missionGoal.includes("neighbourhood")) {
+    const problems = ['trash', 'waste', 'garbage', 'leak', 'water', 'light', 'streetlight', 'hole', 'road', 'traffic', 'pollution', 'broken', 'dirty', 'litter'];
+    const techSolutions = ['sensor', 'camera', 'ai', 'app', 'system', 'detect', 'notify', 'alert', 'analyze', 'satellite', 'monitor'];
+    const hasProblem = problems.some(kw => lowerText.includes(kw));
+    const hasSolution = techSolutions.some(kw => lowerText.includes(kw));
+    if (hasProblem && hasSolution && textWithoutUrls.length >= 40) {
+      score = 95;
+      feedback = "Excellent observation! You spotted a real local problem and thought of an automated/smart sensor way to monitor it.";
+    } else {
+      score = 45;
+      feedback = "Please describe a local issue (like garbage or water leaks) and explain how smart technology or sensors can help solve it.";
+    }
+  } else {
+    // Interview
+    const people = ['father', 'mother', 'parent', 'teacher', 'neighbour', 'uncle', 'aunt', 'doctor', 'shopkeeper', 'adult', 'friend', 'colleague', 'he', 'she', 'they', 'mr', 'mrs', 'ms'];
+    const technology = ['computer', 'laptop', 'excel', 'software', 'app', 'email', 'search', 'write', 'track', 'teach', 'sell', 'record', 'system', 'smart', 'tool', 'internet', 'ai'];
+    const hasPerson = people.some(kw => lowerText.includes(kw));
+    const hasTech = technology.some(kw => lowerText.includes(kw));
+    if (hasPerson && hasTech && textWithoutUrls.length >= 40) {
+      score = 95;
+      feedback = "Great interview summary! You've successfully documented who you spoke with and the technology tools they use.";
+    } else {
+      score = 45;
+      feedback = "Make sure you specify who you interviewed (e.g. parent, teacher) and what software, computers, or smart apps they use daily.";
+    }
+  }
+
+  return {
+    score,
+    feedback,
+    passed: score >= 50
+  };
 }
 

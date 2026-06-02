@@ -181,7 +181,7 @@ export default function WeeklyMissions() {
 
 
   const mission = WEEKLY_MISSIONS_DATA.find(m => m.id === selectedMission);
-  const isSubmitted = (id: number) => submissions.some(s => s.missionId === id);
+  const isSubmitted = (id: number) => submissions.some(s => s.missionId === id && s.status === 'approved');
 
   const validation = mission ? validateSubmission(mission.id, text) : { isValid: false, requirements: [] };
 
@@ -195,41 +195,43 @@ export default function WeeklyMissions() {
     
     try {
       const evalResult = await evaluateMissionSubmission(mission.title, goalText, text);
-      const earnedXp = Math.max(20, Math.round((evalResult.score / 100) * mission.xp_reward));
+      const earnedXp = evalResult.passed ? Math.max(20, Math.round((evalResult.score / 100) * mission.xp_reward)) : 0;
       
-      const submission: Submission = {
-        missionId: mission.id,
-        text,
-        status: evalResult.passed ? 'approved' : 'pending',
-        xp: earnedXp,
-        submittedAt: new Date().toISOString(),
-        score: evalResult.score,
-        feedback: evalResult.feedback
-      };
+      if (evalResult.passed) {
+        const submission: Submission = {
+          missionId: mission.id,
+          text,
+          status: 'approved',
+          xp: earnedXp,
+          submittedAt: new Date().toISOString(),
+          score: evalResult.score,
+          feedback: evalResult.feedback
+        };
 
-      if (user) {
-        await supabase.from('mission_submissions').insert({
-          user_id: user.id,
-          mission_id: mission.id,
-          text_observation: text,
-          status: evalResult.passed ? 'approved' : 'pending',
-          earned_xp: earnedXp,
-        });
-        
-        await updateProfile({
-          xp: (profile?.xp ?? 0) + earnedXp
-        });
-      } else if (isGuest) {
-        await updateProfile({
-          xp: (guestProfile?.xp ?? 0) + earnedXp
-        });
+        if (user) {
+          await supabase.from('mission_submissions').insert({
+            user_id: user.id,
+            mission_id: mission.id,
+            text_observation: text,
+            status: 'approved',
+            earned_xp: earnedXp,
+          });
+          
+          await updateProfile({
+            xp: (profile?.xp ?? 0) + earnedXp
+          });
+        } else if (isGuest) {
+          await updateProfile({
+            xp: (guestProfile?.xp ?? 0) + earnedXp
+          });
+        }
+
+        const newSubs = [...submissions, submission];
+        setSubmissions(newSubs);
+        localStorage.setItem('mission_submissions', JSON.stringify(newSubs));
+        setToastXP(earnedXp);
       }
 
-      const newSubs = [...submissions, submission];
-      setSubmissions(newSubs);
-      localStorage.setItem('mission_submissions', JSON.stringify(newSubs));
-      
-      setToastXP(earnedXp);
       setEvaluationResult({
         score: evalResult.score,
         feedback: evalResult.feedback,
@@ -237,48 +239,55 @@ export default function WeeklyMissions() {
       });
       setShowGradeCard(true);
     } catch (error) {
-      console.warn('Gemini evaluation failed, falling back to full score:', error);
-      const earnedXp = mission.xp_reward;
-      
-      const submission: Submission = {
-        missionId: mission.id,
-        text,
-        status: 'approved',
-        xp: earnedXp,
-        submittedAt: new Date().toISOString(),
-        score: 100,
-        feedback: "Excellent! Your submission met all checklist criteria and was approved successfully."
-      };
-
-      if (user) {
-        await supabase.from('mission_submissions').insert({
-          user_id: user.id,
-          mission_id: mission.id,
-          text_observation: text,
-          status: 'approved',
-          earned_xp: earnedXp,
-        });
+      console.warn('Gemini evaluation failed, falling back to local verification:', error);
+      try {
+        const evalResult = await evaluateMissionSubmission(mission.title, goalText, text);
+        const earnedXp = evalResult.passed ? Math.max(20, Math.round((evalResult.score / 100) * mission.xp_reward)) : 0;
         
-        await updateProfile({
-          xp: (profile?.xp ?? 0) + earnedXp
-        });
-      } else if (isGuest) {
-        await updateProfile({
-          xp: (guestProfile?.xp ?? 0) + earnedXp
-        });
-      }
+        if (evalResult.passed) {
+          const submission: Submission = {
+            missionId: mission.id,
+            text,
+            status: 'approved',
+            xp: earnedXp,
+            submittedAt: new Date().toISOString(),
+            score: evalResult.score,
+            feedback: evalResult.feedback
+          };
 
-      const newSubs = [...submissions, submission];
-      setSubmissions(newSubs);
-      localStorage.setItem('mission_submissions', JSON.stringify(newSubs));
-      
-      setToastXP(earnedXp);
-      setEvaluationResult({
-        score: 100,
-        feedback: "Excellent! Your submission met all checklist criteria and was approved successfully.",
-        earnedXp
-      });
-      setShowGradeCard(true);
+          if (user) {
+            await supabase.from('mission_submissions').insert({
+              user_id: user.id,
+              mission_id: mission.id,
+              text_observation: text,
+              status: 'approved',
+              earned_xp: earnedXp,
+            });
+            
+            await updateProfile({
+              xp: (profile?.xp ?? 0) + earnedXp
+            });
+          } else if (isGuest) {
+            await updateProfile({
+              xp: (guestProfile?.xp ?? 0) + earnedXp
+            });
+          }
+
+          const newSubs = [...submissions, submission];
+          setSubmissions(newSubs);
+          localStorage.setItem('mission_submissions', JSON.stringify(newSubs));
+          setToastXP(earnedXp);
+        }
+
+        setEvaluationResult({
+          score: evalResult.score,
+          feedback: evalResult.feedback,
+          earnedXp
+        });
+        setShowGradeCard(true);
+      } catch (fallbackError) {
+        console.error('Local verification fallback failed:', fallbackError);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -440,9 +449,15 @@ export default function WeeklyMissions() {
                   </div>
 
                   {/* Circular / Large Score Badge */}
-                  <div className="relative w-32 h-32 mx-auto flex flex-col items-center justify-center border-8 border-black bg-pixel-darker rounded-full shadow-[0_0_15px_rgba(34,197,94,0.3)]">
+                  <div className={`relative w-32 h-32 mx-auto flex flex-col items-center justify-center border-8 border-black bg-pixel-darker rounded-full ${
+                    evaluationResult.score >= 50 
+                      ? 'shadow-[0_0_15px_rgba(34,197,94,0.3)]' 
+                      : 'shadow-[0_0_15px_rgba(239,68,68,0.3)]'
+                  }`}>
                     <div className="text-[9px] font-game text-white/40 uppercase tracking-widest">Score</div>
-                    <div className="text-3xl font-game text-success animate-pulse">
+                    <div className={`text-3xl font-game animate-pulse ${
+                      evaluationResult.score >= 50 ? 'text-success' : 'text-pixel-red'
+                    }`}>
                       {evaluationResult.score}%
                     </div>
                     <div className="text-[10px] font-body text-white/60 mt-1">
@@ -450,18 +465,32 @@ export default function WeeklyMissions() {
                         evaluationResult.score >= 90 ? 'A+' :
                         evaluationResult.score >= 80 ? 'A' :
                         evaluationResult.score >= 70 ? 'B' :
-                        evaluationResult.score >= 50 ? 'C' : 'D'
+                        evaluationResult.score >= 50 ? 'C' : 'F'
                       }
                     </div>
                   </div>
 
                   {/* XP Reward Banner */}
-                  <div className="border-4 border-black bg-warning/10 p-3 flex items-center justify-center gap-3">
-                    <Zap className="w-6 h-6 text-warning animate-bounce" />
-                    <div className="text-left">
-                      <div className="text-warning font-game text-xs">+{evaluationResult.earnedXp} XP Awarded</div>
-                      <div className="text-white/50 font-body text-[9px]">Added to your profile</div>
-                    </div>
+                  <div className={`border-4 border-black p-3 flex items-center justify-center gap-3 ${
+                    evaluationResult.score >= 50 ? 'bg-warning/10' : 'bg-pixel-red/10'
+                  }`}>
+                    {evaluationResult.score >= 50 ? (
+                      <>
+                        <Zap className="w-6 h-6 text-warning animate-bounce" />
+                        <div className="text-left">
+                          <div className="text-warning font-game text-xs">+{evaluationResult.earnedXp} XP Awarded</div>
+                          <div className="text-white/50 font-body text-[9px]">Added to your profile</div>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className="w-6 h-6 text-pixel-red animate-bounce" />
+                        <div className="text-left">
+                          <div className="text-pixel-red font-game text-xs">0 XP Earned</div>
+                          <div className="text-white/50 font-body text-[9px]">Score must be at least 50% to pass</div>
+                        </div>
+                      </>
+                    )}
                   </div>
 
                   {/* AI Feedback Bubble */}
@@ -474,19 +503,32 @@ export default function WeeklyMissions() {
                     </p>
                   </div>
 
-                  {/* Claim Button */}
-                  <Button
-                    variant="success"
-                    fullWidth
-                    onClick={() => {
-                      setSelectedMission(null);
-                      setText('');
-                      setShowXP(true);
-                      resetAIStates();
-                    }}
-                  >
-                    Claim Rewards & Return! 🎒
-                  </Button>
+                  {/* Claim or Retry Button */}
+                  {evaluationResult.score >= 50 ? (
+                    <Button
+                      variant="success"
+                      fullWidth
+                      onClick={() => {
+                        setSelectedMission(null);
+                        setText('');
+                        setShowXP(true);
+                        resetAIStates();
+                      }}
+                    >
+                      Claim Rewards & Return! 🎒
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="primary"
+                      fullWidth
+                      onClick={() => {
+                        setShowGradeCard(false);
+                        setEvaluationResult(null);
+                      }}
+                    >
+                      Try Again to Improve! 🔄
+                    </Button>
+                  )}
                 </motion.div>
               ) : (
                 /* Edit / Input View */

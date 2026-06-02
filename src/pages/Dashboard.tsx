@@ -19,7 +19,7 @@ export default function Dashboard() {
 
   const completedLessons = profile?.completed_lessons?.length || 0;
   const completedQuests = profile?.completed_quests?.length || 0;
-  const submissions = JSON.parse(localStorage.getItem('mission_submissions') || '[]').length;
+  const submissions = JSON.parse(localStorage.getItem('mission_submissions') || '[]').filter((s: any) => s.status === 'approved').length;
   const inventions = JSON.parse(localStorage.getItem('guest_inventions') || '[]').length;
   const savedIdeas = JSON.parse(localStorage.getItem('saved_ideas') || '[]').length;
 
