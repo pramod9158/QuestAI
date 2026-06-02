@@ -46,9 +46,9 @@ export default function AIIdeaGenerator() {
   };
 
   const IDEA_COLORS = [
-    { border: 'border-primary', bg: 'bg-primary/20', badge: 'bg-primary', emoji: '💜' },
-    { border: 'border-blue-game', bg: 'bg-blue-game/20', badge: 'bg-blue-game', emoji: '💙' },
-    { border: 'border-success', bg: 'bg-success/20', badge: 'bg-success', emoji: '💚' },
+    { border: 'border-primary', bgSolid: 'linear-gradient(180deg, #2D1D54 0%, #1E1B4B 100%)', badge: 'bg-primary', emoji: '💜' },
+    { border: 'border-blue-game', bgSolid: 'linear-gradient(180deg, #1D2A54 0%, #1E1B4B 100%)', badge: 'bg-blue-game', emoji: '💙' },
+    { border: 'border-success', bgSolid: 'linear-gradient(180deg, #1B3D34 0%, #1E1B4B 100%)', badge: 'bg-success', emoji: '💚' },
   ];
 
   return (
@@ -56,7 +56,7 @@ export default function AIIdeaGenerator() {
       {showXP && <XPToast amount={40} reason="3 AI ideas generated!" onDone={() => setShowXP(false)} />}
 
       {/* Header */}
-      <div className="bg-gradient-to-b from-pixel-pink/30 to-pixel-darker p-5">
+      <div className="bg-gradient-to-b from-[#3D1B34] to-pixel-darker p-5">
         <button onClick={() => navigate('/play')} className="flex items-center gap-2 text-white/60 hover:text-white mb-3 font-body text-sm">
           <ArrowLeft className="w-4 h-4" /> Back to Play
         </button>
@@ -139,7 +139,10 @@ export default function AIIdeaGenerator() {
                     initial={{ x: 40, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
                     transition={{ delay: i * 0.1 }}
-                    className={`border-4 border-black ${colors.bg} ${colors.border} p-5 rounded-3xl shadow-[0px_6px_0px_0px_rgba(0,0,0,0.85)] hover:scale-[1.01] transition-all`}
+                    className={`border-4 border-black ${colors.border} p-5 rounded-3xl shadow-[0px_6px_0px_0px_rgba(0,0,0,0.85)] hover:scale-[1.01] transition-all`}
+                    style={{
+                      backgroundImage: colors.bgSolid
+                    }}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-2 mb-2">

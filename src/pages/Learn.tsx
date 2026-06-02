@@ -16,7 +16,7 @@ export default function Learn() {
   return (
     <div className="min-h-full bg-pixel-darker pb-6">
       {/* Header */}
-      <div className="bg-gradient-to-b from-primary/30 to-pixel-darker p-5 pb-8">
+      <div className="bg-gradient-to-b from-[#241740] to-pixel-darker p-5 pb-8">
         <h1 className="text-white font-game text-2xl flex items-center gap-2">
           📚 Learning Zones
         </h1>
@@ -72,13 +72,13 @@ export default function Learn() {
                       whileTap={!isLocked ? { scale: 0.98 } : {}}
                       onClick={() => !isLocked && navigate(`/learn/${lesson.id}`)}
                       className={`border-4 border-black p-4 rounded-3xl flex items-center gap-4 transition-all shadow-[0px_6px_0px_0px_rgba(0,0,0,0.85)] ${
-                        isDone ? 'bg-success/20 border-success' :
-                        isLocked ? 'bg-white/5 opacity-60 cursor-not-allowed' :
+                        isDone ? 'bg-[#122A1C] border-success' :
+                        isLocked ? 'bg-black/40 opacity-60 cursor-not-allowed' :
                         'bg-pixel-dark cursor-pointer hover:bg-white/5 hover:scale-[1.01] hover:shadow-[0px_8px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5'
                       }`}
                     >
                       <div className={`w-14 h-14 border-4 border-black flex items-center justify-center text-2xl flex-shrink-0 rounded-2xl shadow-[0px_3px_0px_0px_rgba(0,0,0,1)] ${
-                        isDone ? 'bg-success' : isLocked ? 'bg-gray-700' : 'bg-primary/30'
+                        isDone ? 'bg-success' : isLocked ? 'bg-gray-700' : 'bg-[#241740]'
                       }`}>
                         {isLocked ? <Lock className="w-6 h-6 text-gray-400" /> : lesson.emoji}
                       </div>

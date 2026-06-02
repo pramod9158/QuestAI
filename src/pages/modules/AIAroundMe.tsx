@@ -70,7 +70,7 @@ export default function AIAroundMe() {
       {showXP && <XPToast amount={xpAmount} onDone={() => setShowXP(false)} />}
 
       {/* Header */}
-      <div className="bg-gradient-to-b from-blue-game/30 to-pixel-darker p-5">
+      <div className="bg-gradient-to-b from-[#0D1E3A] to-pixel-darker p-5">
         <button onClick={() => navigate('/play')} className="flex items-center gap-2 text-white/60 hover:text-white mb-3 font-body text-sm">
           <ArrowLeft className="w-4 h-4" /> Back to Play
         </button>
@@ -99,7 +99,10 @@ export default function AIAroundMe() {
             animate={{ x: 0, opacity: 1, rotate: 0 }}
             exit={{ x: -200, opacity: 0, rotate: -5 }}
             transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-            className="w-full border-4 border-black bg-pixel-dark rounded-3xl shadow-[0px_6px_0px_0px_#000000] overflow-hidden"
+            className="w-full border-4 border-black rounded-3xl shadow-[0px_6px_0px_0px_#000000] overflow-hidden"
+            style={{
+              backgroundImage: 'linear-gradient(180deg, #1D2A54 0%, #1E1B4B 100%)'
+            }}
           >
             {/* Card front */}
             <div className="p-8 text-center">
@@ -121,7 +124,7 @@ export default function AIAroundMe() {
                 <motion.div
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: 'auto', opacity: 1 }}
-                  className={`border-t-4 border-black p-4 ${card.answer === answered ? 'bg-success/20' : 'bg-pixel-red/20'}`}
+                  className={`border-t-4 border-black p-4 ${card.answer === answered ? 'bg-[#122A1C]' : 'bg-[#3D1A1A]'}`}
                 >
                   <div className="text-center mb-2">
                     <span className="text-3xl">{card.answer === answered ? '✅' : '❌'}</span>

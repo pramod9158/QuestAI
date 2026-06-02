@@ -67,7 +67,7 @@ export default function BrainstormPlayground() {
       {showXP && <XPToast amount={60} reason="Brainstorm complete!" onDone={() => setShowXP(false)} />}
 
       {/* Header */}
-      <div className="bg-gradient-to-b from-warning/30 to-pixel-darker p-5">
+      <div className="bg-gradient-to-b from-[#281D0A] to-pixel-darker p-5">
         <button onClick={() => navigate('/play')} className="flex items-center gap-2 text-white/60 hover:text-white mb-3 font-body text-sm">
           <ArrowLeft className="w-4 h-4" /> Back to Play
         </button>
@@ -77,7 +77,7 @@ export default function BrainstormPlayground() {
         <div className="flex gap-2 mt-4">
           {['Category', 'Problem', 'Who', 'Idea!'].map((s, i) => (
             <div key={s} className={`flex-1 text-center py-1.5 border-2 border-black font-body text-[10px] transition-all ${
-              i <= step ? 'bg-warning text-black' : 'bg-white/10 text-white/40'
+              i <= step ? 'bg-warning text-black' : 'bg-pixel-dark text-white/40'
             }`}>
               {i + 1}. {s}
             </div>
@@ -111,7 +111,11 @@ export default function BrainstormPlayground() {
           {step === 1 && (
             <motion.div key="prob" initial={{ x: 100, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -100, opacity: 0 }} className="space-y-5">
               <h2 className="text-white font-game text-base">Step 2: What's the Problem? 🔍</h2>
-              <div className="border-4 border-black bg-pixel-dark p-4 flex items-center gap-3">
+              <div className="border-4 border-black p-4 flex items-center gap-3"
+                style={{
+                  backgroundImage: 'linear-gradient(180deg, #3D2D1B 0%, #1E1B4B 100%)'
+                }}
+              >
                 <span className="text-3xl">{CATEGORIES.find(c => c.id === category)?.emoji}</span>
                 <span className="text-white font-game text-sm capitalize">{category}</span>
               </div>
@@ -195,7 +199,7 @@ export default function BrainstormPlayground() {
 
               <motion.div
                 initial={{ y: 30 }} animate={{ y: 0 }}
-                className="border-4 border-warning bg-warning/10 p-6 rounded-3xl shadow-[0px_6px_0px_0px_rgba(245,158,11,0.35)] space-y-4"
+                className="border-4 border-warning bg-[#281D0A] p-6 rounded-3xl shadow-[0px_6px_0px_0px_rgba(245,158,11,0.35)] space-y-4"
               >
                 <div className="border-b-2 border-warning/30 pb-3">
                   <div className="text-warning font-body text-xs">🤖 AI Solution Name:</div>

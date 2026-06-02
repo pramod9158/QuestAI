@@ -60,7 +60,7 @@ export default function InventorHall() {
 
   return (
     <div className="min-h-full bg-pixel-darker pb-6">
-      <div className="bg-gradient-to-b from-gray-600/30 to-pixel-darker p-5">
+      <div className="bg-gradient-to-b from-[#1B3D3B] to-pixel-darker p-5">
         <button onClick={() => navigate('/play')} className="flex items-center gap-2 text-white/60 hover:text-white mb-3 font-body text-sm">
           <ArrowLeft className="w-4 h-4" /> Back to Play
         </button>
@@ -91,7 +91,10 @@ export default function InventorHall() {
           </div>
         ) : displayList.map((inv, i) => (
           <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
-            className="border-4 border-black bg-pixel-dark p-5 rounded-3xl shadow-[0px_6px_0px_0px_rgba(0,0,0,0.85)] hover:scale-[1.01] hover:-translate-y-0.5 transition-all"
+            className="border-4 border-black p-5 rounded-3xl shadow-[0px_6px_0px_0px_rgba(0,0,0,0.85)] hover:scale-[1.01] hover:-translate-y-0.5 transition-all"
+            style={{
+              backgroundImage: 'linear-gradient(180deg, #1B3D3B 0%, #1E1B4B 100%)'
+            }}
           >
             <div className="flex items-start justify-between gap-3 mb-3">
               <div className={`${CATEGORY_COLORS[inv.category] || 'bg-gray-600'} border-2 border-black px-2.5 py-0.5 font-game text-[9px] text-white capitalize rounded-xl shadow-[0px_2px_0px_0px_#000]`}>

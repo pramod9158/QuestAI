@@ -22,7 +22,7 @@ export default function AICards() {
   return (
     <div className="min-h-full bg-pixel-darker pb-6">
       {/* Header */}
-      <div className="bg-gradient-to-b from-yellow-600/30 to-pixel-darker p-5">
+      <div className="bg-gradient-to-b from-[#3D241B] to-pixel-darker p-5">
         <button onClick={() => navigate('/play')} className="flex items-center gap-2 text-white/60 hover:text-white mb-3 font-body text-sm">
           <ArrowLeft className="w-4 h-4" /> Back to Play
         </button>
@@ -55,10 +55,7 @@ export default function AICards() {
               style={{ aspectRatio: '2/3' }}
             >
               {/* Card Background */}
-              <div className={`absolute inset-0 ${isUnlocked ? card.color : 'bg-gray-800'} opacity-80`} />
-
-              {/* Pixel grid overlay */}
-              <div className="absolute inset-0 bg-pixel-grid opacity-20" />
+              <div className={`absolute inset-0 ${isUnlocked ? card.color : 'bg-gray-800'} opacity-100`} />
 
               {/* Rarity badge */}
               {isUnlocked && (
@@ -119,7 +116,10 @@ export default function AICards() {
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25 }}
               onClick={e => e.stopPropagation()}
-              className="w-full max-w-md border-4 border-black bg-pixel-dark rounded-3xl shadow-[0px_6px_0px_0px_#000000] overflow-hidden"
+              className="w-full max-w-md border-4 border-black rounded-3xl shadow-[0px_6px_0px_0px_#000000] overflow-hidden"
+              style={{
+                backgroundImage: 'linear-gradient(180deg, #3D241B 0%, #1E1B4B 100%)'
+              }}
             >
               {/* Card header */}
               <div className={`${viewCard.color} border-b-4 border-black p-6 flex flex-col items-center gap-3`}>
@@ -142,7 +142,7 @@ export default function AICards() {
                   <div className="text-white/50 font-body text-xs mb-1">⚡ AI Superpower:</div>
                   <div className="text-primary font-game text-sm">{viewCard.ai_power}</div>
                 </div>
-                <div className="border-2 border-warning bg-warning/10 p-3.5 rounded-2xl shadow-[inset_0px_2px_4px_rgba(245,158,11,0.2)]">
+                <div className="border-2 border-warning bg-[#281D0A] p-3.5 rounded-2xl shadow-[inset_0px_2px_4px_rgba(245,158,11,0.2)]">
                   <div className="text-warning font-body text-xs mb-1">🌟 Fun Fact:</div>
                   <div className="text-white/80 font-body text-sm italic">{viewCard.fun_fact}</div>
                 </div>

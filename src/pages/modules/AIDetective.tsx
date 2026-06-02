@@ -53,7 +53,11 @@ export default function AIDetective() {
         <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring' }}>
           <div className="text-8xl text-center">🕵️</div>
         </motion.div>
-        <div className="text-center border-4 border-black bg-pixel-dark p-6 rounded-3xl shadow-[0px_6px_0px_0px_#000000] w-full">
+        <div className="text-center border-4 border-black p-6 rounded-3xl shadow-[0px_6px_0px_0px_#000000] w-full"
+          style={{
+            backgroundImage: 'linear-gradient(180deg, #1B3D34 0%, #1E1B4B 100%)'
+          }}
+        >
           <h2 className="text-white font-game text-xl">Case Files Solved!</h2>
           <p className="text-white/60 font-body text-sm mt-2">You completed all {DETECTIVE_CASES.length} cases</p>
           <div className="text-warning font-pixel text-2xl mt-3">+{totalXP} XP</div>
@@ -71,7 +75,7 @@ export default function AIDetective() {
       {showXP && <XPToast amount={xpAmount} onDone={() => setShowXP(false)} />}
 
       {/* Header */}
-      <div className="bg-gradient-to-b from-success/30 to-pixel-darker p-5">
+      <div className="bg-gradient-to-b from-[#0C2417] to-pixel-darker p-5">
         <button onClick={() => navigate('/play')} className="flex items-center gap-2 text-white/60 hover:text-white mb-3 font-body text-sm">
           <ArrowLeft className="w-4 h-4" /> Back to Play
         </button>
@@ -95,7 +99,10 @@ export default function AIDetective() {
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
-            className="border-4 border-black bg-pixel-dark rounded-3xl shadow-[0px_6px_0px_0px_#000000] overflow-hidden"
+            className="border-4 border-black rounded-3xl shadow-[0px_6px_0px_0px_#000000] overflow-hidden"
+            style={{
+              backgroundImage: 'linear-gradient(180deg, #1B3D34 0%, #1E1B4B 100%)'
+            }}
           >
             {/* Scene visualization */}
             <div className="bg-black/30 p-8 text-center border-b-4 border-black">
@@ -118,7 +125,7 @@ export default function AIDetective() {
                 <SpeakButton text={caseData.scenario} />
               </div>
 
-              <div className="mt-4 bg-warning/10 border-2 border-warning p-3 rounded-2xl">
+              <div className="mt-4 bg-[#281D0A] border-2 border-warning p-3 rounded-2xl">
                 <p className="text-warning font-game text-xs">🔍 Your Detective Question:</p>
                 <p className="text-white font-body text-sm mt-1">"Can AI help solve this problem?"</p>
               </div>
@@ -150,7 +157,7 @@ export default function AIDetective() {
             >
               {/* Verdict */}
               <div className={`border-4 border-black p-5 text-center rounded-3xl shadow-[0px_4px_0px_0px_rgba(0,0,0,0.85)] ${
-                selected === caseData.canAIHelp ? 'bg-success/20 border-success' : 'bg-primary/20 border-primary'
+                selected === caseData.canAIHelp ? 'bg-[#122A1C] border-success' : 'bg-[#241740] border-primary'
               }`}>
                 <div className="text-4xl mb-2">
                   {selected === caseData.canAIHelp ? '🎯' : '💡'}
@@ -161,7 +168,11 @@ export default function AIDetective() {
               </div>
 
               {/* Explanation Card */}
-              <div className="border-4 border-black bg-pixel-dark p-5 rounded-3xl shadow-[0px_6px_0px_0px_#000000]">
+              <div className="border-4 border-black p-5 rounded-3xl shadow-[0px_6px_0px_0px_#000000]"
+                style={{
+                  backgroundImage: 'linear-gradient(180deg, #1B3D34 0%, #1E1B4B 100%)'
+                }}
+              >
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-2xl">
                     {caseData.canAIHelp === 'yes' ? '✅' : caseData.canAIHelp === 'no' ? '❌' : '🤔'}
@@ -173,7 +184,7 @@ export default function AIDetective() {
                 </div>
                 <p className="text-white/80 font-body text-sm leading-relaxed">{caseData.explanation}</p>
                 {selected === caseData.canAIHelp && (
-                  <div className="mt-3 bg-warning/20 border-2 border-warning px-3 py-2 text-center rounded-xl">
+                  <div className="mt-3 bg-[#281D0A] border-2 border-warning px-3 py-2 text-center rounded-xl">
                     <span className="text-warning font-pixel text-[10px]">+{caseData.xp} XP EARNED!</span>
                   </div>
                 )}
