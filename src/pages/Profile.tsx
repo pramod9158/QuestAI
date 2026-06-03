@@ -67,7 +67,7 @@ export default function Profile() {
             {/* Level badge */}
             <div
               className="absolute -bottom-2 -right-2 px-2 py-0.5 font-pixel text-[6px] text-white"
-              style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #3B82F6 100%)', border: '2px solid #000000', boxShadow: '2px 2px 0px #000000' }}
+              style={{ background: '#7C3AED', border: '2px solid #000000', boxShadow: '2px 2px 0px #000000' }}
             >
               LV.{level}
             </div>
@@ -98,7 +98,7 @@ export default function Profile() {
               <motion.div
                 className="h-full"
                 style={{
-                  background: 'linear-gradient(90deg, #F59E0B, #FCD34D)',
+                  background: '#F59E0B',
                   backgroundImage: 'repeating-linear-gradient(90deg, transparent 0px, transparent 4px, rgba(0,0,0,0.2) 4px, rgba(0,0,0,0.2) 6px)',
                 }}
                 animate={{ width: `${xpInfo.progress}%` }}
@@ -130,7 +130,7 @@ export default function Profile() {
             <div className="text-xl mb-0.5">{stat.icon}</div>
             <div
               className="font-game text-sm"
-              style={{ background: `linear-gradient(135deg, ${stat.gradFrom}, ${stat.gradTo})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
+              style={{ color: stat.border }}
             >
               {stat.value}
             </div>
@@ -151,7 +151,7 @@ export default function Profile() {
               onClick={() => setActiveTab(tab.key)}
               className="flex-1 py-2 font-pixel text-[6px] transition-all duration-150 tracking-wide"
               style={activeTab === tab.key ? {
-                background: 'linear-gradient(135deg, #7C3AED, #3B82F6)',
+                background: '#7C3AED',
                 color: 'white',
                 border: '1.5px solid #000000',
                 boxShadow: '2px 2px 0px #000000',
@@ -190,7 +190,7 @@ export default function Profile() {
                   <span className="text-white/65 font-body text-sm">{item.emoji} {item.label}</span>
                   <span
                     className="font-game text-sm"
-                    style={{ background: `linear-gradient(135deg, ${item.gradFrom}, ${item.gradTo})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
+                    style={{ color: item.gradFrom }}
                   >
                     {item.value}
                   </span>

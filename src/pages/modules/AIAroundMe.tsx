@@ -70,7 +70,7 @@ export default function AIAroundMe() {
       {showXP && <XPToast amount={xpAmount} onDone={() => setShowXP(false)} />}
 
       {/* Header */}
-      <div className="bg-gradient-to-b from-blue-game/30 to-pixel-darker p-5">
+      <div className="bg-surface-2 p-5">
         <button onClick={() => navigate('/play')} className="flex items-center gap-2 text-white/60 hover:text-white mb-3 font-body text-sm">
           <ArrowLeft className="w-4 h-4" /> Back to Play
         </button>

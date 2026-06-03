@@ -60,7 +60,7 @@ export default function InventorHall() {
 
   return (
     <div className="min-h-full bg-game pb-6">
-      <div className="bg-gradient-to-b from-gray-600/30 to-pixel-darker p-5">
+      <div className="bg-surface-2 p-5">
         <button onClick={() => navigate('/play')} className="flex items-center gap-2 text-white/60 hover:text-white mb-3 font-body text-sm">
           <ArrowLeft className="w-4 h-4" /> Back to Play
         </button>
@@ -120,7 +120,7 @@ export default function InventorHall() {
                 <span>{inv.innovation_score}/100</span>
               </div>
               <div className="h-2 bg-black border border-black">
-                <div className="h-full bg-gradient-to-r from-primary to-warning" style={{ width: `${inv.innovation_score}%` }} />
+                <div className="h-full bg-primary" style={{ width: `${inv.innovation_score}%` }} />
               </div>
             </div>
           </motion.div>

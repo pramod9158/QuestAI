@@ -106,7 +106,7 @@ export default function StoryAdventures() {
         {showXP && <XPToast amount={quest.xpReward} reason={`${quest.title} complete!`} onDone={() => setShowXP(false)} />}
 
         {/* Quest Header */}
-        <div className="bg-gradient-to-b from-primary/40 to-pixel-darker p-5">
+      <div className="bg-surface-2 p-5">
           <button onClick={() => { setSelectedQuest(null); setCurrentStep(0); handleNextStep(); }} className="flex items-center gap-2 text-white/60 hover:text-white font-body text-sm mb-3">
             <ArrowLeft className="w-4 h-4" /> Quest Map
           </button>
@@ -211,7 +211,7 @@ export default function StoryAdventures() {
   // Quest Map
   return (
     <div className="min-h-full bg-game pb-6">
-      <div className="bg-gradient-to-b from-primary/40 to-pixel-darker p-5 pb-8">
+      <div className="bg-surface-2 p-5 pb-8">
         <button onClick={() => navigate('/play')} className="flex items-center gap-2 text-white/60 hover:text-white mb-3 font-body text-sm">
           <ArrowLeft className="w-4 h-4" /> Back to Play
         </button>

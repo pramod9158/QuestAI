@@ -98,8 +98,9 @@ export default function Auth() {
                   onClick={() => setTab(t)}
                   className="flex-1 py-2.5 font-pixel text-[7px] transition-all duration-150 tracking-wide"
                   style={tab === t ? {
-                    background: 'linear-gradient(135deg, #7C3AED, #3B82F6)',
+                    background: '#7C3AED',
                     color: 'white',
+                    border: '1.5px solid #000000',
                     boxShadow: '2px 2px 0px #000000',
                   } : { color: 'rgba(255,255,255,0.4)' }}
                 >

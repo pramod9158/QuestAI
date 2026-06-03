@@ -90,7 +90,7 @@ export default function Home() {
         >
           <div
             className="w-10 h-10 flex items-center justify-center text-xl flex-shrink-0"
-            style={{ background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', border: '2px solid #000000', boxShadow: '2px 2px 0px #000000' }}
+            style={{ background: '#3B82F6', border: '2px solid #000000', boxShadow: '2px 2px 0px #000000' }}
           >
             🎯
           </div>
@@ -122,7 +122,7 @@ export default function Home() {
             <div className="text-2xl mb-1">{stat.icon}</div>
             <div
               className="font-game text-sm"
-              style={{ background: `linear-gradient(135deg, ${stat.gradFrom}, ${stat.gradTo})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
+              style={{ color: stat.borderColor }}
             >
               {stat.value}
             </div>
@@ -159,7 +159,7 @@ export default function Home() {
         >
           <div
             className="w-14 h-14 flex items-center justify-center text-3xl flex-shrink-0"
-            style={{ background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', border: '2px solid #000000', boxShadow: '2px 2px 0px #000000' }}
+            style={{ background: '#3B82F6', border: '2px solid #000000', boxShadow: '2px 2px 0px #000000' }}
           >
             {CURRICULUM[completedLessons]?.emoji || '📺'}
           </div>
@@ -206,7 +206,7 @@ export default function Home() {
             >
               <div
                 className="w-10 h-10 flex items-center justify-center text-xl mb-3"
-                style={{ background: `linear-gradient(135deg, ${mod.gradFrom}, ${mod.gradTo})`, border: '2px solid #000000', boxShadow: '2px 2px 0px #000000' }}
+                style={{ background: mod.gradFrom, border: '2px solid #000000', boxShadow: '2px 2px 0px #000000' }}
               >
                 {mod.emoji}
               </div>
@@ -238,7 +238,7 @@ export default function Home() {
                   <div
                     className="w-14 h-14 flex items-center justify-center text-2xl"
                     style={{
-                      background: 'linear-gradient(135deg, #2D1B69, #1E3A5F)',
+                      background: '#7C3AED',
                       border: '3px solid #000000',
                       boxShadow: '3px 3px 0px 0px #000000',
                     }}
@@ -290,7 +290,7 @@ export default function Home() {
               <span className="font-body text-white/80 text-sm flex-1">{row.name}</span>
               <span
                 className="font-game text-xs"
-                style={{ background: `linear-gradient(135deg, ${row.gradFrom}, ${row.gradTo})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
+                style={{ color: row.gradFrom }}
               >
                 {row.xp}
               </span>

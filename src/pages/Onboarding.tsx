@@ -83,7 +83,7 @@ export default function Onboarding() {
                   <div
                     className="w-14 h-14 flex items-center justify-center text-3xl flex-shrink-0"
                     style={{
-                      background: `linear-gradient(135deg, ${z.gradFrom}, ${z.gradTo})`,
+                      background: z.gradFrom,
                       border: '2px solid #000000',
                       boxShadow: '2px 2px 0px #000000',
                     }}

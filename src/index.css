@@ -216,54 +216,52 @@ body {
 /* ────────────────────────────────────────────
    GRADIENT BACKGROUNDS
 ──────────────────────────────────────────── */
-.grad-primary { background: linear-gradient(135deg, #7C3AED 0%, #3B82F6 100%); }
-.grad-secondary { background: linear-gradient(135deg, #F59E0B 0%, #EF4444 100%); }
-.grad-xp { background: linear-gradient(135deg, #F59E0B 0%, #FCD34D 100%); }
-.grad-mission { background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%); }
-.grad-bg { background: linear-gradient(180deg, #0F0A2E 0%, #1E1B4B 100%); }
-.grad-success { background: linear-gradient(135deg, #10B981 0%, #3B82F6 100%); }
-.grad-danger { background: linear-gradient(135deg, #F59E0B 0%, #EF4444 100%); }
-.grad-fire { background: linear-gradient(135deg, #EF4444 0%, #F59E0B 100%); }
+.grad-primary { background: #7C3AED; }
+.grad-secondary { background: #EF4444; }
+.grad-xp { background: #F59E0B; }
+.grad-mission { background: #3B82F6; }
+.grad-bg { background: #1E1B4B; }
+.grad-success { background: #10B981; }
+.grad-danger { background: #EF4444; }
+.grad-fire { background: #EF4444; }
 
 /* Animated gradient */
 .grad-animated {
-  background: linear-gradient(270deg, #7C3AED, #3B82F6, #10B981, #F59E0B);
-  background-size: 400% 400%;
-  animation: gradientShift 6s ease infinite;
+  background: #7C3AED;
 }
 
 /* ────────────────────────────────────────────
    GRADIENT TEXT
 ──────────────────────────────────────────── */
 .grad-text-primary {
-  background: linear-gradient(135deg, #7C3AED, #3B82F6);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #A78BFA;
+  background: none !important;
+  -webkit-text-fill-color: initial !important;
+  background-clip: unset !important;
 }
 .grad-text-xp {
-  background: linear-gradient(135deg, #F59E0B, #FCD34D);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #F59E0B;
+  background: none !important;
+  -webkit-text-fill-color: initial !important;
+  background-clip: unset !important;
 }
 .grad-text-mission {
-  background: linear-gradient(135deg, #3B82F6, #8B5CF6);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #3B82F6;
+  background: none !important;
+  -webkit-text-fill-color: initial !important;
+  background-clip: unset !important;
 }
 .grad-text-secondary {
-  background: linear-gradient(135deg, #F59E0B, #EF4444);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #EF4444;
+  background: none !important;
+  -webkit-text-fill-color: initial !important;
+  background-clip: unset !important;
 }
 .grad-text-fire {
-  background: linear-gradient(135deg, #EF4444, #F59E0B);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #EF4444;
+  background: none !important;
+  -webkit-text-fill-color: initial !important;
+  background-clip: unset !important;
 }
 
 /* ────────────────────────────────────────────
@@ -295,31 +293,31 @@ body {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #7C3AED 0%, #3B82F6 100%);
+  background: #7C3AED;
   color: white;
   box-shadow: 4px 4px 0px 0px #000000;
 }
 
 .btn-blue {
-  background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
+  background: #3B82F6;
   color: white;
   box-shadow: 4px 4px 0px 0px #000000;
 }
 
 .btn-success {
-  background: linear-gradient(135deg, #10B981 0%, #3B82F6 100%);
+  background: #10B981;
   color: white;
   box-shadow: 4px 4px 0px 0px #000000;
 }
 
 .btn-warning {
-  background: linear-gradient(135deg, #F59E0B 0%, #FCD34D 100%);
+  background: #F59E0B;
   color: #0F0A2E;
   box-shadow: 4px 4px 0px 0px #000000;
 }
 
 .btn-danger {
-  background: linear-gradient(135deg, #EF4444 0%, #F59E0B 100%);
+  background: #EF4444;
   color: white;
   box-shadow: 4px 4px 0px 0px #000000;
 }
@@ -336,7 +334,7 @@ body {
 }
 
 .btn-pixel {
-  background: linear-gradient(135deg, #7C3AED 0%, #3B82F6 100%);
+  background: #7C3AED;
   color: white;
   box-shadow: 4px 4px 0px 0px #000000;
 }

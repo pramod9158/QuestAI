@@ -73,7 +73,7 @@ export default function ComicCreator() {
 
   return (
     <div className="min-h-full pb-6">
-      <div className="p-5" style={{ background: 'linear-gradient(180deg, rgba(124,58,237,0.2), transparent)' }}>
+      <div className="p-5" style={{ background: '#16103A' }}>
         <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-white/55 hover:text-white mb-3 font-body text-sm">
           <ArrowLeft className="w-4 h-4" /> Back
         </button>
@@ -93,12 +93,12 @@ export default function ComicCreator() {
                   className="flex-1 h-8 cursor-pointer flex items-center justify-center font-pixel text-[7px] transition-all"
                   style={
                     i < currentPanel ? {
-                      background: 'linear-gradient(135deg, #10B981, #3B82F6)',
+                      background: '#10B981',
                       color: 'white',
                       border: '2px solid #000000',
                       boxShadow: '2px 2px 0px #000000',
                     } : i === currentPanel ? {
-                      background: 'linear-gradient(135deg, #7C3AED, #3B82F6)',
+                      background: '#7C3AED',
                       color: 'white',
                       border: '2px solid #000000',
                       boxShadow: '2px 2px 0px #000000',
@@ -147,7 +147,7 @@ export default function ComicCreator() {
                       onClick={() => handleKeyword(kw)}
                       className="p-3 text-center font-body text-sm transition-all"
                       style={panelChoices[currentPanel] === kw ? {
-                        background: 'linear-gradient(135deg, #7C3AED, #3B82F6)',
+                        background: '#7C3AED',
                         color: 'white',
                         border: '3px solid #000000',
                         boxShadow: '4px 4px 0px #000000',

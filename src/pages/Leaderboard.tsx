@@ -90,7 +90,7 @@ export default function Leaderboard() {
                     className="w-full flex flex-col items-center justify-center py-4"
                     style={{
                       height: p.height,
-                      background: `linear-gradient(180deg, ${p.gradFrom}33 0%, ${p.gradTo}1A 100%)`,
+                      background: '#1E1B4B',
                       borderLeft: '3px solid #000000',
                       borderRight: '3px solid #000000',
                       borderTop: '3px solid #000000',
@@ -100,7 +100,7 @@ export default function Leaderboard() {
                     <div className="text-3xl">{p.rank}</div>
                     <div
                       className="font-game text-xs mt-1"
-                      style={{ background: `linear-gradient(135deg, ${p.gradFrom}, ${p.gradTo})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
+                      style={{ color: p.gradFrom }}
                     >
                       {entry?.xp} XP
                     </div>
@@ -154,8 +154,7 @@ export default function Leaderboard() {
                 <span
                   className="font-game text-sm"
                   style={isTop3 && ts ? {
-                    background: `linear-gradient(135deg, ${ts.gradFrom}, ${ts.gradTo})`,
-                    WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+                    color: ts.gradFrom,
                   } : { color: 'rgba(255,255,255,0.6)' }}
                 >
                   {entry.xp}

@@ -82,7 +82,7 @@ export default function LessonPlayer() {
       {/* Header */}
       <div
         className="px-4 py-3 flex items-center gap-3"
-        style={{ background: 'rgba(13,13,26,0.9)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(127,90,240,0.25)' }}
+        style={{ background: '#1E1B4B', borderBottom: '3px solid #000000', boxShadow: '0 4px 0px 0px #000000' }}
       >
         <button onClick={() => navigate('/learn')} className="touch-target text-white/50 hover:text-white transition-colors">
           <ArrowLeft className="w-5 h-5" />
@@ -123,7 +123,7 @@ export default function LessonPlayer() {
             />
           </div>
           {/* TTS Intro */}
-          <div className="p-3" style={{ background: 'rgba(127,90,240,0.08)', borderTop: '1px solid rgba(127,90,240,0.2)' }}>
+          <div className="p-3" style={{ background: '#16103A', borderTop: '2px solid #000000' }}>
             <p className="text-white/60 font-body text-xs italic">"{lesson.ttsIntro}"</p>
           </div>
         </div>
@@ -145,15 +145,15 @@ export default function LessonPlayer() {
       {/* Complete Button */}
       <div
         className="p-4"
-        style={{ background: 'rgba(13,13,26,0.9)', backdropFilter: 'blur(16px)', borderTop: '1px solid rgba(255,255,255,0.08)' }}
+        style={{ background: '#16103A', borderTop: '3px solid #000000', boxShadow: '0 -4px 0px 0px #000000' }}
       >
         {completed ? (
           <div
             className="flex items-center justify-center gap-2 py-4 rounded-2xl"
-            style={{ background: 'linear-gradient(135deg, rgba(44,182,125,0.2), rgba(0,194,255,0.12))', border: '1px solid rgba(44,182,125,0.4)' }}
+            style={{ background: '#10B981', border: '3px solid #000000', boxShadow: '3px 3px 0px 0px #000000' }}
           >
-            <CheckCircle className="w-6 h-6" style={{ color: '#2CB67D' }} />
-            <span className="font-heading font-bold text-sm" style={{ color: '#2CB67D' }}>Lesson Complete! +{lesson.xpReward} XP earned!</span>
+            <CheckCircle className="w-6 h-6 text-white" />
+            <span className="font-heading font-bold text-sm text-white">Lesson Complete! +{lesson.xpReward} XP earned!</span>
           </div>
         ) : (
           <Button variant="success" size="lg" fullWidth onClick={handleComplete}>

@@ -47,7 +47,7 @@ export default function Play() {
             <div
               className="w-12 h-12 flex items-center justify-center text-2xl"
               style={{
-                background: `linear-gradient(135deg, ${mod.gradFrom}, ${mod.gradTo})`,
+                background: mod.gradFrom,
                 border: '2px solid #000000',
                 boxShadow: '2px 2px 0px #000000',
               }}

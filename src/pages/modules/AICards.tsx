@@ -21,7 +21,7 @@ export default function AICards() {
   return (
     <div className="min-h-full bg-game pb-6">
       {/* Header */}
-      <div className="bg-gradient-to-b from-yellow-600/30 to-pixel-darker p-5">
+      <div className="bg-surface-2 p-5">
         <button onClick={() => navigate('/play')} className="flex items-center gap-2 text-white/60 hover:text-white mb-3 font-body text-sm">
           <ArrowLeft className="w-4 h-4" /> Back to Play
         </button>

@@ -41,7 +41,7 @@ export default function Learn() {
               onClick={() => setActiveZone(z.key as typeof activeZone)}
               className="px-3 py-2 font-body text-xs flex items-center gap-1.5 transition-all duration-150"
               style={activeZone === z.key ? {
-                background: 'linear-gradient(135deg, #7C3AED, #3B82F6)',
+                background: '#7C3AED',
                 color: 'white',
                 border: '2px solid #000000',
                 boxShadow: '3px 3px 0px 0px #000000',
@@ -80,7 +80,7 @@ export default function Learn() {
               >
                 <div
                   className="w-12 h-12 flex items-center justify-center text-2xl flex-shrink-0"
-                  style={{ background: `linear-gradient(135deg, ${ps.gradFrom}, ${ps.gradTo})`, border: '2px solid #000000', boxShadow: '2px 2px 0px #000000' }}
+                  style={{ background: ps.gradFrom, border: '2px solid #000000', boxShadow: '2px 2px 0px #000000' }}
                 >
                   {phase.emoji}
                 </div>
@@ -93,7 +93,7 @@ export default function Learn() {
                       <motion.div
                         className="h-full"
                         style={{
-                          background: `linear-gradient(90deg, ${ps.gradFrom}, ${ps.gradTo})`,
+                          background: ps.gradFrom,
                           backgroundImage: 'repeating-linear-gradient(90deg, transparent 0px, transparent 4px, rgba(0,0,0,0.2) 4px, rgba(0,0,0,0.2) 6px)',
                         }}
                         initial={{ width: 0 }}
@@ -135,7 +135,7 @@ export default function Learn() {
                       <div
                         className="w-14 h-14 flex items-center justify-center text-2xl flex-shrink-0"
                         style={isDone ? {
-                          background: `linear-gradient(135deg, ${ps.gradFrom}, ${ps.gradTo})`,
+                          background: ps.gradFrom,
                           boxShadow: `2px 2px 0px #000000`,
                           border: '2px solid #000000',
                         } : {
@@ -161,7 +161,7 @@ export default function Learn() {
                         {isDone ? (
                           <div
                             className="w-8 h-8 flex items-center justify-center"
-                            style={{ background: `linear-gradient(135deg, ${ps.gradFrom}, ${ps.gradTo})`, border: '2px solid #000000', boxShadow: '2px 2px 0px #000000' }}
+                            style={{ background: ps.gradFrom, border: '2px solid #000000', boxShadow: '2px 2px 0px #000000' }}
                           >
                             <CheckCircle className="w-4 h-4 text-white" />
                           </div>

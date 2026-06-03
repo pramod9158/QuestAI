@@ -299,7 +299,7 @@ export default function WeeklyMissions() {
       {showXP && <XPToast amount={toastXP} reason="Mission submitted!" onDone={() => setShowXP(false)} />}
 
       {/* Header */}
-      <div className="p-5" style={{ background: 'linear-gradient(180deg, rgba(124,58,237,0.2), transparent)' }}>
+      <div className="p-5" style={{ background: '#16103A' }}>
         <h1 className="font-pixel text-[10px] text-white flex items-center gap-2 tracking-wide">🎯 WEEKLY MISSIONS</h1>
         <p className="text-white/55 font-body text-sm mt-1">Real-world field challenges — earn massive XP!</p>
 
@@ -309,8 +309,9 @@ export default function WeeklyMissions() {
             <button key={tab} onClick={() => setActiveTab(tab)}
               className="flex-1 py-2 font-pixel text-[6px] transition-all duration-150 tracking-wide"
               style={activeTab === tab ? {
-                background: 'linear-gradient(135deg, #7C3AED, #3B82F6)',
+                background: '#7C3AED',
                 color: 'white',
+                border: '1.5px solid #000000',
                 boxShadow: '2px 2px 0px #000000',
               } : { color: 'rgba(255,255,255,0.4)' }}>
               {tab === 'missions' ? '🎯 MISSIONS' : '📋 SUBMISSIONS'}
@@ -400,7 +401,7 @@ export default function WeeklyMissions() {
                       <div className="text-white/50 font-body text-xs">{new Date(s.submittedAt).toLocaleDateString()}</div>
                     </div>
                     <div className="flex flex-col items-end gap-1">
-                      <span className="font-pixel text-[7px] px-2 py-1 text-white" style={{ background: 'linear-gradient(135deg, #10B981, #3B82F6)', border: '2px solid #000000', boxShadow: '2px 2px 0px #000000' }}>+{s.xp} XP</span>
+                       <span className="font-pixel text-[7px] px-2 py-1 text-white" style={{ background: '#10B981', border: '2px solid #000000', boxShadow: '2px 2px 0px #000000' }}>+{s.xp} XP</span>
                       {s.score !== undefined && (
                         <span className="bg-primary/20 border border-primary/40 text-primary-light font-pixel text-[8px] px-1">
                           Score: {s.score}%

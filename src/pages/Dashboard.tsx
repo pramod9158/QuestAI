@@ -84,16 +84,14 @@ export default function Dashboard() {
     return (
       <div
         className="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden"
-        style={{ background: 'linear-gradient(135deg, #0D0D1A 0%, #1A1040 100%)' }}
+        style={{ background: '#0F0A2E' }}
       >
-        <div className="gradient-orb gradient-orb-mission" style={{ width: 240, height: 240, top: -60, left: -60, opacity: 0.4 }} />
-        <div className="gradient-orb gradient-orb-primary" style={{ width: 180, height: 180, bottom: -40, right: -40, opacity: 0.35, animationDelay: '-5s' }} />
         <div className="w-full max-w-sm space-y-6 relative z-10">
           <div className="text-center">
             <div className="text-7xl mb-4">👨‍🏫</div>
             <h1
               className="font-heading font-bold text-xl"
-              style={{ background: 'linear-gradient(135deg, #00C2FF, #5B5FFF)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
+              style={{ color: '#00C2FF' }}
             >
               Parent/Teacher Dashboard
             </h1>
@@ -158,7 +156,7 @@ export default function Dashboard() {
           <div className="flex items-center gap-4 pb-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
             <div
               className="w-16 h-16 flex items-center justify-center text-3xl font-heading font-bold"
-              style={{ background: 'linear-gradient(135deg, #7F5AF0, #2CB67D)', border: '2px solid #000000', boxShadow: '2px 2px 0px #000000' }}
+              style={{ background: '#7C3AED', border: '2px solid #000000', boxShadow: '2px 2px 0px #000000' }}
             >
               {profile?.username?.charAt(0).toUpperCase()}
             </div>
@@ -185,9 +183,9 @@ export default function Dashboard() {
                 <div className="text-xl mb-1">{stat.emoji}</div>
                 <div
                   className="font-heading font-bold text-lg"
-                  style={{ background: `linear-gradient(135deg, ${stat.grad[0]}, ${stat.grad[1]})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
+                  style={{ color: stat.grad[0] }}
                 >
-                  {stat.value}<span className="text-white/30 text-xs font-normal" style={{ WebkitTextFillColor: 'rgba(255,255,255,0.3)' }}>/{stat.max}</span>
+                  {stat.value}<span className="text-white/30 text-xs font-normal">/{stat.max}</span>
                 </div>
                 <div className="text-white/45 font-body text-xs">{stat.label}</div>
               </div>
@@ -207,7 +205,7 @@ export default function Dashboard() {
                 <div key={b.id} className="flex flex-col items-center gap-1.5">
                   <div
                     className="w-12 h-12 flex items-center justify-center text-2xl"
-                    style={{ background: 'linear-gradient(135deg, rgba(127,90,240,0.3), rgba(44,182,125,0.2))', border: '2px solid #000000', boxShadow: '2px 2px 0px #000000' }}
+                    style={{ background: '#7C3AED', border: '2px solid #000000', boxShadow: '2px 2px 0px #000000' }}
                   >
                     {b.emoji}
                   </div>
@@ -331,7 +329,7 @@ export default function Dashboard() {
 
       {/* Hidden Certificate template for PDF */}
       <div ref={certRef} style={{ position: 'absolute', left: '-9999px', top: 0, width: '800px', backgroundColor: '#0F0A2E', padding: '40px', fontFamily: 'Nunito, sans-serif' }}>
-        <div style={{ border: '8px solid #7C3AED', padding: '40px', textAlign: 'center', background: 'linear-gradient(135deg, #1E1B4B, #0F0A2E)' }}>
+        <div style={{ border: '8px solid #7C3AED', padding: '40px', textAlign: 'center', background: '#1E1B4B' }}>
           <div style={{ fontSize: '48px', marginBottom: '16px' }}>🤖</div>
           <h1 style={{ color: '#F59E0B', fontSize: '28px', marginBottom: '8px', fontWeight: 'bold' }}>CERTIFICATE OF ACHIEVEMENT</h1>
           <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '14px', marginBottom: '24px' }}>AI Explorer — Gamified AI Learning Platform</p>
