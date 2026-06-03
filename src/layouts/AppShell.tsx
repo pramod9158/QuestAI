@@ -40,8 +40,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             className="sticky top-0 z-40 px-4 py-3 flex flex-col gap-2"
             style={{
               background: 'linear-gradient(180deg, #1E1B4B 0%, #16103A 100%)',
-              borderBottom: '3px solid #7C3AED',
-              boxShadow: '0 4px 0px 0px rgba(0,0,0,0.5)',
+              borderBottom: '3px solid #000000',
+              boxShadow: '0 4px 0px 0px #000000',
             }}
           >
             <div className="flex items-center justify-between">
@@ -82,8 +82,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             className="sticky bottom-0 z-40 pb-safe"
             style={{
               background: 'linear-gradient(180deg, #16103A 0%, #1E1B4B 100%)',
-              borderTop: '3px solid #7C3AED',
-              boxShadow: '0 -4px 0px 0px rgba(0,0,0,0.5)',
+              borderTop: '3px solid #000000',
+              boxShadow: '0 -4px 0px 0px #000000',
             }}
           >
             <div className="flex items-center justify-around px-2">
@@ -100,8 +100,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                         className="p-2 transition-all duration-150"
                         style={isActive ? {
                           background: 'linear-gradient(135deg, #7C3AED 0%, #3B82F6 100%)',
-                          boxShadow: '3px 3px 0px 0px #5B21B6, 0 0 12px rgba(124,58,237,0.4)',
-                          border: '2px solid rgba(255,255,255,0.3)',
+                          boxShadow: '3px 3px 0px 0px #000000',
+                          border: '2px solid #000000',
                         } : {}}
                       >
                         <Icon className="w-5 h-5" />

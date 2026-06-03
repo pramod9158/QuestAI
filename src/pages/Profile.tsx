@@ -57,8 +57,8 @@ export default function Profile() {
             <div
               className="absolute inset-[-4px]"
               style={{
-                background: 'linear-gradient(135deg, #7C3AED, #3B82F6)',
-                boxShadow: '4px 4px 0px 0px #5B21B6, 0 0 16px rgba(124,58,237,0.5)',
+                background: '#000000',
+                boxShadow: '4px 4px 0px 0px #000000',
               }}
             />
             <div style={{ position: 'relative' }}>
@@ -66,8 +66,8 @@ export default function Profile() {
             </div>
             {/* Level badge */}
             <div
-              className="absolute -bottom-2 -right-2 px-2 py-0.5 font-pixel text-[6px] text-gray-900"
-              style={{ background: 'linear-gradient(135deg, #F59E0B, #FCD34D)', border: '2px solid #D97706', boxShadow: '2px 2px 0px #92400E' }}
+              className="absolute -bottom-2 -right-2 px-2 py-0.5 font-pixel text-[6px] text-white"
+              style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #3B82F6 100%)', border: '2px solid #000000', boxShadow: '2px 2px 0px #000000' }}
             >
               LV.{level}
             </div>
@@ -80,7 +80,7 @@ export default function Profile() {
             </p>
             {user && (
               <div className="flex items-center gap-1.5 mt-2">
-                <div className="w-2 h-2" style={{ background: '#10B981', boxShadow: '0 0 6px rgba(16,185,129,0.8)' }} />
+                <div className="w-2 h-2" style={{ background: '#10B981' }} />
                 <span className="font-pixel text-[6px]" style={{ color: '#10B981' }}>CONNECTED</span>
               </div>
             )}
@@ -94,7 +94,7 @@ export default function Profile() {
           </ProgressRing>
           <div className="flex-1">
             <div className="text-white/45 font-pixel text-[6px] mb-1.5 tracking-wide">XP TO LEVEL {level + 1}</div>
-            <div className="h-3 overflow-hidden" style={{ background: '#0F0A2E', border: '2px solid rgba(245,158,11,0.4)' }}>
+            <div className="h-3 overflow-hidden" style={{ background: '#0F0A2E', border: '2px solid #000000' }}>
               <motion.div
                 className="h-full"
                 style={{
@@ -124,7 +124,7 @@ export default function Profile() {
             style={{
               background: '#1E1B4B',
               border: `2px solid ${stat.border}`,
-              boxShadow: `3px 3px 0px 0px ${stat.shadow}`,
+              boxShadow: '3px 3px 0px 0px #000000',
             }}
           >
             <div className="text-xl mb-0.5">{stat.icon}</div>
@@ -143,7 +143,7 @@ export default function Profile() {
       <div className="px-5 mt-5">
         <div
           className="flex p-1"
-          style={{ background: '#16103A', border: '2px solid rgba(124,58,237,0.3)' }}
+          style={{ background: '#16103A', border: '2px solid #000000' }}
         >
           {TABS.map(tab => (
             <button
@@ -153,7 +153,8 @@ export default function Profile() {
               style={activeTab === tab.key ? {
                 background: 'linear-gradient(135deg, #7C3AED, #3B82F6)',
                 color: 'white',
-                boxShadow: '2px 2px 0px #5B21B6',
+                border: '1.5px solid #000000',
+                boxShadow: '2px 2px 0px #000000',
               } : { color: 'rgba(255,255,255,0.4)' }}
             >
               {tab.label}
@@ -170,8 +171,8 @@ export default function Profile() {
               className="p-5 space-y-3"
               style={{
                 background: '#1E1B4B',
-                border: '3px solid rgba(124,58,237,0.4)',
-                boxShadow: '4px 4px 0px rgba(0,0,0,0.6)',
+                border: '3px solid #000000',
+                boxShadow: '4px 4px 0px 0px #000000',
               }}
             >
               <h3 className="font-pixel text-[7px] text-white tracking-wide">📊 MY JOURNEY</h3>
@@ -201,9 +202,9 @@ export default function Profile() {
             <div
               className="p-5"
               style={{
-                background: 'linear-gradient(135deg, #1E1B4B, #2D1B69)',
-                border: '3px solid #7C3AED',
-                boxShadow: '4px 4px 0px #5B21B6',
+                background: '#1E1B4B',
+                border: '3px solid #000000',
+                boxShadow: '4px 4px 0px 0px #000000',
               }}
             >
               <h3 className="font-pixel text-[7px] text-white mb-4 tracking-wide">🎁 MYSTERY BOX</h3>
@@ -224,9 +225,9 @@ export default function Profile() {
               onClick={() => navigate('/dashboard')}
               className="w-full p-4 flex items-center gap-3 text-left transition-all"
               style={{
-                background: 'linear-gradient(135deg, #1E1B4B, #1E3A5F)',
-                border: '3px solid #3B82F6',
-                boxShadow: '4px 4px 0px #1D4ED8',
+                background: '#1E1B4B',
+                border: '3px solid #000000',
+                boxShadow: '4px 4px 0px 0px #000000',
               }}
             >
               <span className="text-3xl">👨‍🏫</span>
@@ -243,7 +244,7 @@ export default function Profile() {
           <div className="space-y-5">
             <div
               className="px-3 py-2 inline-block"
-              style={{ background: '#16103A', border: '2px solid rgba(124,58,237,0.3)', boxShadow: '2px 2px 0px rgba(0,0,0,0.4)' }}
+              style={{ background: '#16103A', border: '2px solid #000000', boxShadow: '2px 2px 0px 0px #000000' }}
             >
               <span className="font-pixel text-[6px] text-white/60 tracking-wide">{badges.length}/{BADGES.length} BADGES EARNED</span>
             </div>
@@ -274,7 +275,7 @@ export default function Profile() {
           <div className="space-y-4">
             <div
               className="p-5 space-y-3"
-              style={{ background: '#1E1B4B', border: '3px solid rgba(124,58,237,0.4)', boxShadow: '4px 4px 0px rgba(0,0,0,0.6)' }}
+              style={{ background: '#1E1B4B', border: '3px solid #000000', boxShadow: '4px 4px 0px 0px #000000' }}
             >
               <h3 className="font-pixel text-[7px] text-white tracking-wide">⚙️ ACCOUNT</h3>
               <Button variant="danger" fullWidth onClick={handleSignOut} icon={<LogOut className="w-4 h-4" />}>
@@ -284,14 +285,14 @@ export default function Profile() {
 
             <div
               className="p-5 space-y-3"
-              style={{ background: '#1E1B4B', border: '3px solid rgba(124,58,237,0.4)', boxShadow: '4px 4px 0px rgba(0,0,0,0.6)' }}
+              style={{ background: '#1E1B4B', border: '3px solid #000000', boxShadow: '4px 4px 0px 0px #000000' }}
             >
               <h3 className="font-pixel text-[7px] text-white tracking-wide">🎮 ZONE</h3>
               <p className="text-white/45 font-body text-xs">Current: {profile.zone === 'junior' ? '🚀 Junior Explorer (6-11)' : '🧠 Future Innovator (12-16)'}</p>
               <button
                 onClick={() => navigate('/onboarding')}
                 className="w-full py-2.5 text-white/55 font-body text-sm hover:text-white transition-colors"
-                style={{ background: '#16103A', border: '2px solid rgba(124,58,237,0.3)', boxShadow: '2px 2px 0px rgba(0,0,0,0.4)' }}
+                style={{ background: '#16103A', border: '2px solid #000000', boxShadow: '2px 2px 0px 0px #000000' }}
               >
                 Switch Zone
               </button>

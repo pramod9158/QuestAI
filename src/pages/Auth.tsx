@@ -83,14 +83,14 @@ export default function Auth() {
             className="p-6"
             style={{
               background: '#1E1B4B',
-              border: '3px solid #7C3AED',
-              boxShadow: '6px 6px 0px 0px #5B21B6',
+              border: '3px solid #000000',
+              boxShadow: '6px 6px 0px 0px #000000',
             }}
           >
             {/* Tabs */}
             <div
               className="flex p-1 mb-6"
-              style={{ background: '#16103A', border: '2px solid rgba(124,58,237,0.3)' }}
+              style={{ background: '#16103A', border: '2px solid #000000' }}
             >
               {(['login', 'signup'] as const).map((t) => (
                 <button
@@ -100,7 +100,7 @@ export default function Auth() {
                   style={tab === t ? {
                     background: 'linear-gradient(135deg, #7C3AED, #3B82F6)',
                     color: 'white',
-                    boxShadow: '2px 2px 0px #5B21B6',
+                    boxShadow: '2px 2px 0px #000000',
                   } : { color: 'rgba(255,255,255,0.4)' }}
                 >
                   {t === 'login' ? '🔑 SIGN IN' : '⭐ SIGN UP'}
@@ -143,7 +143,7 @@ export default function Auth() {
               {error && (
                 <div
                   className="px-4 py-3 font-body text-sm text-red-300"
-                  style={{ background: '#3B1414', border: '2px solid #EF4444', boxShadow: '2px 2px 0px #991B1B' }}
+                  style={{ background: '#3B1414', border: '2px solid #000000', boxShadow: '2px 2px 0px #000000' }}
                 >
                   {error}
                 </div>
@@ -151,7 +151,7 @@ export default function Auth() {
               {success && (
                 <div
                   className="px-4 py-3 font-body text-sm text-green-300"
-                  style={{ background: '#0D3B2E', border: '2px solid #10B981', boxShadow: '2px 2px 0px #047857' }}
+                  style={{ background: '#0D3B2E', border: '2px solid #000000', boxShadow: '2px 2px 0px #000000' }}
                 >
                   {success}
                 </div>

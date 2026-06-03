@@ -43,13 +43,13 @@ export default function Learn() {
               style={activeZone === z.key ? {
                 background: 'linear-gradient(135deg, #7C3AED, #3B82F6)',
                 color: 'white',
-                border: '2px solid #5B21B6',
-                boxShadow: '3px 3px 0px 0px #5B21B6',
+                border: '2px solid #000000',
+                boxShadow: '3px 3px 0px 0px #000000',
               } : {
                 background: '#1E1B4B',
                 color: 'rgba(255,255,255,0.55)',
-                border: '2px solid rgba(124,58,237,0.3)',
-                boxShadow: '2px 2px 0px 0px rgba(0,0,0,0.4)',
+                border: '2px solid #000000',
+                boxShadow: '2px 2px 0px 0px #000000',
               }}
             >
               {z.emoji} {z.label}
@@ -73,14 +73,14 @@ export default function Learn() {
               <div
                 className="p-4 flex items-center gap-3 mb-3"
                 style={{
-                  background: 'linear-gradient(135deg, #1E1B4B, #16103A)',
-                  border: `3px solid ${ps.border}`,
-                  boxShadow: `4px 4px 0px 0px ${ps.shadow}`,
+                  background: '#1E1B4B',
+                  border: '3px solid #000000',
+                  boxShadow: '4px 4px 0px 0px #000000',
                 }}
               >
                 <div
                   className="w-12 h-12 flex items-center justify-center text-2xl flex-shrink-0"
-                  style={{ background: `linear-gradient(135deg, ${ps.gradFrom}, ${ps.gradTo})`, border: '2px solid rgba(0,0,0,0.3)', boxShadow: '2px 2px 0px rgba(0,0,0,0.5)' }}
+                  style={{ background: `linear-gradient(135deg, ${ps.gradFrom}, ${ps.gradTo})`, border: '2px solid #000000', boxShadow: '2px 2px 0px #000000' }}
                 >
                   {phase.emoji}
                 </div>
@@ -125,15 +125,9 @@ export default function Learn() {
                       onClick={() => !isLocked && navigate(`/learn/${lesson.id}`)}
                       className="flex items-center gap-4 p-4 transition-all"
                       style={{
-                        background: isDone
-                          ? 'linear-gradient(135deg, #1E1B4B, #16103A)'
-                          : isLocked
-                          ? '#16103A'
-                          : '#1E1B4B',
-                        border: isDone
-                          ? `3px solid ${ps.border}`
-                          : `3px solid ${isLocked ? 'rgba(255,255,255,0.06)' : 'rgba(124,58,237,0.3)'}`,
-                        boxShadow: isDone ? `3px 3px 0px 0px ${ps.shadow}` : '2px 2px 0px rgba(0,0,0,0.4)',
+                        background: isLocked ? '#16103A' : '#1E1B4B',
+                        border: '3px solid #000000',
+                        boxShadow: '3px 3px 0px 0px #000000',
                         cursor: isLocked ? 'not-allowed' : 'pointer',
                         opacity: isLocked ? 0.5 : 1,
                       }}
@@ -142,8 +136,8 @@ export default function Learn() {
                         className="w-14 h-14 flex items-center justify-center text-2xl flex-shrink-0"
                         style={isDone ? {
                           background: `linear-gradient(135deg, ${ps.gradFrom}, ${ps.gradTo})`,
-                          boxShadow: `2px 2px 0px rgba(0,0,0,0.5)`,
-                          border: '2px solid rgba(0,0,0,0.3)',
+                          boxShadow: `2px 2px 0px #000000`,
+                          border: '2px solid #000000',
                         } : {
                           background: isLocked ? '#0F0A2E' : '#16103A',
                           border: '2px solid rgba(255,255,255,0.1)',
@@ -167,7 +161,7 @@ export default function Learn() {
                         {isDone ? (
                           <div
                             className="w-8 h-8 flex items-center justify-center"
-                            style={{ background: `linear-gradient(135deg, ${ps.gradFrom}, ${ps.gradTo})`, boxShadow: '2px 2px 0px rgba(0,0,0,0.5)' }}
+                            style={{ background: `linear-gradient(135deg, ${ps.gradFrom}, ${ps.gradTo})`, border: '2px solid #000000', boxShadow: '2px 2px 0px #000000' }}
                           >
                             <CheckCircle className="w-4 h-4 text-white" />
                           </div>

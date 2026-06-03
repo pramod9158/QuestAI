@@ -100,8 +100,8 @@ export default function Dashboard() {
             <p className="text-white/50 font-body text-sm mt-2">Enter PIN to view progress report</p>
           </div>
           <div
-            className="p-6 rounded-2xl space-y-4"
-            style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(16px)', border: '1px solid rgba(0,194,255,0.25)', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}
+            className="p-6 space-y-4"
+            style={{ background: '#1E1B4B', border: '3px solid #000000', boxShadow: '6px 6px 0px 0px #000000' }}
           >
             <input
               type="password" inputMode="numeric" pattern="[0-9]*"
@@ -152,13 +152,13 @@ export default function Dashboard() {
       <div className="px-5 space-y-4 -mt-6">
         {/* Summary Card */}
         <div
-          className="p-5 rounded-2xl"
-          style={{ background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)' }}
+          className="p-5"
+          style={{ background: '#1E1B4B', border: '3px solid #000000', boxShadow: '4px 4px 0px 0px #000000' }}
         >
           <div className="flex items-center gap-4 pb-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
             <div
-              className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl font-heading font-bold"
-              style={{ background: 'linear-gradient(135deg, #7F5AF0, #2CB67D)', boxShadow: '0 4px 16px rgba(127,90,240,0.5)' }}
+              className="w-16 h-16 flex items-center justify-center text-3xl font-heading font-bold"
+              style={{ background: 'linear-gradient(135deg, #7F5AF0, #2CB67D)', border: '2px solid #000000', boxShadow: '2px 2px 0px #000000' }}
             >
               {profile?.username?.charAt(0).toUpperCase()}
             </div>
@@ -179,8 +179,8 @@ export default function Dashboard() {
             ].map(stat => (
               <div
                 key={stat.label}
-                className="p-3 rounded-xl"
-                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
+                className="p-3"
+                style={{ background: '#16103A', border: '2px solid #000000', boxShadow: '2px 2px 0px #000000' }}
               >
                 <div className="text-xl mb-1">{stat.emoji}</div>
                 <div
@@ -198,16 +198,16 @@ export default function Dashboard() {
         {/* Badges Earned */}
         {badges.length > 0 && (
           <div
-            className="p-5 rounded-2xl"
-            style={{ background: 'linear-gradient(135deg, rgba(127,90,240,0.15), rgba(44,182,125,0.08))', border: '1px solid rgba(127,90,240,0.3)', backdropFilter: 'blur(12px)' }}
+            className="p-5"
+            style={{ background: '#1E1B4B', border: '3px solid #000000', boxShadow: '4px 4px 0px 0px #000000' }}
           >
             <h3 className="font-heading font-bold text-sm text-white mb-4">🏆 Badges Earned</h3>
             <div className="flex flex-wrap gap-3">
               {badges.map(b => (
                 <div key={b.id} className="flex flex-col items-center gap-1.5">
                   <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
-                    style={{ background: 'linear-gradient(135deg, rgba(127,90,240,0.3), rgba(44,182,125,0.2))', border: '1px solid rgba(127,90,240,0.5)', boxShadow: '0 4px 12px rgba(127,90,240,0.3)' }}
+                    className="w-12 h-12 flex items-center justify-center text-2xl"
+                    style={{ background: 'linear-gradient(135deg, rgba(127,90,240,0.3), rgba(44,182,125,0.2))', border: '2px solid #000000', boxShadow: '2px 2px 0px #000000' }}
                   >
                     {b.emoji}
                   </div>
@@ -220,8 +220,8 @@ export default function Dashboard() {
 
         {/* Learning Insights */}
         <div
-          className="p-5 rounded-2xl"
-          style={{ background: 'linear-gradient(135deg, rgba(255,214,10,0.12), rgba(255,159,28,0.07))', border: '1px solid rgba(255,214,10,0.3)', backdropFilter: 'blur(12px)' }}
+          className="p-5"
+          style={{ background: '#1E1B4B', border: '3px solid #000000', boxShadow: '4px 4px 0px 0px #000000' }}
         >
           <h3 className="font-heading font-bold text-sm mb-3" style={{ color: '#FFD60A' }}>📝 Learning Insights</h3>
           <div className="space-y-2">
@@ -236,8 +236,8 @@ export default function Dashboard() {
 
         {/* Certificate */}
         <div
-          className="p-5 rounded-2xl"
-          style={{ background: 'linear-gradient(135deg, rgba(44,182,125,0.15), rgba(0,194,255,0.08))', border: '1px solid rgba(44,182,125,0.35)', backdropFilter: 'blur(12px)' }}
+          className="p-5"
+          style={{ background: '#1E1B4B', border: '3px solid #000000', boxShadow: '4px 4px 0px 0px #000000' }}
         >
           <h3 className="font-heading font-bold text-sm text-white mb-2">📜 Completion Certificate</h3>
           <p className="text-white/50 font-body text-xs mb-4">Generate a beautiful PDF certificate to share!</p>
@@ -248,8 +248,8 @@ export default function Dashboard() {
 
         {/* QuestAI Parent Companion Chat */}
         <div
-          className="p-5 rounded-2xl space-y-4"
-          style={{ background: 'linear-gradient(135deg, rgba(127,90,240,0.15), rgba(0,196,255,0.08))', border: '1px solid rgba(127,90,240,0.3)', backdropFilter: 'blur(12px)' }}
+          className="p-5 space-y-4"
+          style={{ background: '#1E1B4B', border: '3px solid #000000', boxShadow: '4px 4px 0px 0px #000000' }}
         >
           <div className="flex items-center gap-2">
             <MessageSquare className="w-5 h-5 text-primary" />
@@ -263,14 +263,14 @@ export default function Dashboard() {
           </p>
 
           {/* Chat Messages */}
-          <div className="space-y-3 bg-black/30 border border-white/5 rounded-xl p-3 max-h-60 overflow-y-auto">
+          <div className="space-y-3 bg-black/30 border border-white/5 p-3 max-h-60 overflow-y-auto">
             {chatMessages.map((msg, index) => (
               <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div
-                  className={`p-3 rounded-xl max-w-[85%] text-xs font-body leading-relaxed ${
+                  className={`p-3 max-w-[85%] text-xs font-body leading-relaxed border border-black ${
                     msg.role === 'user'
-                      ? 'bg-primary text-white rounded-tr-none'
-                      : 'bg-white/10 text-white/90 rounded-tl-none border border-white/5'
+                      ? 'bg-primary text-white'
+                      : 'bg-white/10 text-white/90 border border-white/5'
                   }`}
                 >
                   {msg.role === 'assistant' && (
@@ -316,12 +316,12 @@ export default function Dashboard() {
               onKeyDown={(e) => e.key === 'Enter' && handleSendChat()}
               placeholder="Ask anything about their progress..."
               disabled={sendingChat}
-              className="flex-1 bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-white/30 focus:outline-none focus:border-primary/50"
+              className="flex-1 pixel-input px-3 py-2 text-xs text-white placeholder-white/30"
             />
             <button
               onClick={() => handleSendChat()}
               disabled={sendingChat || !chatInput.trim()}
-              className="bg-primary hover:bg-primary-light text-white p-2 rounded-xl transition-colors disabled:opacity-40 disabled:hover:bg-primary flex items-center justify-center cursor-pointer"
+              className="btn-primary p-2 flex items-center justify-center cursor-pointer"
             >
               <Send className="w-4 h-4" />
             </button>

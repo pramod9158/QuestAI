@@ -304,14 +304,14 @@ export default function WeeklyMissions() {
         <p className="text-white/55 font-body text-sm mt-1">Real-world field challenges — earn massive XP!</p>
 
         {/* Tabs */}
-        <div className="flex mt-4 p-1" style={{ background: '#16103A', border: '2px solid rgba(124,58,237,0.3)' }}>
+        <div className="flex mt-4 p-1" style={{ background: '#16103A', border: '2px solid #000000' }}>
           {(['missions', 'submissions'] as const).map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)}
               className="flex-1 py-2 font-pixel text-[6px] transition-all duration-150 tracking-wide"
               style={activeTab === tab ? {
                 background: 'linear-gradient(135deg, #7C3AED, #3B82F6)',
                 color: 'white',
-                boxShadow: '2px 2px 0px #5B21B6',
+                boxShadow: '2px 2px 0px #000000',
               } : { color: 'rgba(255,255,255,0.4)' }}>
               {tab === 'missions' ? '🎯 MISSIONS' : '📋 SUBMISSIONS'}
             </button>
@@ -332,13 +332,13 @@ export default function WeeklyMissions() {
                   transition={{ delay: i * 0.08 }}
                   className="p-5"
                   style={done ? {
-                    background: 'linear-gradient(135deg, #0D3B2E, #1E1B4B)',
-                    border: '3px solid #10B981',
-                    boxShadow: '4px 4px 0px #047857',
+                    background: '#1E1B4B',
+                    border: '3px solid #000000',
+                    boxShadow: '4px 4px 0px #000000',
                   } : {
                     background: '#1E1B4B',
-                    border: '3px solid rgba(124,58,237,0.4)',
-                    boxShadow: '4px 4px 0px rgba(0,0,0,0.6)',
+                    border: '3px solid #000000',
+                    boxShadow: '4px 4px 0px #000000',
                   }}
                 >
                   <div className="flex items-start justify-between gap-3">
@@ -392,7 +392,7 @@ export default function WeeklyMissions() {
             ) : submissions.map((s, i) => {
               const m = WEEKLY_MISSIONS_DATA.find(m => m.id === s.missionId);
               return (
-                <div key={i} className="p-4" style={{ background: 'linear-gradient(135deg, #0D3B2E, #1E1B4B)', border: '3px solid #10B981', boxShadow: '3px 3px 0px #047857' }}>
+                <div key={i} className="p-4" style={{ background: '#1E1B4B', border: '3px solid #000000', boxShadow: '3px 3px 0px #000000' }}>
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-xl">{m?.emoji}</span>
                     <div className="flex-1">
@@ -400,7 +400,7 @@ export default function WeeklyMissions() {
                       <div className="text-white/50 font-body text-xs">{new Date(s.submittedAt).toLocaleDateString()}</div>
                     </div>
                     <div className="flex flex-col items-end gap-1">
-                      <span className="font-pixel text-[7px] px-2 py-1 text-white" style={{ background: 'linear-gradient(135deg, #10B981, #3B82F6)', border: '2px solid #047857', boxShadow: '2px 2px 0px rgba(0,0,0,0.5)' }}>+{s.xp} XP</span>
+                      <span className="font-pixel text-[7px] px-2 py-1 text-white" style={{ background: 'linear-gradient(135deg, #10B981, #3B82F6)', border: '2px solid #000000', boxShadow: '2px 2px 0px #000000' }}>+{s.xp} XP</span>
                       {s.score !== undefined && (
                         <span className="bg-primary/20 border border-primary/40 text-primary-light font-pixel text-[8px] px-1">
                           Score: {s.score}%
@@ -439,10 +439,10 @@ export default function WeeklyMissions() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               className="w-full max-w-md my-auto"
-              style={{ background: '#1E1B4B', border: '4px solid #7C3AED', boxShadow: '6px 6px 0px #5B21B6' }}
+              style={{ background: '#1E1B4B', border: '4px solid #000000', boxShadow: '6px 6px 0px #000000' }}
             >
               {/* Header */}
-              <div className="p-4 flex items-center gap-3" style={{ background: '#16103A', borderBottom: '3px solid #7C3AED' }}>
+              <div className="p-4 flex items-center gap-3" style={{ background: '#16103A', borderBottom: '3px solid #000000' }}>
                 <span className="text-3xl">{mission.emoji}</span>
                 <div>
                   <div className="text-white font-game text-sm">{mission.title}</div>

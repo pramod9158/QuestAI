@@ -95,18 +95,18 @@ export default function ComicCreator() {
                     i < currentPanel ? {
                       background: 'linear-gradient(135deg, #10B981, #3B82F6)',
                       color: 'white',
-                      border: '2px solid #047857',
-                      boxShadow: '2px 2px 0px #047857',
+                      border: '2px solid #000000',
+                      boxShadow: '2px 2px 0px #000000',
                     } : i === currentPanel ? {
                       background: 'linear-gradient(135deg, #7C3AED, #3B82F6)',
                       color: 'white',
-                      border: '2px solid #5B21B6',
-                      boxShadow: '2px 2px 0px #5B21B6',
+                      border: '2px solid #000000',
+                      boxShadow: '2px 2px 0px #000000',
                       animation: 'pixelFlash 0.3s steps(2) infinite',
                     } : {
                       background: '#16103A',
                       color: 'rgba(255,255,255,0.35)',
-                      border: '2px solid rgba(124,58,237,0.2)',
+                      border: '2px solid #000000',
                     }
                   }
                 >
@@ -121,9 +121,9 @@ export default function ComicCreator() {
                 <div
                   className="p-5 mb-4"
                   style={{
-                    background: 'linear-gradient(135deg, #2D1B69, #1E1B4B)',
-                    border: '4px solid #7C3AED',
-                    boxShadow: '6px 6px 0px 0px #5B21B6',
+                    background: '#1E1B4B',
+                    border: '4px solid #000000',
+                    boxShadow: '6px 6px 0px 0px #000000',
                   }}
                 >
                   <div className="text-3xl text-center mb-3">{['🌍', '😟', '🤖', '⚡', '💡', '🏆'][currentPanel]}</div>
@@ -132,7 +132,7 @@ export default function ComicCreator() {
                   {panelChoices[currentPanel] && (
                     <div
                       className="mt-3 p-2 text-center"
-                      style={{ background: 'rgba(16,185,129,0.15)', border: '2px solid #10B981', boxShadow: '2px 2px 0px #047857' }}
+                      style={{ background: 'rgba(16,185,129,0.15)', border: '2px solid #000000', boxShadow: '2px 2px 0px #000000' }}
                     >
                       <span className="text-white font-game text-sm">{PANEL_EMOJIS[panelChoices[currentPanel]]} {panelChoices[currentPanel]}</span>
                     </div>
@@ -149,13 +149,13 @@ export default function ComicCreator() {
                       style={panelChoices[currentPanel] === kw ? {
                         background: 'linear-gradient(135deg, #7C3AED, #3B82F6)',
                         color: 'white',
-                        border: '3px solid #5B21B6',
-                        boxShadow: '4px 4px 0px #5B21B6',
+                        border: '3px solid #000000',
+                        boxShadow: '4px 4px 0px #000000',
                       } : {
                         background: '#1E1B4B',
                         color: 'rgba(255,255,255,0.75)',
-                        border: '3px solid rgba(124,58,237,0.3)',
-                        boxShadow: '3px 3px 0px rgba(0,0,0,0.5)',
+                        border: '3px solid #000000',
+                        boxShadow: '3px 3px 0px #000000',
                       }}
                     >
                       <span className="text-xl block mb-1">{PANEL_EMOJIS[kw] || '⭐'}</span>
@@ -180,9 +180,9 @@ export default function ComicCreator() {
             <div
               className="text-center p-5"
               style={{
-                background: 'linear-gradient(135deg, #3D2B0F, #1E1B4B)',
-                border: '4px solid #F59E0B',
-                boxShadow: '6px 6px 0px 0px #D97706',
+                background: '#1E1B4B',
+                border: '4px solid #000000',
+                boxShadow: '6px 6px 0px 0px #000000',
               }}
             >
               <div className="text-5xl mb-2">🎉</div>
@@ -197,8 +197,8 @@ export default function ComicCreator() {
                   className="p-3 aspect-square flex flex-col items-center justify-center gap-2"
                   style={{
                     background: '#1E1B4B',
-                    border: '3px solid #7C3AED',
-                    boxShadow: '3px 3px 0px #5B21B6',
+                    border: '3px solid #000000',
+                    boxShadow: '3px 3px 0px #000000',
                   }}
                 >
                   <div className="text-4xl">{PANEL_EMOJIS[panelChoices[i]] || '⭐'}</div>

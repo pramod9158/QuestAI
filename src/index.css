@@ -56,22 +56,22 @@
   --font-mono: "Press Start 2P", monospace;
 
   /* ── Pixel Shadows (hard offset, no blur) ── */
-  --shadow-pixel: 4px 4px 0px 0px rgba(0,0,0,0.8);
-  --shadow-pixel-lg: 6px 6px 0px 0px rgba(0,0,0,0.8);
-  --shadow-pixel-sm: 2px 2px 0px 0px rgba(0,0,0,0.8);
-  --shadow-pixel-purple: 4px 4px 0px 0px #5B21B6;
-  --shadow-pixel-blue: 4px 4px 0px 0px #1D4ED8;
-  --shadow-pixel-green: 4px 4px 0px 0px #047857;
-  --shadow-pixel-orange: 4px 4px 0px 0px #D97706;
-  --shadow-pixel-red: 4px 4px 0px 0px #991B1B;
-  --shadow-pixel-yellow: 4px 4px 0px 0px #92400E;
-  --shadow-card: 4px 4px 0px 0px rgba(0,0,0,0.8);
+  --shadow-pixel: 4px 4px 0px 0px #000000;
+  --shadow-pixel-lg: 6px 6px 0px 0px #000000;
+  --shadow-pixel-sm: 2px 2px 0px 0px #000000;
+  --shadow-pixel-purple: 4px 4px 0px 0px #000000;
+  --shadow-pixel-blue: 4px 4px 0px 0px #000000;
+  --shadow-pixel-green: 4px 4px 0px 0px #000000;
+  --shadow-pixel-orange: 4px 4px 0px 0px #000000;
+  --shadow-pixel-red: 4px 4px 0px 0px #000000;
+  --shadow-pixel-yellow: 4px 4px 0px 0px #000000;
+  --shadow-card: 4px 4px 0px 0px #000000;
 
   /* ── Glow Shadows (for special effects) ── */
-  --shadow-glow-primary: 0 0 12px rgba(124,58,237,0.6);
-  --shadow-glow-xp: 0 0 12px rgba(245,158,11,0.6);
-  --shadow-glow-mission: 0 0 12px rgba(59,130,246,0.6);
-  --shadow-glow-fire: 0 0 12px rgba(239,68,68,0.6);
+  --shadow-glow-primary: none;
+  --shadow-glow-xp: none;
+  --shadow-glow-mission: none;
+  --shadow-glow-fire: none;
 
   /* ── Animations ── */
   --animate-float: float 3s ease-in-out infinite;
@@ -173,44 +173,44 @@ body {
 ──────────────────────────────────────────── */
 .pixel-card, .glass-card {
   background: #1E1B4B;
-  border: 3px solid rgba(124,58,237,0.5);
+  border: 3px solid #000000;
   border-radius: 0;
-  box-shadow: 4px 4px 0px 0px rgba(0,0,0,0.8);
+  box-shadow: 4px 4px 0px 0px #000000;
 }
 
 .pixel-card-purple, .pixel-card-primary, .glass-card-primary {
-  background: linear-gradient(135deg, #1E1B4B 0%, #2D1B69 100%);
+  background: #1E1B4B;
   border: 3px solid #7C3AED;
   border-radius: 0;
-  box-shadow: 4px 4px 0px 0px #5B21B6;
+  box-shadow: 4px 4px 0px 0px #000000;
 }
 
 .pixel-card-blue, .glass-card-mission {
-  background: linear-gradient(135deg, #1E1B4B 0%, #1E3A5F 100%);
+  background: #1E1B4B;
   border: 3px solid #3B82F6;
   border-radius: 0;
-  box-shadow: 4px 4px 0px 0px #1D4ED8;
+  box-shadow: 4px 4px 0px 0px #000000;
 }
 
 .pixel-card-green {
-  background: linear-gradient(135deg, #1E1B4B 0%, #0D3B2E 100%);
+  background: #1E1B4B;
   border: 3px solid #10B981;
   border-radius: 0;
-  box-shadow: 4px 4px 0px 0px #047857;
+  box-shadow: 4px 4px 0px 0px #000000;
 }
 
 .pixel-card-orange, .glass-card-xp, .glass-card-secondary {
-  background: linear-gradient(135deg, #1E1B4B 0%, #3D2B0F 100%);
+  background: #1E1B4B;
   border: 3px solid #F59E0B;
   border-radius: 0;
-  box-shadow: 4px 4px 0px 0px #D97706;
+  box-shadow: 4px 4px 0px 0px #000000;
 }
 
 .pixel-card-red {
-  background: linear-gradient(135deg, #1E1B4B 0%, #3B1414 100%);
+  background: #1E1B4B;
   border: 3px solid #EF4444;
   border-radius: 0;
-  box-shadow: 4px 4px 0px 0px #991B1B;
+  box-shadow: 4px 4px 0px 0px #000000;
 }
 
 /* ────────────────────────────────────────────
@@ -273,7 +273,7 @@ body {
   font-family: "Fredoka One", cursive;
   font-weight: 700;
   border-radius: 0;
-  border: 3px solid rgba(0,0,0,0.8);
+  border: 3px solid #000000;
   transition: all 0.15s ease;
   cursor: pointer;
   position: relative;
@@ -291,54 +291,54 @@ body {
 .btn-pixel:active, .btn-primary:active, .btn-blue:active,
 .btn-success:active, .btn-warning:active, .btn-danger:active {
   transform: translate(2px, 2px);
-  box-shadow: 1px 1px 0px 0px rgba(0,0,0,0.8) !important;
+  box-shadow: 1px 1px 0px 0px #000000 !important;
 }
 
 .btn-primary {
   background: linear-gradient(135deg, #7C3AED 0%, #3B82F6 100%);
   color: white;
-  box-shadow: 4px 4px 0px 0px #5B21B6;
+  box-shadow: 4px 4px 0px 0px #000000;
 }
 
 .btn-blue {
   background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
   color: white;
-  box-shadow: 4px 4px 0px 0px #1D4ED8;
+  box-shadow: 4px 4px 0px 0px #000000;
 }
 
 .btn-success {
   background: linear-gradient(135deg, #10B981 0%, #3B82F6 100%);
   color: white;
-  box-shadow: 4px 4px 0px 0px #047857;
+  box-shadow: 4px 4px 0px 0px #000000;
 }
 
 .btn-warning {
   background: linear-gradient(135deg, #F59E0B 0%, #FCD34D 100%);
   color: #0F0A2E;
-  box-shadow: 4px 4px 0px 0px #D97706;
+  box-shadow: 4px 4px 0px 0px #000000;
 }
 
 .btn-danger {
   background: linear-gradient(135deg, #EF4444 0%, #F59E0B 100%);
   color: white;
-  box-shadow: 4px 4px 0px 0px #991B1B;
+  box-shadow: 4px 4px 0px 0px #000000;
 }
 
 .btn-ghost {
   background: rgba(124,58,237,0.15);
   color: white;
-  border: 3px solid rgba(124,58,237,0.5);
-  box-shadow: 3px 3px 0px 0px rgba(0,0,0,0.5);
+  border: 3px solid #000000;
+  box-shadow: 3px 3px 0px 0px #000000;
 }
 .btn-ghost:hover {
   background: rgba(124,58,237,0.3);
-  border-color: #7C3AED;
+  border-color: #000000;
 }
 
 .btn-pixel {
   background: linear-gradient(135deg, #7C3AED 0%, #3B82F6 100%);
   color: white;
-  box-shadow: 4px 4px 0px 0px #5B21B6;
+  box-shadow: 4px 4px 0px 0px #000000;
 }
 
 /* disabled state */
@@ -357,7 +357,7 @@ body {
   width: 100%;
   height: 12px;
   background: #0F0A2E;
-  border: 2px solid rgba(124,58,237,0.5);
+  border: 2px solid #000000;
   border-radius: 0;
   overflow: hidden;
   position: relative;
@@ -421,29 +421,29 @@ body {
   font-size: 24px;
   cursor: pointer;
   transition: all 0.15s ease;
-  border: 3px solid rgba(124,58,237,0.5);
+  border: 3px solid #000000;
 }
 
 .quest-node-locked {
   background: #16103A;
   color: rgba(255, 255, 255, 0.3);
   cursor: not-allowed;
-  border-color: rgba(255,255,255,0.1);
+  border-color: #000000;
 }
 
 .quest-node-active {
   background: linear-gradient(135deg, #F59E0B 0%, #FCD34D 100%);
   color: #0F0A2E;
-  box-shadow: 0 0 16px rgba(245,158,11,0.6), 4px 4px 0px 0px #D97706;
+  box-shadow: 4px 4px 0px 0px #000000;
   animation: pixelFlash 0.3s steps(2) infinite;
-  border-color: #F59E0B;
+  border-color: #000000;
 }
 
 .quest-node-done {
   background: linear-gradient(135deg, #10B981 0%, #3B82F6 100%);
   color: white;
-  box-shadow: 4px 4px 0px 0px #047857;
-  border-color: #10B981;
+  box-shadow: 4px 4px 0px 0px #000000;
+  border-color: #000000;
 }
 
 .quest-node:hover, .quest-node-active:hover, .quest-node-done:hover {
@@ -456,7 +456,7 @@ body {
 .pixel-input {
   width: 100%;
   background: #16103A;
-  border: 3px solid rgba(124,58,237,0.4);
+  border: 3px solid #000000;
   border-radius: 0;
   color: white;
   font-family: "Nunito", sans-serif;
@@ -469,7 +469,7 @@ body {
 .pixel-input::placeholder { color: rgba(255, 255, 255, 0.3); }
 .pixel-input:focus {
   border-color: #7C3AED;
-  box-shadow: inset 2px 2px 0px rgba(0,0,0,0.3), 0 0 12px rgba(124,58,237,0.4);
+  box-shadow: inset 2px 2px 0px rgba(0,0,0,0.3);
 }
 
 /* ────────────────────────────────────────────
@@ -485,20 +485,20 @@ body {
   font-size: 8px;
   font-weight: 700;
   background: linear-gradient(135deg, #7C3AED, #3B82F6);
-  border: 2px solid #5B21B6;
+  border: 2px solid #000000;
   color: white;
-  box-shadow: 2px 2px 0px 0px rgba(0,0,0,0.6);
+  box-shadow: 2px 2px 0px 0px #000000;
   text-transform: uppercase;
 }
 
 /* ────────────────────────────────────────────
    PIXEL GLOW UTILITIES
 ──────────────────────────────────────────── */
-.glow-primary { box-shadow: 0 0 16px rgba(124,58,237,0.6), 4px 4px 0px 0px #5B21B6; }
-.glow-xp { box-shadow: 0 0 16px rgba(245,158,11,0.6), 4px 4px 0px 0px #D97706; }
-.glow-mission { box-shadow: 0 0 16px rgba(59,130,246,0.6), 4px 4px 0px 0px #1D4ED8; }
-.glow-secondary { box-shadow: 0 0 16px rgba(245,158,11,0.6), 4px 4px 0px 0px #D97706; }
-.glow-accent { box-shadow: 0 0 16px rgba(16,185,129,0.6), 4px 4px 0px 0px #047857; }
+.glow-primary { box-shadow: 4px 4px 0px 0px #000000; }
+.glow-xp { box-shadow: 4px 4px 0px 0px #000000; }
+.glow-mission { box-shadow: 4px 4px 0px 0px #000000; }
+.glow-secondary { box-shadow: 4px 4px 0px 0px #000000; }
+.glow-accent { box-shadow: 4px 4px 0px 0px #000000; }
 
 /* ────────────────────────────────────────────
    TYPOGRAPHY HELPERS

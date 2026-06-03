@@ -30,8 +30,8 @@ export function XPToast({ amount, reason, onDone }: XPToastProps) {
             className="px-6 py-3 flex items-center gap-2"
             style={{
               background: 'linear-gradient(135deg, #F59E0B 0%, #FCD34D 100%)',
-              border: '3px solid #D97706',
-              boxShadow: '4px 4px 0px 0px #92400E, 0 0 20px rgba(245,158,11,0.5)',
+              border: '3px solid #000000',
+              boxShadow: '4px 4px 0px 0px #000000',
             }}
           >
             <Zap className="w-5 h-5 text-gray-900" fill="#0F0A2E" />
@@ -42,8 +42,8 @@ export function XPToast({ amount, reason, onDone }: XPToastProps) {
               className="px-4 py-1.5 text-white/90 font-body text-xs"
               style={{
                 background: '#1E1B4B',
-                border: '2px solid #F59E0B',
-                boxShadow: '2px 2px 0px rgba(0,0,0,0.5)',
+                border: '2px solid #000000',
+                boxShadow: '2px 2px 0px 0px #000000',
               }}
             >
               {reason}
@@ -74,8 +74,8 @@ export function CoinToast({ amount }: CoinToastProps) {
             className="px-5 py-3 flex items-center gap-2"
             style={{
               background: 'linear-gradient(135deg, #F59E0B 0%, #FCD34D 100%)',
-              border: '3px solid #D97706',
-              boxShadow: '4px 4px 0px 0px #92400E',
+              border: '3px solid #000000',
+              boxShadow: '4px 4px 0px 0px #000000',
             }}
           >
             <span className="text-xl">🪙</span>
@@ -94,11 +94,11 @@ export function XPBar({ current, needed, level }: XPBarProps) {
   return (
     <div className="flex items-center gap-2">
       <div
-        className="px-2 py-0.5 font-pixel text-[7px] text-gray-900 whitespace-nowrap"
+        className="px-2 py-0.5 font-pixel text-[7px] text-white whitespace-nowrap"
         style={{
-          background: 'linear-gradient(135deg, #F59E0B 0%, #FCD34D 100%)',
-          border: '2px solid #D97706',
-          boxShadow: '2px 2px 0px 0px #92400E',
+          background: 'linear-gradient(135deg, #7C3AED 0%, #3B82F6 100%)',
+          border: '2px solid #000000',
+          boxShadow: '2px 2px 0px 0px #000000',
         }}
       >
         Lv.{level}
@@ -125,7 +125,7 @@ export function CoinCounter({ coins }: CoinCounterProps) {
       style={{
         background: 'linear-gradient(135deg, rgba(245,158,11,0.2), rgba(252,211,77,0.1))',
         border: '2px solid #F59E0B',
-        boxShadow: '2px 2px 0px 0px #92400E',
+        boxShadow: '2px 2px 0px 0px #000000',
       }}
     >
       <span className="text-sm">🪙</span>
@@ -145,7 +145,7 @@ export function StreakFlame({ streak }: StreakFlameProps) {
       style={{
         background: 'linear-gradient(135deg, rgba(239,68,68,0.2), rgba(245,158,11,0.15))',
         border: '2px solid #EF4444',
-        boxShadow: '2px 2px 0px 0px #991B1B',
+        boxShadow: '2px 2px 0px 0px #000000',
       }}
     >
       <span className="text-sm">🔥</span>
@@ -172,8 +172,8 @@ export function Badge({ emoji, name, unlocked = true, size = 'md' }: BadgeProps)
           background: unlocked
             ? 'linear-gradient(135deg, #2D1B69, #1E3A5F)'
             : '#16103A',
-          border: unlocked ? '3px solid #7C3AED' : '3px solid rgba(255,255,255,0.1)',
-          boxShadow: unlocked ? '3px 3px 0px 0px #5B21B6, 0 0 12px rgba(124,58,237,0.3)' : 'none',
+          border: '3px solid #000000',
+          boxShadow: unlocked ? '3px 3px 0px 0px #000000' : 'none',
         }}
       >
         <span style={{ fontSize: fontSize[size] }}>{unlocked ? emoji : '🔒'}</span>
@@ -194,8 +194,8 @@ export function ProgressRing({ progress, size = 80, color = '#7C3AED', children 
       style={{
         width: size, height: size,
         background: '#16103A',
-        border: `3px solid ${color}`,
-        boxShadow: `3px 3px 0px 0px rgba(0,0,0,0.6), 0 0 8px ${color}44`,
+        border: `3px solid #000000`,
+        boxShadow: `3px 3px 0px 0px #000000`,
       }}
     >
       {children}
@@ -231,10 +231,8 @@ export function MysteryBox({ onOpen, isOpen, reward }: MysteryBoxProps) {
           background: isOpen
             ? 'linear-gradient(135deg, #F59E0B, #FCD34D)'
             : 'linear-gradient(135deg, #7C3AED, #3B82F6)',
-          border: isOpen ? '4px solid #D97706' : '4px solid #5B21B6',
-          boxShadow: isOpen
-            ? '6px 6px 0px 0px #92400E, 0 0 20px rgba(245,158,11,0.5)'
-            : '6px 6px 0px 0px rgba(0,0,0,0.8), 0 0 16px rgba(124,58,237,0.4)',
+          border: '4px solid #000000',
+          boxShadow: '6px 6px 0px 0px #000000',
         }}
       >
         {isOpen ? reward || '🎁' : '❓'}
@@ -266,8 +264,8 @@ export function PixelAvatar({ username = 'AI', size = 64, colorIndex = 0 }: Pixe
         width: size,
         height: size,
         background: `linear-gradient(135deg, ${from} 0%, ${to} 100%)`,
-        border: '3px solid rgba(255,255,255,0.3)',
-        boxShadow: `4px 4px 0px 0px rgba(0,0,0,0.8), 0 0 8px ${from}66`,
+        border: '3px solid #000000',
+        boxShadow: '4px 4px 0px 0px #000000',
         fontSize: size * 0.3,
       }}
     >
@@ -296,13 +294,13 @@ export function SpeakButton({ text }: SpeakButtonProps) {
       style={speaking ? {
         background: 'linear-gradient(135deg, #10B981, #3B82F6)',
         color: 'white',
-        border: '3px solid #047857',
-        boxShadow: '3px 3px 0px 0px rgba(0,0,0,0.6)',
+        border: '3px solid #000000',
+        boxShadow: '3px 3px 0px 0px #000000',
       } : {
         background: '#1E1B4B',
         color: 'rgba(255,255,255,0.7)',
-        border: '3px solid rgba(124,58,237,0.4)',
-        boxShadow: '3px 3px 0px 0px rgba(0,0,0,0.5)',
+        border: '3px solid #000000',
+        boxShadow: '3px 3px 0px 0px #000000',
       }}
     >
       <span className="text-lg">{speaking ? '🔊' : '🔈'}</span>

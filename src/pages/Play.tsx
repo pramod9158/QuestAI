@@ -39,17 +39,17 @@ export default function Play() {
             onClick={() => navigate(mod.path)}
             className="p-5 cursor-pointer flex flex-col gap-3"
             style={{
-              background: 'linear-gradient(135deg, #1E1B4B, #16103A)',
-              border: `3px solid ${mod.border}`,
-              boxShadow: `4px 4px 0px 0px ${mod.shadow}`,
+              background: '#1E1B4B',
+              border: '3px solid #000000',
+              boxShadow: '4px 4px 0px 0px #000000',
             }}
           >
             <div
               className="w-12 h-12 flex items-center justify-center text-2xl"
               style={{
                 background: `linear-gradient(135deg, ${mod.gradFrom}, ${mod.gradTo})`,
-                border: '2px solid rgba(0,0,0,0.3)',
-                boxShadow: '2px 2px 0px rgba(0,0,0,0.5)',
+                border: '2px solid #000000',
+                boxShadow: '2px 2px 0px #000000',
               }}
             >
               {mod.emoji}

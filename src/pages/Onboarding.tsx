@@ -75,17 +75,17 @@ export default function Onboarding() {
                   onClick={() => handleZoneSelect(z.id as 'junior' | 'innovator')}
                   className="w-full p-5 flex items-center gap-4 text-left cursor-pointer transition-all"
                   style={{
-                    background: 'linear-gradient(135deg, #1E1B4B, #16103A)',
-                    border: `3px solid ${z.border}`,
-                    boxShadow: `6px 6px 0px 0px ${z.shadow}`,
+                    background: '#1E1B4B',
+                    border: '3px solid #000000',
+                    boxShadow: '6px 6px 0px 0px #000000',
                   }}
                 >
                   <div
                     className="w-14 h-14 flex items-center justify-center text-3xl flex-shrink-0"
                     style={{
                       background: `linear-gradient(135deg, ${z.gradFrom}, ${z.gradTo})`,
-                      border: '2px solid rgba(0,0,0,0.3)',
-                      boxShadow: '2px 2px 0px rgba(0,0,0,0.5)',
+                      border: '2px solid #000000',
+                      boxShadow: '2px 2px 0px #000000',
                     }}
                   >
                     {z.emoji}

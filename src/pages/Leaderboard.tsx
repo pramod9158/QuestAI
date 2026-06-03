@@ -91,10 +91,10 @@ export default function Leaderboard() {
                     style={{
                       height: p.height,
                       background: `linear-gradient(180deg, ${p.gradFrom}33 0%, ${p.gradTo}1A 100%)`,
-                      borderLeft: `3px solid ${p.border}`,
-                      borderRight: `3px solid ${p.border}`,
-                      borderTop: `3px solid ${p.border}`,
-                      boxShadow: `0 -3px 0px 0px ${p.shadow}, 4px 0 0px 0px ${p.shadow}`,
+                      borderLeft: '3px solid #000000',
+                      borderRight: '3px solid #000000',
+                      borderTop: '3px solid #000000',
+                      boxShadow: '0 -3px 0px 0px #000000, 4px 0 0px 0px #000000',
                     }}
                   >
                     <div className="text-3xl">{p.rank}</div>
@@ -132,13 +132,13 @@ export default function Leaderboard() {
               transition={{ delay: i * 0.04, duration: 0.35 }}
               className="flex items-center gap-3 p-3"
               style={isTop3 && ts ? {
-                background: 'linear-gradient(135deg, #1E1B4B, #16103A)',
-                border: `3px solid ${ts.border}`,
-                boxShadow: `3px 3px 0px 0px ${ts.shadow}`,
+                background: '#1E1B4B',
+                border: '3px solid #000000',
+                boxShadow: '3px 3px 0px 0px #000000',
               } : {
                 background: '#1E1B4B',
-                border: '2px solid rgba(124,58,237,0.2)',
-                boxShadow: '2px 2px 0px rgba(0,0,0,0.3)',
+                border: '2px solid #000000',
+                boxShadow: '2px 2px 0px 0px #000000',
               }}
             >
               <div className="w-8 text-center font-game text-sm">

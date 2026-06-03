@@ -83,14 +83,14 @@ export default function Home() {
           onClick={() => navigate('/missions')}
           className="mt-5 p-4 flex items-center gap-3 cursor-pointer active:scale-98 transition-transform"
           style={{
-            background: 'linear-gradient(135deg, #1E1B4B 0%, #1E3A5F 100%)',
-            border: '3px solid #3B82F6',
-            boxShadow: '4px 4px 0px 0px #1D4ED8',
+            background: '#1E1B4B',
+            border: '3px solid #000000',
+            boxShadow: '4px 4px 0px 0px #000000',
           }}
         >
           <div
             className="w-10 h-10 flex items-center justify-center text-xl flex-shrink-0"
-            style={{ background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', border: '2px solid #1D4ED8', boxShadow: '2px 2px 0px rgba(0,0,0,0.5)' }}
+            style={{ background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', border: '2px solid #000000', boxShadow: '2px 2px 0px #000000' }}
           >
             🎯
           </div>
@@ -114,9 +114,9 @@ export default function Home() {
             {...fadeUp(i * 0.07)}
             className="p-3 text-center"
             style={{
-              background: 'linear-gradient(135deg, #1E1B4B, #16103A)',
+              background: '#1E1B4B',
               border: `3px solid ${stat.borderColor}`,
-              boxShadow: `4px 4px 0px 0px ${stat.shadowColor}`,
+              boxShadow: '4px 4px 0px 0px #000000',
             }}
           >
             <div className="text-2xl mb-1">{stat.icon}</div>
@@ -152,14 +152,14 @@ export default function Home() {
           onClick={() => navigate('/learn')}
           className="p-4 flex items-center gap-4 cursor-pointer"
           style={{
-            background: 'linear-gradient(135deg, #1E1B4B, #1E3A5F)',
-            border: '3px solid #3B82F6',
-            boxShadow: '4px 4px 0px 0px #1D4ED8',
+            background: '#1E1B4B',
+            border: '3px solid #000000',
+            boxShadow: '4px 4px 0px 0px #000000',
           }}
         >
           <div
             className="w-14 h-14 flex items-center justify-center text-3xl flex-shrink-0"
-            style={{ background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', border: '2px solid #1D4ED8', boxShadow: '2px 2px 0px rgba(0,0,0,0.5)' }}
+            style={{ background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', border: '2px solid #000000', boxShadow: '2px 2px 0px #000000' }}
           >
             {CURRICULUM[completedLessons]?.emoji || '📺'}
           </div>
@@ -199,14 +199,14 @@ export default function Home() {
               onClick={() => navigate(mod.path)}
               className="p-4 cursor-pointer"
               style={{
-                background: 'linear-gradient(135deg, #1E1B4B, #16103A)',
-                border: `3px solid ${mod.border}`,
-                boxShadow: `4px 4px 0px 0px ${mod.shadow}`,
+                background: '#1E1B4B',
+                border: '3px solid #000000',
+                boxShadow: '4px 4px 0px 0px #000000',
               }}
             >
               <div
                 className="w-10 h-10 flex items-center justify-center text-xl mb-3"
-                style={{ background: `linear-gradient(135deg, ${mod.gradFrom}, ${mod.gradTo})`, border: '2px solid rgba(0,0,0,0.3)', boxShadow: '2px 2px 0px rgba(0,0,0,0.5)' }}
+                style={{ background: `linear-gradient(135deg, ${mod.gradFrom}, ${mod.gradTo})`, border: '2px solid #000000', boxShadow: '2px 2px 0px #000000' }}
               >
                 {mod.emoji}
               </div>
@@ -227,9 +227,9 @@ export default function Home() {
           <div
             className="p-4"
             style={{
-              background: 'linear-gradient(135deg, #1E1B4B, #3D2B0F)',
-              border: '3px solid #F59E0B',
-              boxShadow: '4px 4px 0px 0px #D97706',
+              background: '#1E1B4B',
+              border: '3px solid #000000',
+              boxShadow: '4px 4px 0px 0px #000000',
             }}
           >
             <div className="flex gap-4 overflow-x-auto no-scrollbar pb-1">
@@ -239,8 +239,8 @@ export default function Home() {
                     className="w-14 h-14 flex items-center justify-center text-2xl"
                     style={{
                       background: 'linear-gradient(135deg, #2D1B69, #1E3A5F)',
-                      border: '3px solid #7C3AED',
-                      boxShadow: '3px 3px 0px 0px #5B21B6',
+                      border: '3px solid #000000',
+                      boxShadow: '3px 3px 0px 0px #000000',
                     }}
                   >
                     {b.emoji}
@@ -271,9 +271,9 @@ export default function Home() {
         <div
           className="overflow-hidden"
           style={{
-            background: 'linear-gradient(135deg, #1E1B4B, #0D3B2E)',
-            border: '3px solid #10B981',
-            boxShadow: '4px 4px 0px 0px #047857',
+            background: '#1E1B4B',
+            border: '3px solid #000000',
+            boxShadow: '4px 4px 0px 0px #000000',
           }}
         >
           {[
