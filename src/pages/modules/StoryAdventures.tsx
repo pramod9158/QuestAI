@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { STORY_QUESTS } from '@/data/curriculum';
 import { Button } from '@/components/ui/Button';
 import { XPToast } from '@/components/ui/GameUI';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth, useCurrentProfile } from '@/contexts/AuthContext';
 import { Lock, Star, ChevronRight, ArrowLeft, Zap } from 'lucide-react';
 import { SpeakButton } from '@/components/ui/GameUI';
 import { evaluateStoryReflection } from '@/lib/gemini';
@@ -29,6 +29,12 @@ const QUEST_STEPS = {
 export default function StoryAdventures() {
   const navigate = useNavigate();
   const { profile, guestProfile, isGuest, updateProfile } = useAuth();
+  const currentProfile = useCurrentProfile();
+  const userZone = currentProfile?.zone || 'junior';
+
+  // Filter quests by age zone
+  const zoneQuests = STORY_QUESTS.filter(q => q.zone === userZone || q.zone === 'both');
+
   const [selectedQuest, setSelectedQuest] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [showXP, setShowXP] = useState(false);
@@ -39,6 +45,21 @@ export default function StoryAdventures() {
   const [evaluatingReflection, setEvaluatingReflection] = useState(false);
   const [reflectionFeedback, setReflectionFeedback] = useState<string | null>(null);
   const [reflectionBonusXp, setReflectionBonusXp] = useState(0);
+
+  React.useEffect(() => {
+    if (selectedQuest) {
+      const steps = QUEST_STEPS[selectedQuest as keyof typeof QUEST_STEPS];
+      if (steps) {
+        const isDone = completedQuests.includes(selectedQuest);
+        if (isDone) {
+          localStorage.setItem(`play_progress_story_${selectedQuest}`, '100');
+        } else {
+          const percent = Math.max(10, Math.round((currentStep / (steps.length - 1)) * 100));
+          localStorage.setItem(`play_progress_story_${selectedQuest}`, percent.toString());
+        }
+      }
+    }
+  }, [selectedQuest, currentStep, completedQuests]);
 
   const handleSubmitReflection = async () => {
     if (!selectedQuest || !reflectionText.trim() || evaluatingReflection) return;
@@ -81,6 +102,8 @@ export default function StoryAdventures() {
         completed_quests: [...completedQuests, questId],
       });
     }
+    localStorage.setItem(`quests_${questId}`, 'true');
+    localStorage.setItem(`play_progress_story_${questId}`, '100');
     setShowXP(true);
   };
 
@@ -216,13 +239,15 @@ export default function StoryAdventures() {
           <ArrowLeft className="w-4 h-4" /> Back to Play
         </button>
         <h1 className="text-white font-game text-xl flex items-center gap-2">⚔️ Story Adventures</h1>
-        <p className="text-white/60 font-body text-sm mt-1">Become an AI hero — solve real-world quests!</p>
+        <p className="text-white/60 font-body text-sm mt-1">
+          {userZone === 'junior' ? 'Become an AI hero — solve fun everyday quests!' : 'Tackle complex real-world AI challenges!'}
+        </p>
       </div>
 
       <div className="px-4 -mt-4 space-y-4">
-        {STORY_QUESTS.map((quest, i) => {
+        {zoneQuests.map((quest, i) => {
           const isDone = completedQuests.includes(quest.id);
-          const isLocked = i > 1 && !completedQuests.includes(STORY_QUESTS[i - 1].id);
+          const isLocked = false;
           return (
             <motion.div
               key={quest.id}

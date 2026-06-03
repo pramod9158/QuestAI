@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { DETECTIVE_CASES } from '@/data/curriculum';
 import { Button } from '@/components/ui/Button';
 import { XPToast, SpeakButton } from '@/components/ui/GameUI';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth, useCurrentProfile } from '@/contexts/AuthContext';
 import { CheckCircle, XCircle, HelpCircle, ChevronRight, ArrowLeft } from 'lucide-react';
 
 type Answer = 'yes' | 'no' | 'maybe';
@@ -17,7 +17,26 @@ const ANSWER_CONFIG = {
 
 export default function AIDetective() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const category = searchParams.get('category');
+
   const { profile, guestProfile, isGuest, updateProfile } = useAuth();
+  const currentProfile = useCurrentProfile();
+  const userZone = currentProfile?.zone || 'junior';
+
+  // Filter cases by age zone and category
+  let zoneCases = DETECTIVE_CASES.filter(c => c.zone === userZone || c.zone === 'both');
+  if (category) {
+    const filtered = zoneCases.filter(c => 
+      c.scenario.toLowerCase().includes(category.toLowerCase()) || 
+      c.explanation.toLowerCase().includes(category.toLowerCase())
+    );
+    if (filtered.length > 0) {
+      zoneCases = filtered;
+    }
+  }
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selected, setSelected] = useState<Answer | null>(null);
   const [totalXP, setTotalXP] = useState(0);
@@ -25,7 +44,23 @@ export default function AIDetective() {
   const [xpAmount, setXPAmount] = useState(0);
   const [done, setDone] = useState(false);
 
-  const caseData = DETECTIVE_CASES[currentIndex];
+  useEffect(() => {
+    const progKey = category ? `play_progress_detective_${category}` : 'play_progress_detective';
+    const percent = done 
+      ? 100 
+      : Math.max(10, Math.round((currentIndex / zoneCases.length) * 100));
+    localStorage.setItem(progKey, percent.toString());
+    if (done) {
+      localStorage.setItem('play_completed_detective', 'true');
+      localStorage.setItem('play_progress_detective', '100');
+      if (category) {
+        localStorage.setItem(`play_completed_detective_${category}`, 'true');
+        localStorage.setItem(`play_progress_detective_${category}`, '100');
+      }
+    }
+  }, [currentIndex, done, category, zoneCases.length]);
+
+  const caseData = zoneCases[currentIndex];
 
   const handleAnswer = (answer: Answer) => {
     if (selected) return;
@@ -43,7 +78,7 @@ export default function AIDetective() {
 
   const handleNext = () => {
     setSelected(null);
-    if (currentIndex + 1 >= DETECTIVE_CASES.length) setDone(true);
+    if (currentIndex + 1 >= zoneCases.length) setDone(true);
     else setCurrentIndex(i => i + 1);
   };
 
@@ -55,7 +90,7 @@ export default function AIDetective() {
         </motion.div>
         <div className="text-center border-4 border-black bg-surface p-6 shadow-pixel-lg w-full">
           <h2 className="text-white font-game text-xl">Case Files Solved!</h2>
-          <p className="text-white/60 font-body text-sm mt-2">You completed all {DETECTIVE_CASES.length} cases</p>
+          <p className="text-white/60 font-body text-sm">You completed all {zoneCases.length} cases</p>
           <div className="text-warning font-pixel text-2xl mt-3">+{totalXP} XP</div>
           <p className="text-white/40 font-body text-xs mt-1">Total earned</p>
         </div>
@@ -76,14 +111,16 @@ export default function AIDetective() {
           <ArrowLeft className="w-4 h-4" /> Back to Play
         </button>
         <h1 className="text-white font-game text-xl flex items-center gap-2">🕵️ AI Detective</h1>
-        <p className="text-white/60 font-body text-sm mt-1">Can AI help in this real situation?</p>
+        <p className="text-white/60 font-body text-sm mt-1">
+          {userZone === 'junior' ? 'Can AI help in these everyday situations?' : 'Analyse complex real-world AI scenarios!'}
+        </p>
         <div className="flex items-center gap-3 mt-3">
           <div className="flex gap-1">
-            {DETECTIVE_CASES.map((_, i) => (
+            {zoneCases.map((_, i) => (
               <div key={i} className={`w-2 h-2 border border-black ${i < currentIndex ? 'bg-success' : i === currentIndex ? 'bg-warning animate-pulse' : 'bg-white/20'}`} />
             ))}
           </div>
-          <span className="text-white/50 font-body text-xs ml-auto">{currentIndex + 1}/{DETECTIVE_CASES.length}</span>
+          <span className="text-white/50 font-body text-xs ml-auto">{currentIndex + 1}/{zoneCases.length}</span>
         </div>
       </div>
 
@@ -183,7 +220,7 @@ export default function AIDetective() {
               </div>
 
               <Button variant="primary" fullWidth onClick={handleNext}>
-                {currentIndex + 1 >= DETECTIVE_CASES.length ? '🏆 See Results!' : 'Next Case →'}
+                {currentIndex + 1 >= zoneCases.length ? '🏆 See Results!' : 'Next Case →'}
               </Button>
             </motion.div>
           </AnimatePresence>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { XPToast } from '@/components/ui/GameUI';
 import { SpeakButton } from '@/components/ui/GameUI';
@@ -19,6 +19,10 @@ const SWIPE_CARDS = [
 
 export default function AIAroundMe() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const type = searchParams.get('type');
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answered, setAnswered] = useState<boolean | null>(null);
   const [score, setScore] = useState(0);
@@ -26,6 +30,22 @@ export default function AIAroundMe() {
   const [showXP, setShowXP] = useState(false);
   const [xpAmount, setXPAmount] = useState(0);
   const [done, setDone] = useState(false);
+
+  React.useEffect(() => {
+    const progKey = type ? `play_progress_around-me_${type}` : 'play_progress_around-me';
+    const percent = done
+      ? 100
+      : Math.max(10, Math.round((currentIndex / SWIPE_CARDS.length) * 100));
+    localStorage.setItem(progKey, percent.toString());
+    if (done) {
+      localStorage.setItem('play_completed_around-me', 'true');
+      localStorage.setItem('play_progress_around-me', '100');
+      if (type) {
+        localStorage.setItem(`play_completed_around-me_${type}`, 'true');
+        localStorage.setItem(`play_progress_around-me_${type}`, '100');
+      }
+    }
+  }, [currentIndex, done, type, SWIPE_CARDS.length]);
 
   const card = SWIPE_CARDS[currentIndex];
 

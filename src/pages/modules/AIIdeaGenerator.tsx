@@ -1,32 +1,73 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { XPToast } from '@/components/ui/GameUI';
 import { generateAIIdeas } from '@/lib/gemini';
+import { useCurrentProfile } from '@/contexts/AuthContext';
 import { Zap, Lightbulb, ChevronRight, ArrowLeft } from 'lucide-react';
 
-const QUICK_PROBLEMS = [
+const JUNIOR_QUICK_PROBLEMS = [
+  'My dog always runs away and gets lost',
+  'I forget to water my plants and they die',
+  'The school canteen runs out of my favourite food',
+  'My school bag is very heavy to carry every day',
+  'I always forget which homework is due tomorrow',
+  'The playground gets muddy when it rains',
+  'My pet cat keeps scratching the furniture',
+  'The library books always go missing',
+];
+
+const INNOVATOR_QUICK_PROBLEMS = [
   'Plants die because people forget to water them',
   'Students forget to do homework',
   'Traffic jams near school every morning',
   'Hospital queues take 4 hours',
-  'Farmers don\'t know when crops are sick',
+  "Farmers don't know when crops are sick",
   'Library books go missing',
   'Old people feel lonely at home',
   'Food gets wasted in the canteen',
 ];
 
-const CATEGORIES = ['school', 'health', 'farming', 'environment', 'transport', 'home', 'animals', 'sports'];
+const JUNIOR_CATEGORIES = ['home', 'animals', 'school', 'garden', 'food'];
+const INNOVATOR_CATEGORIES = ['school', 'health', 'farming', 'environment', 'transport', 'home', 'animals', 'sports'];
 
 export default function AIIdeaGenerator() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const mode = searchParams.get('mode');
+
+  const currentProfile = useCurrentProfile();
+  const userZone = currentProfile?.zone || 'junior';
+
+  const QUICK_PROBLEMS = userZone === 'junior' ? JUNIOR_QUICK_PROBLEMS : INNOVATOR_QUICK_PROBLEMS;
+  const CATEGORIES = userZone === 'junior' ? JUNIOR_CATEGORIES : INNOVATOR_CATEGORIES;
+
   const [problem, setProblem] = useState('');
-  const [category, setCategory] = useState('school');
+  const [category, setCategory] = useState(CATEGORIES[0]);
   const [ideas, setIdeas] = useState<{ name: string; description: string }[]>([]);
   const [loading, setLoading] = useState(false);
   const [showXP, setShowXP] = useState(false);
   const [savedIdeas, setSavedIdeas] = useState<Set<number>>(new Set());
+
+  useEffect(() => {
+    const progKey = mode ? `play_progress_idea-generator_${mode}` : 'play_progress_idea-generator';
+    const percent = ideas.length > 0
+      ? 100
+      : problem.trim().length > 0
+      ? 50
+      : 0;
+    localStorage.setItem(progKey, percent.toString());
+    
+    if (ideas.length > 0) {
+      if (mode) {
+        localStorage.setItem(`play_completed_idea-generator_${mode}`, 'true');
+      } else {
+        localStorage.setItem('play_completed_idea-generator', 'true');
+      }
+    }
+  }, [problem, ideas, mode]);
 
   const handleGenerate = async () => {
     if (!problem.trim()) return;
@@ -61,7 +102,9 @@ export default function AIIdeaGenerator() {
           <ArrowLeft className="w-4 h-4" /> Back to Play
         </button>
         <h1 className="text-white font-game text-xl flex items-center gap-2">⚡ AI Idea Generator</h1>
-        <p className="text-white/60 font-body text-sm mt-1">Describe any problem — AI gives you 3 solutions!</p>
+        <p className="text-white/60 font-body text-sm mt-1">
+          {userZone === 'junior' ? 'Describe a problem — AI gives you 3 fun solutions!' : 'Describe any problem — AI gives you 3 solutions!'}
+        </p>
       </div>
 
       <div className="px-4 pt-4 space-y-5">

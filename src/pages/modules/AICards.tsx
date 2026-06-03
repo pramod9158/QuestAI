@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { AI_CARDS_DATA } from '@/data/curriculum';
 import { SpeakButton } from '@/components/ui/GameUI';
 import { Lock, Star, ArrowLeft } from 'lucide-react';
@@ -14,9 +14,22 @@ const RARITY_COLORS = {
 
 export default function AICards() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const category = searchParams.get('category');
+
   const unlockedIds: number[] = JSON.parse(localStorage.getItem('unlocked_cards') || '[1, 2, 3]');
   const [flipped, setFlipped] = useState<number | null>(null);
   const [viewCard, setViewCard] = useState<typeof AI_CARDS_DATA[0] | null>(null);
+
+  useEffect(() => {
+    localStorage.setItem('play_completed_cards', 'true');
+    localStorage.setItem('play_progress_cards', '100');
+    if (category) {
+      localStorage.setItem(`play_completed_cards_${category}`, 'true');
+      localStorage.setItem(`play_progress_cards_${category}`, '100');
+    }
+  }, [category]);
 
   return (
     <div className="min-h-full bg-game pb-6">
@@ -30,17 +43,17 @@ export default function AICards() {
         <div className="flex items-center gap-2 mt-3">
           <div className="flex gap-1">
             {AI_CARDS_DATA.map((c, i) => (
-              <div key={i} className={`w-4 h-4 border-2 border-black ${unlockedIds.includes(c.id) ? 'bg-warning' : 'bg-white/20'}`} />
+              <div key={i} className="w-4 h-4 border-2 border-black bg-warning" />
             ))}
           </div>
-          <span className="text-warning font-pixel text-[10px]">{unlockedIds.length}/{AI_CARDS_DATA.length} COLLECTED</span>
+          <span className="text-warning font-pixel text-[10px]">{AI_CARDS_DATA.length}/{AI_CARDS_DATA.length} COLLECTED</span>
         </div>
       </div>
 
       {/* Card Grid */}
       <div className="px-4 pt-4 grid grid-cols-2 gap-4">
         {AI_CARDS_DATA.map((card) => {
-          const isUnlocked = unlockedIds.includes(card.id);
+          const isUnlocked = true;
           const rarity = RARITY_COLORS[card.rarity as keyof typeof RARITY_COLORS];
           const isFlipped = flipped === card.id;
 

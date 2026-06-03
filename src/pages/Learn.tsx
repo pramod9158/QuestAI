@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { CURRICULUM, PHASES } from '@/data/curriculum';
-import { useCurrentProfile } from '@/contexts/AuthContext';
 import { Lock, Play, CheckCircle, Zap } from 'lucide-react';
+import { getPlatformProgress } from '@/lib/gamification';
+import { CardProgressBadge, CardProgressBar } from '@/components/ui/GameUI';
+import { useCurrentProfile } from '@/contexts/AuthContext';
 
 const PHASE_STYLES: Record<number, { gradFrom: string; gradTo: string; border: string; shadow: string }> = {
   1: { gradFrom: '#7C3AED', gradTo: '#3B82F6', border: '#7C3AED', shadow: '#5B21B6' },
@@ -15,55 +17,108 @@ const PHASE_STYLES: Record<number, { gradFrom: string; gradTo: string; border: s
 export default function Learn() {
   const navigate = useNavigate();
   const profile = useCurrentProfile();
-  const [activeZone, setActiveZone] = useState<'all' | 'junior' | 'innovator'>('all');
-
+  
+  const userZone = profile?.zone || 'junior';
   const completedIds: string[] = profile?.completed_lessons || [];
-  const filtered = CURRICULUM.filter(l => activeZone === 'all' || l.zone === activeZone || l.zone === 'both');
+  const filtered = CURRICULUM.filter(l => l.zone === userZone || l.zone === 'both');
+
+  const stats = getPlatformProgress(profile);
+  const doneCount = stats.completedLessons;
+  const totalLessons = stats.totalLessons;
+  const totalPercent = stats.lessonPercent;
+  const overallPercent = stats.overallPercent;
 
   return (
     <div className="min-h-full pb-8">
       {/* Header */}
-      <div className="relative px-5 pt-6 pb-10 overflow-hidden">
+      <div className="relative px-5 pt-6 pb-8 overflow-hidden">
         <h1 className="font-pixel text-[10px] text-white flex items-center gap-2 relative tracking-wide">
-          📚 LEARNING ZONES
+          📚 {userZone === 'junior' ? 'JUNIOR EXPLORER ZONE (AGES 6–11)' : 'FUTURE INNOVATOR ZONE (AGES 12–16)'}
         </h1>
-        <p className="text-white/50 font-body text-sm mt-2 relative">20-lesson AI curriculum — explore at your own pace</p>
-
-        {/* Zone filter pills */}
-        <div className="flex gap-2 mt-4 relative">
-          {[
-            { key: 'all', label: 'All', emoji: '🌍' },
-            { key: 'junior', label: 'Ages 6–11', emoji: '🚀' },
-            { key: 'innovator', label: 'Ages 12–16', emoji: '🧠' },
-          ].map(z => (
-            <button
-              key={z.key}
-              onClick={() => setActiveZone(z.key as typeof activeZone)}
-              className="px-3 py-2 font-body text-xs flex items-center gap-1.5 transition-all duration-150"
-              style={activeZone === z.key ? {
-                background: '#7C3AED',
-                color: 'white',
-                border: '2px solid #000000',
-                boxShadow: '3px 3px 0px 0px #000000',
-              } : {
-                background: '#1E1B4B',
-                color: 'rgba(255,255,255,0.55)',
-                border: '2px solid #000000',
-                boxShadow: '2px 2px 0px 0px #000000',
-              }}
-            >
-              {z.emoji} {z.label}
-            </button>
-          ))}
-        </div>
+        <p className="text-white/55 font-body text-sm mt-2 relative">
+          {userZone === 'junior' 
+            ? 'Exactly 20 structured phases to explore AI magic!' 
+            : 'Exactly 20 advanced phases to master artificial intelligence!'}
+        </p>
       </div>
 
       {/* Phase Sections */}
       <div className="px-5 -mt-6 space-y-8">
+        
+        {/* Tab Overall Progress Panel */}
+        <div
+          className="p-4 space-y-3"
+          style={{
+            background: '#1E1B4B',
+            border: '3px solid #00C2FF',
+            boxShadow: '4px 4px 0px 0px #000000',
+          }}
+        >
+          <div className="flex items-center gap-1.5 border-b border-white/10 pb-2">
+            <span className="text-sm">🏆</span>
+            <span className="font-game text-[10px] text-white uppercase tracking-wider">Mission Control</span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            {/* Bar 1: Overall Progress */}
+            <div className="space-y-1">
+              <div className="flex justify-between items-baseline text-[7px] font-pixel text-[#FFD60A]">
+                <span>OVERALL</span>
+                <span>{overallPercent}%</span>
+              </div>
+              <div className="w-full h-3 bg-[#0F0A2E] border border-black p-[1px] flex items-center">
+                <div className="h-full bg-[#FFD60A]" style={{ width: `${overallPercent}%`, transition: 'width 0.8s ease' }} />
+              </div>
+            </div>
+
+            {/* Bar 2: Lesson Progress */}
+            <div className="space-y-1">
+              <div className="flex justify-between items-baseline text-[7px] font-pixel text-[#00C2FF]">
+                <span>CURRICULUM</span>
+                <span>{doneCount}/20 ({totalPercent}%)</span>
+              </div>
+              <div className="w-full h-3 bg-[#0F0A2E] border border-black p-[1px] flex items-center">
+                <div className="h-full bg-[#00C2FF]" style={{ width: `${totalPercent}%`, transition: 'width 0.8s ease' }} />
+              </div>
+            </div>
+          </div>
+
+          {/* Quick List of what is completed */}
+          <div className="pt-2 border-t border-white/5 space-y-1.5 max-h-36 overflow-y-auto pr-1">
+            <span className="text-white/45 font-game text-[8px] block uppercase">Curriculum Checklist:</span>
+            {filtered.map((lesson, idx) => {
+              const isDone = completedIds.includes(lesson.id);
+              const isLocked = false;
+              const pVal = isDone ? 100 : parseInt(localStorage.getItem(`lesson_progress_${lesson.id}`) || '0', 10);
+              return (
+                <div key={lesson.id} className="flex items-center justify-between text-[10px] font-body text-white/80">
+                  <div className="flex items-center gap-1.5 truncate">
+                    <span>{isDone ? '✅' : pVal > 0 ? '⏳' : '⏳'}</span>
+                    <span className={isDone ? 'line-through text-white/40 truncate' : 'truncate'}>
+                      {lesson.title} {pVal > 0 && pVal < 100 && `(${pVal}%)`}
+                    </span>
+                  </div>
+                  <button
+                    disabled={isLocked || isDone}
+                    onClick={() => !isLocked && !isDone && navigate(`/learn/${lesson.id}`)}
+                    className={`font-pixel text-[6px] px-1.5 py-0.5 border border-black shadow-[1px_1px_0px_#000] uppercase ${
+                      isDone ? 'bg-success text-white opacity-60' :
+                      isLocked ? 'bg-gray-800 text-white/40 cursor-not-allowed' :
+                      'bg-warning text-black hover:bg-amber-300 cursor-pointer'
+                    }`}
+                  >
+                    {isDone ? 'Done' : isLocked ? 'Locked' : 'Start'}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
         {PHASES.map(phase => {
           const phaseLessons = filtered.filter(l => l.phase === phase.id);
           if (phaseLessons.length === 0) return null;
-          const ps = PHASE_STYLES[phase.id] || PHASE_STYLES[1];
+          const ps = PHASE_STYLES[((phase.id - 1) % 4) + 1];
           const doneCount = phaseLessons.filter(l => completedIds.includes(l.id)).length;
           const pct = Math.round((doneCount / phaseLessons.length) * 100);
 
@@ -112,7 +167,8 @@ export default function Learn() {
               <div className="space-y-3">
                 {phaseLessons.map((lesson, idx) => {
                   const isDone = completedIds.includes(lesson.id);
-                  const isLocked = idx > 0 && !completedIds.includes(phaseLessons[idx - 1].id) && phase.id > 1;
+                  const isLocked = false;
+                  const pVal = isDone ? 100 : parseInt(localStorage.getItem(`lesson_progress_${lesson.id}`) || '0', 10);
 
                   return (
                     <motion.div
@@ -146,15 +202,21 @@ export default function Learn() {
                         {isLocked ? <Lock className="w-6 h-6 text-white/30" /> : lesson.emoji}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-white font-game text-sm leading-tight">{lesson.title}</div>
+                        <div className="flex items-center justify-between gap-1.5">
+                          <div className="text-white font-game text-sm leading-tight truncate">{lesson.title}</div>
+                          <CardProgressBadge percent={pVal} />
+                        </div>
                         <div className="text-white/40 font-body text-[11px] mt-0.5 line-clamp-2">{lesson.description}</div>
-                        <div className="flex items-center gap-3 mt-1.5">
+                        <div className="flex items-center justify-between gap-3 mt-1.5">
                           <span className="flex items-center gap-1 font-pixel text-[6px]" style={{ color: '#F59E0B' }}>
                             <Zap className="w-3 h-3" /> +{lesson.xpReward} XP
                           </span>
                           <span className="text-white/30 font-pixel text-[5px]">
                             {lesson.zone === 'junior' ? '🚀 6–11' : lesson.zone === 'innovator' ? '🧠 12–16' : '🌍 ALL'}
                           </span>
+                        </div>
+                        <div className="mt-2.5">
+                          <CardProgressBar percent={pVal} />
                         </div>
                       </div>
                       <div className="flex-shrink-0">

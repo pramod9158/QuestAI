@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
-import { XPToast } from '@/components/ui/GameUI';
+import { XPToast, CardProgressBadge, CardProgressBar } from '@/components/ui/GameUI';
 import { WEEKLY_MISSIONS_DATA } from '@/data/curriculum';
 import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth, useCurrentProfile } from '@/contexts/AuthContext';
 import { FileText, CheckCircle, XCircle, Zap, ArrowLeft, HelpCircle, Sparkles } from 'lucide-react';
 import { generateMissionSuggestions, evaluateMissionSubmission } from '@/lib/gemini';
+import { getPlatformProgress } from '@/lib/gamification';
 
 interface Submission { 
   missionId: number; 
@@ -19,39 +20,60 @@ interface Submission {
 }
 
 const MISSION_HELPERS: Record<number, { goal: string; examples: string; validationDesc: string }> = {
+  // Junior missions
   1: {
     goal: "Find 3 smart items or AI-powered features in your home.",
     examples: "FaceID / fingerprint phone unlock, YouTube/Netflix recommendations, smart voice assistants (Alexa/Siri), robotic vacuum cleaner, smart light bulbs, or smart AC schedule.",
     validationDesc: "Identify and describe at least 3 smart/AI features or devices and explain why they are smart."
   },
   2: {
-    goal: "Find 3 spots in your school or home where people waste time waiting.",
+    goal: "Find 2 examples of technology or apps that help animals — describe each one.",
+    examples: "A GPS pet tracker collar, a veterinary diagnosis app, a wildlife camera that sends alerts, or an app that helps identify animal species from a photo.",
+    validationDesc: "Describe at least 2 technology examples that help animals and explain how they work."
+  },
+  3: {
+    goal: "Watch a screen for 10 minutes and note 3 times AI made a recommendation or suggestion to you.",
+    examples: "YouTube suggesting 'watch next', Netflix showing 'you might also like', Spotify playlist suggestions, or Google Maps suggesting a route automatically.",
+    validationDesc: "Describe 3 specific moments where an app or screen suggested something to you, and explain how AI might be involved."
+  },
+  4: {
+    goal: "Ask a parent or sibling to show you one way technology makes their day easier.",
+    examples: "A smart calendar reminder, a Google Maps route, a recipe app, an automatic bill payment, or a work email tool.",
+    validationDesc: "Describe who you asked, what they showed you, and explain in simple terms how it makes their life easier."
+  },
+  // Innovator missions
+  101: {
+    goal: "Find 3 spots in your school or neighbourhood where people waste time waiting.",
     examples: "Waiting in line at the school canteen, waiting at the school bus stop, waiting to check out books in the library, or gate queues.",
     validationDesc: "Propose how predictive AI, smart cameras, or scheduling apps could predict, automate, or reduce this waiting time."
   },
-  3: {
+  102: {
     goal: "Spot a real-world problem in your neighbourhood, school, or city.",
     examples: "Water pipe leaks, overflowing trash bins, dark unlit streetlights, unsafe potholes on the road, or garbage pile-ups.",
     validationDesc: "Describe the issue clearly and suggest how AI sensors, smart cameras, or automated mapping could detect it automatically."
   },
-  4: {
+  103: {
     goal: "Interview an adult (parent, teacher, neighbour) about technology at work.",
     examples: "Ask them: 'What smart software, spreadsheets, computer apps, or automation tools do you use to make your job easier?'",
     validationDesc: "Summarize who you interviewed, what their profession is, and the technology tools they rely on daily."
-  }
+  },
+  104: {
+    goal: "Find one example where AI gave an unfair or surprising result and explain why it may have happened.",
+    examples: "A voice assistant that misunderstands certain accents, an image search that shows biased results, or an AI hiring tool that treats different people differently.",
+    validationDesc: "Describe the AI system, explain what unfair or surprising result occurred, and suggest why the training data might have caused it."
+  },
 };
-
 const validateSubmission = (missionId: number, text: string) => {
   const t = text.trim().toLowerCase();
+  const nonRepetitive = !/(.)\\1{4,}/.test(t) && !/^(xyz|abc|test|qwerty|asdf)/.test(t) && text.trim().split(/\s+/).length >= 5;
   
+  // ── JUNIOR MISSIONS ───────────────────────────────────
   if (missionId === 1) {
     const keywords = ['phone', 'mobile', 'camera', 'face id', 'fingerprint', 'alexa', 'siri', 'assistant', 'speaker', 'tv', 'television', 'refrigerator', 'fridge', 'vacuum', 'robot', 'youtube', 'netflix', 'spotify', 'light', 'bulb', 'ac', 'conditioner', 'smart', 'ai', 'algorithm', 'app', 'feed', 'recommend'];
     const matches = keywords.filter(kw => t.includes(kw));
     const minChars = 35;
     const hasEnoughChars = text.trim().length >= minChars;
     const hasSmartKeywords = matches.length >= 2;
-    const nonRepetitive = !/(.)\1{4,}/.test(t) && !/^(xyz|abc|test|qwerty|asdf)/.test(t) && text.trim().split(/\s+/).length >= 5;
-    
     return {
       isValid: hasEnoughChars && hasSmartKeywords && nonRepetitive,
       requirements: [
@@ -63,14 +85,67 @@ const validateSubmission = (missionId: number, text: string) => {
   }
   
   if (missionId === 2) {
+    // Animal Friend AI — mention animals + technology
+    const animalKeywords = ['dog', 'cat', 'pet', 'animal', 'bird', 'fish', 'cow', 'wildlife', 'vet', 'collar', 'tracker', 'wildlife', 'nature'];
+    const techKeywords = ['app', 'tracker', 'gps', 'camera', 'sensor', 'technology', 'device', 'smart', 'ai', 'identify', 'detect', 'monitor'];
+    const hasAnimal = animalKeywords.some(kw => t.includes(kw));
+    const hasTech = techKeywords.some(kw => t.includes(kw));
+    const minChars = 30;
+    const hasEnoughChars = text.trim().length >= minChars;
+    return {
+      isValid: hasEnoughChars && hasAnimal && hasTech && nonRepetitive,
+      requirements: [
+        { label: `📝 Write at least ${minChars} characters`, done: hasEnoughChars },
+        { label: "🐾 Mention animals or pets", done: hasAnimal },
+        { label: "📱 Describe a technology or app that helps them", done: hasTech },
+      ]
+    };
+  }
+  
+  if (missionId === 3) {
+    // Smart Screen Spotter — mention a screen and recommendations
+    const screenKeywords = ['youtube', 'netflix', 'spotify', 'phone', 'tv', 'screen', 'tablet', 'watch', 'video', 'app', 'show'];
+    const suggestionKeywords = ['suggest', 'recommend', 'next', 'for you', 'playlist', 'similar', 'because', 'like', 'ad', 'algorithm'];
+    const hasScreen = screenKeywords.some(kw => t.includes(kw));
+    const hasSuggestion = suggestionKeywords.some(kw => t.includes(kw));
+    const minChars = 30;
+    const hasEnoughChars = text.trim().length >= minChars;
+    return {
+      isValid: hasEnoughChars && hasScreen && hasSuggestion && nonRepetitive,
+      requirements: [
+        { label: `📝 Write at least ${minChars} characters`, done: hasEnoughChars },
+        { label: "📺 Mention a screen or app you watched (e.g. YouTube, Netflix)", done: hasScreen },
+        { label: "💡 Describe how it suggested or recommended something to you", done: hasSuggestion },
+      ]
+    };
+  }
+  
+  if (missionId === 4) {
+    // Helpful Robot Helper — mention a person and a technology
+    const personKeywords = ['parent', 'father', 'mother', 'sister', 'brother', 'sibling', 'mum', 'dad', 'uncle', 'aunt', 'grandparent', 'friend', 'he', 'she', 'they'];
+    const techKeywords = ['app', 'phone', 'map', 'calendar', 'reminder', 'computer', 'laptop', 'email', 'google', 'alarm', 'smart', 'technology', 'tool', 'software'];
+    const hasPerson = personKeywords.some(kw => t.includes(kw));
+    const hasTech = techKeywords.some(kw => t.includes(kw));
+    const minChars = 30;
+    const hasEnoughChars = text.trim().length >= minChars;
+    return {
+      isValid: hasEnoughChars && hasPerson && hasTech && nonRepetitive,
+      requirements: [
+        { label: `📝 Write at least ${minChars} characters`, done: hasEnoughChars },
+        { label: "👤 Mention who you asked (e.g. mum, dad, brother)", done: hasPerson },
+        { label: "💻 Describe the technology or app they showed you", done: hasTech },
+      ]
+    };
+  }
+  
+  // ── INNOVATOR MISSIONS ───────────────────────────────────
+  if (missionId === 101) {
     const scenarios = ['queue', 'line', 'wait', 'bus', 'traffic', 'canteen', 'lunch', 'library', 'counter', 'gate', 'office', 'register', 'store', 'shop'];
     const aiSolutions = ['predict', 'optimize', 'schedule', 'app', 'alert', 'route', 'camera', 'sensor', 'automated', 'time', 'manage'];
     const hasScenario = scenarios.some(kw => t.includes(kw));
     const hasAISolution = aiSolutions.some(kw => t.includes(kw));
     const minChars = 35;
     const hasEnoughChars = text.trim().length >= minChars;
-    const nonRepetitive = !/(.)\1{4,}/.test(t) && !/^(xyz|abc|test|qwerty|asdf)/.test(t) && text.trim().split(/\s+/).length >= 5;
-
     return {
       isValid: hasEnoughChars && hasScenario && hasAISolution && nonRepetitive,
       requirements: [
@@ -81,40 +156,54 @@ const validateSubmission = (missionId: number, text: string) => {
     };
   }
   
-  if (missionId === 3) {
+  if (missionId === 102) {
     const problems = ['trash', 'waste', 'garbage', 'leak', 'water', 'light', 'streetlight', 'hole', 'road', 'traffic', 'pollution', 'broken', 'dirty', 'litter'];
     const techSolutions = ['sensor', 'camera', 'ai', 'app', 'system', 'detect', 'notify', 'alert', 'analyze', 'satellite', 'monitor'];
     const hasProblem = problems.some(kw => t.includes(kw));
     const hasTechSolution = techSolutions.some(kw => t.includes(kw));
     const minChars = 40;
     const hasEnoughChars = text.trim().length >= minChars;
-    const nonRepetitive = !/(.)\1{4,}/.test(t) && !/^(xyz|abc|test|qwerty|asdf)/.test(t) && text.trim().split(/\s+/).length >= 5;
-
     return {
       isValid: hasEnoughChars && hasProblem && hasTechSolution && nonRepetitive,
       requirements: [
         { label: `📝 Detailed description (at least ${minChars} characters)`, done: hasEnoughChars },
-        { label: "🌍 Describe a real local problem (e.g. trash leak, broken lights, traffic)", done: hasProblem },
+        { label: "🌍 Describe a real local problem (e.g. trash, water leaks, broken lights)", done: hasProblem },
         { label: "🤖 Propose a smart tech/AI solution (e.g. sensors, auto alerts, cameras)", done: hasTechSolution },
       ]
     };
   }
   
-  if (missionId === 4) {
+  if (missionId === 103) {
     const people = ['father', 'mother', 'parent', 'teacher', 'neighbour', 'uncle', 'aunt', 'doctor', 'shopkeeper', 'adult', 'friend', 'colleague', 'he', 'she', 'they', 'mr', 'mrs', 'ms'];
     const technology = ['computer', 'laptop', 'excel', 'software', 'app', 'email', 'search', 'write', 'track', 'teach', 'sell', 'record', 'system', 'smart', 'tool', 'internet', 'ai'];
     const hasPerson = people.some(kw => t.includes(kw));
     const hasTech = technology.some(kw => t.includes(kw));
     const minChars = 40;
     const hasEnoughChars = text.trim().length >= minChars;
-    const nonRepetitive = !/(.)\1{4,}/.test(t) && !/^(xyz|abc|test|qwerty|asdf)/.test(t) && text.trim().split(/\s+/).length >= 5;
-
     return {
       isValid: hasEnoughChars && hasPerson && hasTech && nonRepetitive,
       requirements: [
         { label: `📝 Write at least ${minChars} characters summarizing the interview`, done: hasEnoughChars },
         { label: "👤 State who you interviewed (e.g. parent, teacher, shopkeeper)", done: hasPerson },
         { label: "💻 List the software, computers, or smart apps they use", done: hasTech },
+      ]
+    };
+  }
+  
+  if (missionId === 104) {
+    // Bias Detector — mention AI or system and an unfair/biased result
+    const aiKeywords = ['ai', 'algorithm', 'system', 'model', 'voice', 'image', 'search', 'recognition', 'tool', 'software'];
+    const biasKeywords = ['bias', 'unfair', 'wrong', 'mistake', 'accent', 'gender', 'race', 'colour', 'skin', 'discriminat', 'inaccurat', 'misunderstand', 'incorrect'];
+    const hasAI = aiKeywords.some(kw => t.includes(kw));
+    const hasBias = biasKeywords.some(kw => t.includes(kw));
+    const minChars = 40;
+    const hasEnoughChars = text.trim().length >= minChars;
+    return {
+      isValid: hasEnoughChars && hasAI && hasBias && nonRepetitive,
+      requirements: [
+        { label: `📝 Write at least ${minChars} characters about your finding`, done: hasEnoughChars },
+        { label: "🤖 Mention an AI system, tool, or algorithm", done: hasAI },
+        { label: "⚖️ Describe an unfair or biased result it gave", done: hasBias },
       ]
     };
   }
@@ -129,6 +218,15 @@ const validateSubmission = (missionId: number, text: string) => {
 
 export default function WeeklyMissions() {
   const { user, profile, guestProfile, isGuest, updateProfile } = useAuth();
+  const currentProfile = useCurrentProfile();
+  const userZone = currentProfile?.zone || 'junior';
+
+  const stats = getPlatformProgress(currentProfile);
+  const overallPercent = stats.overallPercent;
+  const completedMissionsCount = stats.completedMissions;
+  const totalMissionsCount = stats.totalMissions;
+  const missionPercent = stats.missionPercent;
+
   const [activeTab, setActiveTab] = useState<'missions' | 'submissions'>('missions');
   const [selectedMission, setSelectedMission] = useState<number | null>(null);
   const [text, setText] = useState('');
@@ -137,6 +235,52 @@ export default function WeeklyMissions() {
   const [submissions, setSubmissions] = useState<Submission[]>(() => {
     return JSON.parse(localStorage.getItem('mission_submissions') || '[]');
   });
+
+  const [customMissions, setCustomMissions] = useState<any[]>([]);
+
+  // Filter standard missions by zone, then append custom missions (which parents add for specific child)
+  const zoneMissions = WEEKLY_MISSIONS_DATA.filter(m => m.zone === userZone || m.zone === 'both');
+  const allMissions = [...zoneMissions, ...customMissions];
+  const mission = allMissions.find(m => m.id === selectedMission);
+
+  useEffect(() => {
+    const parentCustom = JSON.parse(localStorage.getItem('parent_custom_missions') || '[]');
+    setCustomMissions(parentCustom);
+  }, []);
+
+  // Load draft when selectedMission changes
+  useEffect(() => {
+    if (selectedMission) {
+      const draft = localStorage.getItem(`mission_draft_${selectedMission}`) || '';
+      setText(draft);
+      const existingProg = parseInt(localStorage.getItem(`mission_progress_${selectedMission}`) || '0', 10);
+      if (existingProg === 0) {
+        localStorage.setItem(`mission_progress_${selectedMission}`, '10');
+      }
+    } else {
+      setText('');
+      resetAIStates();
+    }
+  }, [selectedMission]);
+
+  // Save draft and update progress when text changes
+  useEffect(() => {
+    if (selectedMission && mission) {
+      localStorage.setItem(`mission_draft_${selectedMission}`, text);
+      const done = submissions.some(s => s.missionId === selectedMission && s.status === 'approved');
+      if (!done) {
+        if (text.trim().length === 0) {
+          localStorage.setItem(`mission_progress_${selectedMission}`, '10');
+        } else {
+          const minChars = mission.isCustom ? 15 : (MISSION_HELPERS[mission.id]?.goal ? 20 : 10);
+          const percentage = Math.min(95, Math.round(10 + (text.trim().length / minChars) * 85));
+          localStorage.setItem(`mission_progress_${selectedMission}`, percentage.toString());
+        }
+      }
+    }
+  }, [text, selectedMission, mission, submissions]);
+
+
 
   // AI Suggestions states
   const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -180,10 +324,14 @@ export default function WeeklyMissions() {
   };
 
 
-  const mission = WEEKLY_MISSIONS_DATA.find(m => m.id === selectedMission);
+
   const isSubmitted = (id: number) => submissions.some(s => s.missionId === id && s.status === 'approved');
 
-  const validation = mission ? validateSubmission(mission.id, text) : { isValid: false, requirements: [] };
+  const validation = mission ? (
+    mission.isCustom
+      ? { isValid: text.trim().length >= 15, requirements: [{ label: "📝 Write at least 15 characters describing your observation", done: text.trim().length >= 15 }] }
+      : validateSubmission(mission.id, text)
+  ) : { isValid: false, requirements: [] };
 
   const [toastXP, setToastXP] = useState(80);
 
@@ -229,6 +377,8 @@ export default function WeeklyMissions() {
         const newSubs = [...submissions, submission];
         setSubmissions(newSubs);
         localStorage.setItem('mission_submissions', JSON.stringify(newSubs));
+        localStorage.setItem(`mission_progress_${mission.id}`, '100');
+        localStorage.removeItem(`mission_draft_${mission.id}`);
         setToastXP(earnedXp);
       }
 
@@ -276,6 +426,8 @@ export default function WeeklyMissions() {
           const newSubs = [...submissions, submission];
           setSubmissions(newSubs);
           localStorage.setItem('mission_submissions', JSON.stringify(newSubs));
+          localStorage.setItem(`mission_progress_${mission.id}`, '100');
+          localStorage.removeItem(`mission_draft_${mission.id}`);
           setToastXP(earnedXp);
         }
 
@@ -323,11 +475,82 @@ export default function WeeklyMissions() {
       <div className="px-4 pt-2">
         {activeTab === 'missions' && (
           <div className="space-y-4">
-            {WEEKLY_MISSIONS_DATA.map((m, i) => {
+            {/* Missions Tab Progress Panel */}
+            <div
+              className="p-4 space-y-3 mb-2"
+              style={{
+                background: '#1E1B4B',
+                border: '3px solid #7C3AED',
+                boxShadow: '4px 4px 0px 0px #000000',
+              }}
+            >
+              <div className="flex items-center gap-1.5 border-b border-white/10 pb-2">
+                <span className="text-sm">🏆</span>
+                <span className="font-game text-[10px] text-white uppercase tracking-wider">Mission Control</span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                {/* Bar 1: Overall Progress */}
+                <div className="space-y-1">
+                  <div className="flex justify-between items-baseline text-[7px] font-pixel text-[#FFD60A]">
+                    <span>OVERALL</span>
+                    <span>{overallPercent}%</span>
+                  </div>
+                  <div className="w-full h-3 bg-[#0F0A2E] border border-black p-[1px] flex items-center">
+                    <div className="h-full bg-[#FFD60A]" style={{ width: `${overallPercent}%`, transition: 'width 0.8s ease' }} />
+                  </div>
+                </div>
+
+                {/* Bar 2: Missions Progress */}
+                <div className="space-y-1">
+                  <div className="flex justify-between items-baseline text-[7px] font-pixel text-[#A78BFA]">
+                    <span>MISSIONS</span>
+                    <span>{completedMissionsCount}/{totalMissionsCount} ({missionPercent}%)</span>
+                  </div>
+                  <div className="w-full h-3 bg-[#0F0A2E] border border-black p-[1px] flex items-center">
+                    <div className="h-full bg-[#7C3AED]" style={{ width: `${missionPercent}%`, transition: 'width 0.8s ease' }} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Checklist of missions */}
+              <div className="pt-2 border-t border-white/5 space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                <span className="text-white/45 font-game text-[8px] block uppercase">Missions Checklist:</span>
+                {allMissions.map((m) => {
+                  const done = isSubmitted(m.id);
+                  const pVal = done ? 100 : parseInt(localStorage.getItem(`mission_progress_${m.id}`) || '0', 10);
+                  return (
+                    <div key={m.id} className="flex items-center justify-between text-[10px] font-body text-white/80">
+                      <div className="flex items-center gap-1.5 truncate">
+                        <span>{done ? '✅' : pVal > 0 ? '⏳' : '⏳'}</span>
+                        <span className={done ? 'line-through text-white/40 truncate' : 'truncate'}>
+                          {m.emoji} {m.title} {pVal > 0 && pVal < 100 && `(${pVal}%)`}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => {
+                          const el = document.getElementById(`mission-card-${m.id}`);
+                          if (el) {
+                            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                          }
+                        }}
+                        className="font-pixel text-[6px] px-1.5 py-0.5 border border-black bg-warning text-black hover:bg-amber-300 shadow-[1px_1px_0px_#000] uppercase cursor-pointer"
+                      >
+                        Locate
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {allMissions.map((m, i) => {
               const done = isSubmitted(m.id);
+              const pVal = done ? 100 : parseInt(localStorage.getItem(`mission_progress_${m.id}`) || '0', 10);
               return (
                 <motion.div
                   key={m.id}
+                  id={`mission-card-${m.id}`}
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.08 }}
@@ -344,11 +567,14 @@ export default function WeeklyMissions() {
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-2xl">{m.emoji}</span>
-                        <div>
-                          <div className="text-white font-game text-sm">{m.title}</div>
-                          <span className={`text-xs font-body border border-black px-2 py-0.5 ${
+                      <div className="flex items-start gap-2 mb-1">
+                        <span className="text-2xl mt-0.5">{m.emoji}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-1.5">
+                            <div className="text-white font-game text-sm truncate">{m.title}</div>
+                            <CardProgressBadge percent={pVal} />
+                          </div>
+                          <span className={`text-xs font-body border border-black px-2 py-0.5 inline-block mt-1 ${
                             m.difficulty === 'Easy' ? 'bg-success/30 text-green-300' :
                             m.difficulty === 'Medium' ? 'bg-warning/30 text-yellow-300' :
                             'bg-pixel-red/30 text-red-300'
@@ -361,6 +587,9 @@ export default function WeeklyMissions() {
                       <div className="flex items-center gap-1 mt-2">
                         <Zap className="w-4 h-4 text-warning" />
                         <span className="text-warning font-game text-xs">+{m.xp_reward} XP Reward</span>
+                      </div>
+                      <div className="mt-3.5">
+                        <CardProgressBar percent={pVal} />
                       </div>
                     </div>
                     {done ? (
@@ -555,14 +784,29 @@ export default function WeeklyMissions() {
                       <HelpCircle className="w-3 h-3" /> Step-by-Step Instructions
                     </div>
                     <p className="text-white font-body text-xs font-semibold leading-relaxed">
-                      {MISSION_HELPERS[mission.id]?.goal}
+                      {mission.isCustom ? mission.description : MISSION_HELPERS[mission.id]?.goal}
                     </p>
-                    <div className="mt-2 text-white/70 font-body text-[11px] leading-relaxed">
-                      <strong className="text-warning">💡 Examples:</strong> {MISSION_HELPERS[mission.id]?.examples}
-                    </div>
-                    <div className="mt-2 text-white/50 font-body text-[10px] leading-relaxed border-t border-white/5 pt-1">
-                      <strong className="text-white/70">⚙️ How it is validated:</strong> {MISSION_HELPERS[mission.id]?.validationDesc}
-                    </div>
+                    {mission.isCustom && mission.tasks && (
+                      <div className="mt-2 space-y-1">
+                        <strong className="text-warning text-[10px] block">📋 Tasks Checklist:</strong>
+                        {mission.tasks.map((task: string, idx: number) => (
+                          <div key={idx} className="flex items-center gap-1.5 text-white/80 font-body text-[10px]">
+                            <span>⬜</span>
+                            <span>{task}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {!mission.isCustom && (
+                      <>
+                        <div className="mt-2 text-white/70 font-body text-[11px] leading-relaxed">
+                          <strong className="text-warning">💡 Examples:</strong> {MISSION_HELPERS[mission.id]?.examples}
+                        </div>
+                        <div className="mt-2 text-white/50 font-body text-[10px] leading-relaxed border-t border-white/5 pt-1">
+                          <strong className="text-white/70">⚙️ How it is validated:</strong> {MISSION_HELPERS[mission.id]?.validationDesc}
+                        </div>
+                      </>
+                    )}
                   </div>
 
                   {/* Input & Live Checklist */}

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { XPToast } from '@/components/ui/GameUI';
 import { generateBrainstormIdea } from '@/lib/gemini';
 import { Trophy, Star, Lightbulb, Plus, ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 interface Invention {
   id?: string;
@@ -22,6 +22,10 @@ interface Invention {
 
 export default function InventorHall() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const filter = searchParams.get('filter');
+
   const { user } = useAuth();
   const [inventions, setInventions] = useState<Invention[]>([]);
   const [activeTab, setActiveTab] = useState<'hall' | 'mine'>('hall');
@@ -34,6 +38,15 @@ export default function InventorHall() {
     { category: 'health', problem: 'Hospital queues too long', target_audience: 'Patients', ai_solution_name: 'Queue Predictor', ai_solution_description: 'AI predicts hospital waiting times and lets patients book optimal slots from home!', innovation_score: 88, username: 'HealthHero', created_at: '2024-01-13' },
     { category: 'environment', problem: 'Plastic waste in rivers', target_audience: 'Everyone', ai_solution_name: 'River CleanBot AI', ai_solution_description: 'AI-powered floating drones detect and collect plastic waste from rivers automatically!', innovation_score: 95, username: 'EcoWarrior', created_at: '2024-01-12' },
   ];
+
+  useEffect(() => {
+    localStorage.setItem('play_completed_inventor-hall', 'true');
+    localStorage.setItem('play_progress_inventor-hall', '100');
+    if (filter) {
+      localStorage.setItem(`play_completed_inventor-hall_${filter}`, 'true');
+      localStorage.setItem(`play_progress_inventor-hall_${filter}`, '100');
+    }
+  }, [filter]);
 
   useEffect(() => {
     const fetchInventions = async () => {

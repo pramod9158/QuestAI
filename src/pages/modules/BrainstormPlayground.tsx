@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { XPToast } from '@/components/ui/GameUI';
 import { generateBrainstormIdea } from '@/lib/gemini';
@@ -23,6 +23,10 @@ const AUDIENCE_OPTIONS = ['Students', 'Farmers', 'Teachers', 'Doctors', 'Everyon
 
 export default function BrainstormPlayground() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const mode = searchParams.get('mode');
+
   const { user } = useAuth();
   const [step, setStep] = useState(0);
   const [category, setCategory] = useState('');
@@ -32,6 +36,22 @@ export default function BrainstormPlayground() {
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
   const [showXP, setShowXP] = useState(false);
+
+  useEffect(() => {
+    const progKey = mode ? `play_progress_brainstorm_${mode}` : 'play_progress_brainstorm';
+    const percent = step === 3
+      ? 100
+      : Math.max(10, Math.round((step / 3) * 100));
+    localStorage.setItem(progKey, percent.toString());
+    
+    if (step === 3) {
+      if (mode) {
+        localStorage.setItem(`play_completed_brainstorm_${mode}`, 'true');
+      } else {
+        localStorage.setItem('play_completed_brainstorm', 'true');
+      }
+    }
+  }, [step, mode]);
 
   const handleGenerate = async () => {
     setLoading(true);

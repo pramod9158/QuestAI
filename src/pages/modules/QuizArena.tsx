@@ -1,17 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { QUIZ_QUESTIONS } from '@/data/curriculum';
 import { Button } from '@/components/ui/Button';
 import { XPToast } from '@/components/ui/GameUI';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth, useCurrentProfile } from '@/contexts/AuthContext';
 import { Timer, Zap, Trophy, RotateCcw, ArrowLeft } from 'lucide-react';
 
 type Mode = 'lobby' | 'time-attack' | 'casual' | 'results';
 
 export default function QuizArena() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const topic = searchParams.get('topic');
+
   const { profile, guestProfile, isGuest, updateProfile } = useAuth();
+  const currentProfile = useCurrentProfile();
+  const userZone = currentProfile?.zone || 'junior';
   const [mode, setMode] = useState<Mode>('lobby');
   const [currentQ, setCurrentQ] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
@@ -21,7 +27,17 @@ export default function QuizArena() {
   const [showXP, setShowXP] = useState(false);
   const [answers, setAnswers] = useState<(number | null)[]>([]);
 
-  const questions = QUIZ_QUESTIONS;
+  // Filter questions by student's age zone and topic
+  let questions = QUIZ_QUESTIONS.filter(q => q.zone === userZone || q.zone === 'both');
+  if (topic) {
+    const filtered = questions.filter(q => 
+      q.question.toLowerCase().includes(topic.toLowerCase()) || 
+      q.options.some(o => o.toLowerCase().includes(topic.toLowerCase()))
+    );
+    if (filtered.length > 0) {
+      questions = filtered;
+    }
+  }
 
   // Timer for time attack
   useEffect(() => {
@@ -30,6 +46,14 @@ export default function QuizArena() {
     const t = setTimeout(() => setTimeLeft(prev => prev - 1), 1000);
     return () => clearTimeout(t);
   }, [mode, timeLeft, selected]);
+
+  useEffect(() => {
+    if (mode === 'casual' || mode === 'time-attack') {
+      const progKey = topic ? `play_progress_quiz_${topic}` : 'play_progress_quiz';
+      const percent = Math.max(10, Math.round((currentQ / questions.length) * 100));
+      localStorage.setItem(progKey, percent.toString());
+    }
+  }, [mode, currentQ, topic, questions.length]);
 
   const handleAnswer = (idx: number) => {
     if (selected !== null) return;
@@ -48,6 +72,12 @@ export default function QuizArena() {
       if (currentQ + 1 >= questions.length) { 
         setMode('results'); 
         setShowXP(true); 
+        localStorage.setItem('play_completed_quiz', 'true');
+        localStorage.setItem('play_progress_quiz', '100');
+        if (topic) {
+          localStorage.setItem(`play_completed_quiz_${topic}`, 'true');
+          localStorage.setItem(`play_progress_quiz_${topic}`, '100');
+        }
         // Update profile XP!
         const currentProfileXP = isGuest ? (guestProfile?.xp ?? 0) : (profile?.xp ?? 0);
         updateProfile({ xp: currentProfileXP + currentEarned });
@@ -70,7 +100,9 @@ export default function QuizArena() {
           <ArrowLeft className="w-4 h-4" /> Back to Play
         </button>
         <h1 className="text-white font-game text-xl flex items-center gap-2">🎯 Quiz Arena</h1>
-        <p className="text-white/60 font-body text-sm mt-1">Test your AI knowledge — choose your challenge!</p>
+        <p className="text-white/60 font-body text-sm mt-1">
+          {userZone === 'junior' ? '🚀 Junior AI Quiz — everyday AI adventures!' : '🧠 Innovator AI Quiz — advanced AI concepts!'}
+        </p>
       </div>
       <div className="px-4 pt-6 space-y-4">
         <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
@@ -82,7 +114,7 @@ export default function QuizArena() {
             <div>
               <div className="text-white font-game text-lg">⚡ Time Attack!</div>
               <div className="text-white/70 font-body text-sm">15 seconds per question. Bonus XP for speed!</div>
-              <div className="text-red-400 font-body text-xs mt-1">10 Questions • Hard Mode</div>
+              <div className="text-red-400 font-body text-xs mt-1">{questions.length} Questions • Hard Mode</div>
             </div>
           </div>
         </motion.div>
@@ -95,7 +127,7 @@ export default function QuizArena() {
             <div>
               <div className="text-white font-game text-lg">😊 Casual Mode</div>
               <div className="text-white/70 font-body text-sm">No time pressure. Learn at your own pace.</div>
-              <div className="text-green-400 font-body text-xs mt-1">10 Questions • Easy Mode</div>
+              <div className="text-green-400 font-body text-xs mt-1">{questions.length} Questions • Easy Mode</div>
             </div>
           </div>
         </motion.div>

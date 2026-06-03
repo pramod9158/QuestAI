@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { CURRICULUM, WEEKLY_MISSIONS_DATA, PLAY_MODULES_DATA } from '../data/curriculum';
 
 
 // --- XP & Coins ---
@@ -118,3 +119,127 @@ export function updateGuestXP(amount: number): GuestProfile | null {
   saveGuestProfile(updated);
   return updated;
 }
+
+export interface ProgressStats {
+  completedLessons: number;
+  totalLessons: number;
+  lessonPercent: number;
+  completedPlay: number;
+  totalPlay: number;
+  playPercent: number;
+  completedMissions: number;
+  totalMissions: number;
+  missionPercent: number;
+  overallPercent: number;
+}
+
+export function getPlatformProgress(profile: any): ProgressStats {
+  const userZone = profile?.zone || 'junior';
+  
+  // 1. Lessons Progress
+  const completedLessonsList = profile?.completed_lessons || [];
+  const filteredLessons = CURRICULUM.filter(l => l.zone === userZone || l.zone === 'both');
+  const totalLessons = filteredLessons.length;
+  
+  let lessonSum = 0;
+  let completedLessons = 0;
+  
+  filteredLessons.forEach(l => {
+    const isDone = completedLessonsList.includes(l.id);
+    if (isDone) {
+      lessonSum += 100;
+      completedLessons++;
+    } else if (typeof window !== 'undefined') {
+      const p = parseInt(localStorage.getItem(`lesson_progress_${l.id}`) || '0', 10);
+      lessonSum += p;
+    }
+  });
+  
+  const lessonPercent = totalLessons > 0 ? Math.round(lessonSum / totalLessons) : 0;
+  
+  // 2. Play Progress
+  let completedPlay = 0;
+  let playSum = 0;
+  const userModules = PLAY_MODULES_DATA.filter(mod => mod.zones.includes(userZone));
+  const totalPlay = userModules.length || 1;
+
+  if (typeof window !== 'undefined') {
+    userModules.forEach(mod => {
+      let percent = 0;
+      const key = mod.completionKey;
+      if (key === 'quests') {
+        const done = !!(profile?.completed_quests && profile.completed_quests.length > 0);
+        percent = done ? 100 : 0;
+      } else if (key.startsWith('quests_')) {
+        const qId = key.replace('quests_', '');
+        const done = localStorage.getItem(`quests_${qId}`) === 'true' || !!(profile?.completed_quests && profile.completed_quests.includes(qId));
+        if (done) {
+          percent = 100;
+        } else {
+          percent = parseInt(localStorage.getItem(`play_progress_story_${qId}`) || '0', 10);
+        }
+      } else if (key === 'inventions') {
+        const rawInventions = JSON.parse(localStorage.getItem('guest_inventions') || '[]');
+        percent = rawInventions.length > 0 ? 100 : localStorage.getItem('play_progress_brainstorm') ? 50 : 0;
+      } else if (key === 'ideas') {
+        const savedIdeas = JSON.parse(localStorage.getItem('saved_ideas') || '[]');
+        percent = savedIdeas.length > 0 ? 100 : localStorage.getItem('play_progress_idea-generator') ? 50 : 0;
+      } else {
+        const done = localStorage.getItem(key) === 'true';
+        if (done) {
+          percent = 100;
+        } else {
+          const progKey = key.replace('play_completed_', 'play_progress_');
+          percent = parseInt(localStorage.getItem(progKey) || '0', 10);
+        }
+      }
+      playSum += percent;
+      if (percent === 100) completedPlay++;
+    });
+  }
+  const playPercent = Math.round(playSum / totalPlay);
+  
+  // 3. Missions Progress
+  let customMissions: any[] = [];
+  let rawSubs: any[] = [];
+  if (typeof window !== 'undefined') {
+    customMissions = JSON.parse(localStorage.getItem('parent_custom_missions') || '[]');
+    rawSubs = JSON.parse(localStorage.getItem('mission_submissions') || '[]');
+  }
+  const zoneMissions = WEEKLY_MISSIONS_DATA.filter(m => m.zone === userZone || m.zone === 'both');
+  const allMissions = [...zoneMissions, ...customMissions];
+  const totalMissions = allMissions.length || 1;
+  
+  let missionSum = 0;
+  let completedMissions = 0;
+  
+  allMissions.forEach(m => {
+    const done = rawSubs.some(s => s.missionId === m.id && s.status === 'approved');
+    if (done) {
+      missionSum += 100;
+      completedMissions++;
+    } else if (typeof window !== 'undefined') {
+      const p = parseInt(localStorage.getItem(`mission_progress_${m.id}`) || '0', 10);
+      missionSum += p;
+    }
+  });
+  
+  const missionPercent = Math.round(missionSum / totalMissions);
+  
+  // 4. Overall Progress
+  const overallPercent = Math.round((lessonPercent + playPercent + missionPercent) / 3);
+  
+  return {
+    completedLessons,
+    totalLessons,
+    lessonPercent,
+    completedPlay,
+    totalPlay,
+    playPercent,
+    completedMissions,
+    totalMissions,
+    missionPercent,
+    overallPercent
+  };
+}
+

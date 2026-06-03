@@ -2,6 +2,57 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
 
+// Helper to detect keyboard mashing, spam, or random characters
+export function isGibberish(text: string): boolean {
+  const t = text.trim();
+  if (t.length < 5) return false;
+  const lower = t.toLowerCase();
+  
+  // 1. Repeating characters: 5+ consecutive identical characters (e.g. "aaaaa")
+  if (/(.)\1{4,}/.test(lower)) return true;
+  
+  // 2. Starting with common test/spam keyboard sequences
+  if (/^(xyz|abc|test|qwerty|asdf|zxcv|asd)/.test(lower)) return true;
+  
+  // 3. Repeating identical words/phrases (e.g., "phone phone phone")
+  const words = lower.split(/\s+/).filter(Boolean);
+  if (words.length >= 4) {
+    const wordCounts: Record<string, number> = {};
+    for (const w of words) {
+      wordCounts[w] = (wordCounts[w] || 0) + 1;
+    }
+    const maxWordFrequency = Math.max(...Object.values(wordCounts));
+    if (maxWordFrequency / words.length > 0.6) return true;
+  }
+  
+  // 4. Vowel-to-consonant ratio check (keyboard mashing usually has low vowel density)
+  let totalLetters = 0;
+  let vowels = 0;
+  for (const char of lower) {
+    if (/[a-z]/.test(char)) {
+      totalLetters++;
+      if (/[aeiouy]/.test(char)) {
+        vowels++;
+      }
+    }
+  }
+  if (totalLetters > 12) {
+    const vowelRatio = vowels / totalLetters;
+    if (vowelRatio < 0.20) return true;
+  }
+  
+  // 5. Long words with no vowels
+  for (const word of words) {
+    if (word.length > 4 && !/[aeiouy]/.test(word)) {
+      if (!/^\d+$/.test(word)) {
+        return true;
+      }
+    }
+  }
+  
+  return false;
+}
+
 // Simulated fallback ideas by category
 const FALLBACK_IDEAS: Record<string, { name: string; description: string }[]> = {
   school: [
@@ -51,7 +102,7 @@ export async function generateAIIdeas(problem: string, category: string): Promis
   if (GEMINI_API_KEY && GEMINI_API_KEY !== 'your_gemini_api_key_from_aistudio') {
     try {
       const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
       const prompt = `You are a friendly AI educator for children aged 6-16 in India. 
 A student has described a real-world problem: "${problem}" in the category: "${category}".
@@ -87,7 +138,7 @@ export async function generateBrainstormIdea(
   if (GEMINI_API_KEY && GEMINI_API_KEY !== 'your_gemini_api_key_from_aistudio') {
     try {
       const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
       const prompt = `You are a creative AI educator for children in India.
 A student wants to solve this problem:
@@ -198,7 +249,7 @@ export async function generateMissionSuggestions(
   if (GEMINI_API_KEY && GEMINI_API_KEY !== 'your_gemini_api_key_from_aistudio') {
     try {
       const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
       const prompt = `You are a helpful and friendly AI assistant for an educational platform teaching AI to children (aged 6-16).
 The child is working on a weekly mission: "${missionTitle}".
@@ -259,10 +310,11 @@ export async function evaluateMissionSubmission(
   missionGoal: string,
   submissionText: string
 ): Promise<{ score: number; feedback: string; passed: boolean }> {
+  let apiFailed = false;
   if (GEMINI_API_KEY && GEMINI_API_KEY !== 'your_gemini_api_key_from_aistudio') {
     try {
       const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
       const prompt = `You are a supportive, encouraging, and friendly AI educator. 
 A student has submitted an observation for a weekly challenge.
@@ -271,6 +323,7 @@ A student has submitted an observation for a weekly challenge.
 - Student's Submission: "${submissionText}"
 
 Evaluate the student's submission. Be understanding and generous, but ensure they actually attempted the challenge (not just typed random letters/spam or empty text).
+CRITICAL: If the student's submission contains keyboard mashing, random characters, repetitive words, gibberish, or spam (e.g. "sf dfv dvx dfdub...", "abcabcabc", "test test test"), you MUST assign a score of 30 and output feedback explaining that they need to write a realistic observation instead of random characters.
 1. Assign a score between 30 and 100:
    - 90-100: Excellent, detailed observation covering key aspects correctly.
    - 70-89: Good job, but could have added a bit more details or examples.
@@ -304,12 +357,23 @@ Do not include any formatting, markdown, or other text outside the JSON object.`
       }
     } catch (err) {
       console.warn('Gemini API failed to evaluate submission:', err);
+      apiFailed = true;
     }
   }
 
   // Fallback: evaluate using basic length & keyword presence (simple heuristic)
   const text = submissionText.trim();
   const lowerText = text.toLowerCase();
+  
+  if (isGibberish(text)) {
+    return {
+      score: 30,
+      feedback: apiFailed
+        ? "⚠️ [API Quota Exceeded]: It looks like you typed random letters or spam. Please write a realistic observation using real words to complete the challenge!"
+        : "It looks like you typed random letters or spam. Please write a realistic observation using real words to complete the challenge!",
+      passed: false
+    };
+  }
   
   // URL check: strip URLs and check if there's sufficient non-URL text
   const urlRegex = /https?:\/\/[^\s]+/gi;
@@ -322,15 +386,18 @@ Do not include any formatting, markdown, or other text outside the JSON object.`
   if (textWithoutUrls.length < 15 || cleanWordCount < 3 || isSpam) {
     return {
       score: 35,
-      feedback: "Keep trying! Please write a bit more about what you observed. Avoid using random letters, spam, or only links.",
+      feedback: apiFailed
+        ? "⚠️ [API Quota Exceeded]: Keep trying! Please write a bit more about what you observed. Avoid using random letters, spam, or only links."
+        : "Keep trying! Please write a bit more about what you observed. Avoid using random letters, spam, or only links.",
       passed: false
     };
   }
 
   let score = 75;
   let feedback = "Nice try! You've started listing some observations. Try adding more details and explaining how technology helps.";
+  const titleLower = missionTitle.toLowerCase();
   
-  if (missionTitle.includes("Home") || missionGoal.includes("home")) {
+  if (titleLower.includes("home")) {
     const keywords = ['phone', 'mobile', 'camera', 'face id', 'fingerprint', 'alexa', 'siri', 'assistant', 'speaker', 'tv', 'television', 'refrigerator', 'fridge', 'vacuum', 'robot', 'youtube', 'netflix', 'spotify', 'light', 'bulb', 'ac', 'conditioner', 'smart', 'ai', 'algorithm', 'app', 'feed', 'recommend'];
     const matchedCount = keywords.filter(kw => lowerText.includes(kw)).length;
     if (matchedCount >= 2 && textWithoutUrls.length >= 35) {
@@ -340,7 +407,7 @@ Do not include any formatting, markdown, or other text outside the JSON object.`
       score = 45;
       feedback = "Almost there! Make sure you mention at least 2 smart/AI features or devices around your home and why they are smart.";
     }
-  } else if (missionTitle.includes("Time") || missionGoal.includes("waiting")) {
+  } else if (titleLower.includes("time") || titleLower.includes("wait")) {
     const scenarios = ['queue', 'line', 'wait', 'bus', 'traffic', 'canteen', 'lunch', 'library', 'counter', 'gate', 'office', 'register', 'store', 'shop'];
     const aiSolutions = ['predict', 'optimize', 'schedule', 'app', 'alert', 'route', 'camera', 'sensor', 'automated', 'time', 'manage'];
     const hasScenario = scenarios.some(kw => lowerText.includes(kw));
@@ -352,7 +419,7 @@ Do not include any formatting, markdown, or other text outside the JSON object.`
       score = 45;
       feedback = "Try to explain where people wait (like canteen or bus stop) and how AI or smart apps can help predict or reduce that wait time.";
     }
-  } else if (missionTitle.includes("Problem") || missionGoal.includes("neighbourhood")) {
+  } else if (titleLower.includes("problem") || titleLower.includes("spotter")) {
     const problems = ['trash', 'waste', 'garbage', 'leak', 'water', 'light', 'streetlight', 'hole', 'road', 'traffic', 'pollution', 'broken', 'dirty', 'litter'];
     const techSolutions = ['sensor', 'camera', 'ai', 'app', 'system', 'detect', 'notify', 'alert', 'analyze', 'satellite', 'monitor'];
     const hasProblem = problems.some(kw => lowerText.includes(kw));
@@ -364,8 +431,7 @@ Do not include any formatting, markdown, or other text outside the JSON object.`
       score = 45;
       feedback = "Please describe a local issue (like garbage or water leaks) and explain how smart technology or sensors can help solve it.";
     }
-  } else {
-    // Interview
+  } else if (titleLower.includes("interview") || titleLower.includes("adult")) {
     const people = ['father', 'mother', 'parent', 'teacher', 'neighbour', 'uncle', 'aunt', 'doctor', 'shopkeeper', 'adult', 'friend', 'colleague', 'he', 'she', 'they', 'mr', 'mrs', 'ms'];
     const technology = ['computer', 'laptop', 'excel', 'software', 'app', 'email', 'search', 'write', 'track', 'teach', 'sell', 'record', 'system', 'smart', 'tool', 'internet', 'ai'];
     const hasPerson = people.some(kw => lowerText.includes(kw));
@@ -377,6 +443,19 @@ Do not include any formatting, markdown, or other text outside the JSON object.`
       score = 45;
       feedback = "Make sure you specify who you interviewed (e.g. parent, teacher) and what software, computers, or smart apps they use daily.";
     }
+  } else {
+    // Custom parent challenge or other generic fallback
+    if (textWithoutUrls.length >= 25) {
+      score = 90;
+      feedback = "Well done! Your custom mission observation details have been logged successfully.";
+    } else {
+      score = 45;
+      feedback = "Write down a few more details about your custom challenge observation (at least 25 characters).";
+    }
+  }
+
+  if (apiFailed) {
+    feedback = `⚠️ [API Quota Exceeded - Fallback Evaluator Used]: ${feedback}`;
   }
 
   return {
@@ -401,10 +480,11 @@ export async function generateParentAssistantResponse(
   },
   parentMessage: string
 ): Promise<string> {
+  let apiFailed = false;
   if (GEMINI_API_KEY && GEMINI_API_KEY !== 'your_gemini_api_key_from_aistudio') {
     try {
       const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
       const prompt = `You are a friendly, encouraging, and knowledgeable AI educational counselor at QuestAI, a platform that teaches AI and design thinking to children.
 A parent wants to know about their child's progress. Here is the child's data:
@@ -428,6 +508,7 @@ Suggest 1 specific activity or next step they can do on the platform to continue
       return result.response.text().trim();
     } catch (err) {
       console.warn('Gemini API failed to generate parent dashboard response:', err);
+      apiFailed = true;
     }
   }
 
@@ -437,18 +518,21 @@ Suggest 1 specific activity or next step they can do on the platform to continue
   const inventionsCount = studentData.inventions?.length || 0;
   const observationsCount = studentData.observations?.length || 0;
   
+  let fallbackAns = "";
   if (msg.includes("summarize") || msg.includes("progress") || msg.includes("report") || msg.includes("how is")) {
-    return `Hello! ${child} is doing fantastic on QuestAI. They have reached Level ${studentData.level} with ${studentData.xp} XP! They completed ${studentData.completedLessons} lessons and ${studentData.completedQuests} Story Adventures. They've also submitted ${observationsCount} field observations and dreamed up ${inventionsCount} cool AI inventions! I suggest they try more Weekly Field Missions next to put their knowledge into practice!`;
-  }
-  if (msg.includes("invention") || msg.includes("creative") || msg.includes("strengths") || msg.includes("invent")) {
+    fallbackAns = `Hello! ${child} is doing fantastic on QuestAI. They have reached Level ${studentData.level} with ${studentData.xp} XP! They completed ${studentData.completedLessons} lessons and ${studentData.completedQuests} Story Adventures. They've also submitted ${observationsCount} field observations and dreamed up ${inventionsCount} cool AI inventions! I suggest they try more Weekly Field Missions next to put their knowledge into practice!`;
+  } else if (msg.includes("invention") || msg.includes("creative") || msg.includes("strengths") || msg.includes("invent")) {
     if (inventionsCount > 0) {
       const topInvention = studentData.inventions[0];
-      return `QuestAI encourages creativity, and ${child} shows great innovation! They brainstormed "${topInvention.name}": ${topInvention.description}. This project has an innovation score of ${topInvention.innovation_score}%! They are great at connecting AI solutions to real-world problems.`;
+      fallbackAns = `QuestAI encourages creativity, and ${child} shows great innovation! They brainstormed "${topInvention.name}": ${topInvention.description}. This project has an innovation score of ${topInvention.innovation_score}%! They are great at connecting AI solutions to real-world problems.`;
+    } else {
+      fallbackAns = `${child} is building strong analytical skills by completing lessons. To boost their creativity, encourage them to visit the 'Brainstorm Playground' module, where they can build their own AI inventions!`;
     }
-    return `${child} is building strong analytical skills by completing lessons. To boost their creativity, encourage them to visit the 'Brainstorm Playground' module, where they can build their own AI inventions!`;
+  } else {
+    // Generic response
+    fallbackAns = `Hello! ${child} has earned ${studentData.xp} XP and is currently at Level ${studentData.level}. They have completed ${studentData.completedLessons} lessons, ${studentData.completedQuests} story adventures, and ${observationsCount} missions. Encourage them to keep logging in daily to maintain their ${studentData.streak}-day streak! Let me know if you want to know about their specific inventions or observations.`;
   }
-  // Generic response
-  return `Hello! ${child} has earned ${studentData.xp} XP and is currently at Level ${studentData.level}. They have completed ${studentData.completedLessons} lessons, ${studentData.completedQuests} story adventures, and ${observationsCount} missions. Encourage them to keep logging in daily to maintain their ${studentData.streak}-day streak! Let me know if you want to know about their specific inventions or observations.`;
+  return apiFailed ? `⚠️ [API Quota Exceeded - Fallback Counselor]: ${fallbackAns}` : fallbackAns;
 }
 
 // Evaluate a child's reflection on story adventures
@@ -457,10 +541,11 @@ export async function evaluateStoryReflection(
   questionText: string,
   reflectionText: string
 ): Promise<{ feedback: string; bonusXp: number }> {
+  let apiFailed = false;
   if (GEMINI_API_KEY && GEMINI_API_KEY !== 'your_gemini_api_key_from_aistudio') {
     try {
       const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
       const prompt = `You are a supportive, high-energy robot tutor companion for children learning AI.
 The child is doing a story adventure quest titled "${questTitle}".
@@ -468,13 +553,14 @@ They just read a scenario and were asked: "${questionText}".
 The child typed this reflection: "${reflectionText}"
 
 Evaluate their reflection. Be extremely encouraging and positive.
+CRITICAL: If the child's reflection consists of random character typing, gibberish, keyboard mashing, or repetitive spam, you MUST assign a bonusXp of 0 and feedback asking them to try again with real words.
 1. Provide a kid-friendly validation message (max 15-20 words). Acknowledge something they said.
-2. Decide a bonus XP (between 5 and 15) depending on the effort and quality of the response.
+2. Decide a bonus XP (between 5 and 15, or 0 if gibberish/spam) depending on the effort and quality of the response.
 
 Respond ONLY with a JSON object. Format:
 {
   "feedback": "<friendly validation message>",
-  "bonusXp": <number between 5 and 15>
+  "bonusXp": <number between 5 and 15, or 0 if gibberish>
 }
 Do not include any formatting, markdown, or other text outside the JSON object.`;
 
@@ -492,21 +578,193 @@ Do not include any formatting, markdown, or other text outside the JSON object.`
       }
     } catch (err) {
       console.warn('Gemini API failed to evaluate story reflection:', err);
+      apiFailed = true;
     }
   }
 
   // Fallback
   const cleanText = reflectionText.trim();
-  const wordCount = cleanText.split(/\s+/).filter(Boolean).length;
-  if (wordCount < 3) {
+  if (isGibberish(cleanText)) {
     return {
-      feedback: "Nice try! Try writing a bit more about how you would solve this next time!",
-      bonusXp: 5
+      feedback: apiFailed
+        ? "⚠️ [API Quota Exceeded]: Please type a real answer with real words instead of random letters so we can award you bonus XP!"
+        : "Please type a real answer with real words instead of random letters so we can award you bonus XP!",
+      bonusXp: 0
     };
   }
+  const wordCount = cleanText.split(/\s+/).filter(Boolean).length;
+  let feedback = "Spot on! That is a very creative way to think about this problem and use smart tech!";
+  let bonusXp = 10;
+  
+  if (wordCount < 3) {
+    feedback = "Nice try! Try writing a bit more about how you would solve this next time!";
+    bonusXp = 5;
+  }
+  
+  if (apiFailed) {
+    feedback = `⚠️ [API Quota Exceeded - Fallback Evaluator Used]: ${feedback}`;
+  }
+  
   return {
-    feedback: "Spot on! That is a very creative way to think about this problem and use smart tech!",
-    bonusXp: 10
+    feedback,
+    bonusXp
   };
+}
+
+// Ask QuestBot about a specific lesson
+export async function askLessonTutor(
+  lessonTitle: string,
+  lessonSubtitle: string,
+  question: string
+): Promise<string> {
+  let apiFailed = false;
+  if (GEMINI_API_KEY && GEMINI_API_KEY !== 'your_gemini_api_key_from_aistudio') {
+    try {
+      const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+
+      const prompt = `You are a supportive, high-energy robot tutor companion for kids learning AI.
+The child is studying the lesson: "${lessonTitle}" (${lessonSubtitle}).
+They asked this question: "${question}".
+
+Provide a kid-friendly, simple, and exciting answer (max 3 sentences) in plain English. Use emojis!`;
+
+      const result = await model.generateContent(prompt);
+      return result.response.text().trim();
+    } catch (err) {
+      console.warn('Gemini API failed in askLessonTutor:', err);
+      apiFailed = true;
+    }
+  }
+  const fallbackAns = "Beep boop! That's a great question about " + lessonTitle + "! AI is like a smart helper that learns from patterns to solve it. Keep exploring! 🤖✨";
+  return apiFailed ? `⚠️ [API Quota Exceeded - Fallback Answer]: ${fallbackAns}` : fallbackAns;
+}
+
+// Ask general QuestBot questions on the Home screen
+export async function askHomeQuestBot(question: string): Promise<string> {
+  let apiFailed = false;
+  if (GEMINI_API_KEY && GEMINI_API_KEY !== 'your_gemini_api_key_from_aistudio') {
+    try {
+      const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+
+      const prompt = `You are QuestBot, a friendly and funny robot assistant for kids learning AI.
+The child asks: "${question}".
+
+Provide an exciting, simple, and encouraging response (max 3 sentences). Explain any complex terms in super simple terms that a 7-year-old would understand. Use fun emojis!`;
+
+      const result = await model.generateContent(prompt);
+      return result.response.text().trim();
+    } catch (err) {
+      console.warn('Gemini API failed in askHomeQuestBot:', err);
+      apiFailed = true;
+    }
+  }
+  const fallbackAns = "Beep boop! I am QuestBot. I love learning about AI! Try asking me things like 'What is a sensor?' or 'How does AI recognize faces?'. 🤖";
+  return apiFailed ? `⚠️ [API Quota Exceeded - Fallback Answer]: ${fallbackAns}` : fallbackAns;
+}
+
+// Generate custom parent challenge
+export async function generateParentCustomMission(
+  topic: string
+): Promise<{ title: string; description: string; tasks: string[]; xp_reward: number }> {
+  if (GEMINI_API_KEY && GEMINI_API_KEY !== 'your_gemini_api_key_from_aistudio') {
+    try {
+      const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+
+      const prompt = `You are an educational designer at QuestAI. A parent wants to generate a custom, real-world AI exploration mission for their child.
+The parent's suggested topic is: "${topic}".
+
+Generate a creative, safe, and exciting 3-step mission for the child. 
+Respond ONLY with a JSON object format:
+{
+  "title": "A short catchy title (max 4 words)",
+  "description": "A short mission goal for the child (max 25 words)",
+  "tasks": [
+    "Step 1 task description (max 15 words)",
+    "Step 2 task description (max 15 words)",
+    "Step 3 task description (max 15 words)"
+  ],
+  "xp_reward": 80
+}
+Do not include any formatting, markdown, or other text outside the JSON object.`;
+
+      const result = await model.generateContent(prompt);
+      const text = result.response.text().trim();
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        return JSON.parse(jsonMatch[0]);
+      }
+    } catch (err) {
+      console.warn('Gemini API failed in generateParentCustomMission:', err);
+    }
+  }
+  // Fallback custom mission
+  return {
+    title: `Explore ${topic || 'Technology'}`,
+    description: `Observe and study how ${topic || 'technology'} is used in your daily life.`,
+    tasks: [
+      `Find one example of ${topic || 'technology'} at home.`,
+      `Explain to your parent how it works.`,
+      `Write down one way AI could make it even smarter.`
+    ],
+    xp_reward: 75
+  };
+}
+
+// Generate a professional AI cognitive learning diagnostic summary for parents
+export async function generateParentSkillAnalysis(
+  studentData: {
+    username: string;
+    level: number;
+    xp: number;
+    completedLessons: number;
+    completedQuests: number;
+    completedMissions: number;
+    skills: { computational: number; observation: number; creative: number; ethics: number; solving: number };
+  }
+): Promise<string> {
+  if (GEMINI_API_KEY && GEMINI_API_KEY !== 'your_gemini_api_key_from_aistudio') {
+    try {
+      const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+
+      const prompt = `You are a professional educational psychologist and child learning consultant at QuestAI.
+Analyze the child's learning metrics and provide a warm, detailed, and highly constructive diagnostic report for their parents.
+Child's details:
+- Name: ${studentData.username}
+- Current Level: ${studentData.level} (Total XP: ${studentData.xp})
+- Completed Lessons: ${studentData.completedLessons}/12, Quests: ${studentData.completedQuests}/8, Missions: ${studentData.completedMissions}/4
+- Evaluated Skill Ratings (out of 100):
+  * Computational Thinking & Logic: ${studentData.skills.computational}/100
+  * Real-world Tech Observation: ${studentData.skills.observation}/100
+  * Creative AI Innovation: ${studentData.skills.creative}/100
+  * AI Ethics & Digital Citizenship: ${studentData.skills.ethics}/100
+  * Critical Problem Solving: ${studentData.skills.solving}/100
+
+Write a 3-4 sentence professional assessment summarizing:
+1. The child's strengths based on their highest skills.
+2. A specific area of digital literacy or cognitive skill they can develop further.
+3. An encouraging next step or topic for parent-child interaction (e.g. brainstorming together or discussing tech bias).
+Maintain a supportive, premium, and professional tone that proves the educational value of the platform.`;
+
+      const result = await model.generateContent(prompt);
+      return result.response.text().trim();
+    } catch (err) {
+      console.warn('Gemini API failed in generateParentSkillAnalysis:', err);
+    }
+  }
+
+  // Smart fallback report
+  const { username, skills } = studentData;
+  const highestSkill = Object.entries(skills).reduce((a, b) => a[1] > b[1] ? a : b)[0];
+  let strengthDesc = "analytical computational thinking";
+  if (highestSkill === 'observation') strengthDesc = "keen observation of real-world smart technology";
+  else if (highestSkill === 'creative') strengthDesc = "imaginative AI design thinking and creative problem formulation";
+  else if (highestSkill === 'ethics') strengthDesc = "ethical mindfulness and digital safety awareness";
+  else if (highestSkill === 'solving') strengthDesc = "determined critical thinking and systematic problem-solving";
+
+  return `Based on our system evaluations, ${username} is demonstrating exceptional capability in ${strengthDesc}, showing a natural ability to connect learning to practical concepts. To expand their cognitive horizon, we recommend reinforcing their computational logic by starting advanced lesson modules. Try asking ${username} about a simple sensor in your home today to spark a fun, shared technology discussion!`;
 }
 

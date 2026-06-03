@@ -308,3 +308,37 @@ export function SpeakButton({ text }: SpeakButtonProps) {
     </motion.button>
   );
 }
+
+export function CardProgressBadge({ percent }: { percent: number }) {
+  let statusText = "Not Started";
+  let statusColor = "bg-red-950/60 text-red-400 border-red-500";
+  let pulse = "";
+  
+  if (percent === 100) {
+    statusText = "Completed";
+    statusColor = "bg-emerald-950/60 text-emerald-300 border-emerald-500";
+  } else if (percent > 0) {
+    statusText = `In Progress (${percent}%)`;
+    statusColor = "bg-amber-950/60 text-amber-300 border-amber-500";
+    pulse = "animate-pulse";
+  }
+  
+  return (
+    <div className={`inline-flex items-center gap-1 px-1.5 py-0.5 border text-[7px] font-pixel rounded-none uppercase ${statusColor} ${pulse}`}>
+      <span className="w-1.5 h-1.5 rounded-full bg-current" />
+      {statusText}
+    </div>
+  );
+}
+
+export function CardProgressBar({ percent }: { percent: number }) {
+  const barColor = percent === 100 ? "#10B981" : percent > 0 ? "#FFD60A" : "#374151";
+  return (
+    <div className="w-full h-1.5 bg-[#0F0A2E] border border-black p-[0.5px] flex items-center">
+      <div 
+        className="h-full transition-all duration-500" 
+        style={{ width: `${percent}%`, backgroundColor: barColor }} 
+      />
+    </div>
+  );
+}

@@ -12,6 +12,7 @@ export default function Auth() {
   const [tab, setTab] = useState<'login' | 'signup'>(() => {
     return location.state?.mode === 'signup' ? 'signup' : 'login';
   });
+  const [selectedZone, setSelectedZone] = useState<'junior' | 'innovator'>(location.state?.zone || 'junior');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
@@ -27,13 +28,12 @@ export default function Auth() {
     e.preventDefault();
     setError(''); setSuccess(''); setLoading(true);
     if (tab === 'login') {
-      const { error } = await signIn(email, password);
+      const { error } = await signIn(email, password, selectedZone);
       if (error) setError(error);
       else navigate('/');
     } else {
       if (!username.trim()) { setError('Please enter a username'); setLoading(false); return; }
-      const zone = location.state?.zone || 'junior';
-      const { error } = await signUp(email, password, username, zone);
+      const { error } = await signUp(email, password, username, selectedZone);
       if (error) setError(error);
       else {
         setSuccess('✅ Account created! Please check your email to confirm, then sign in.');
@@ -87,6 +87,29 @@ export default function Auth() {
               boxShadow: '6px 6px 0px 0px #000000',
             }}
           >
+            {/* Category Indicator */}
+            <div 
+              className="p-3 mb-4 flex flex-col items-center gap-2 border-2 border-black"
+              style={{ background: '#16103A' }}
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-xl">{selectedZone === 'junior' ? '🚀' : '🧠'}</span>
+                <span className="font-game text-xs text-white uppercase tracking-wider">
+                  {selectedZone === 'junior' ? 'Junior Explorer' : 'Future Innovator'}
+                </span>
+                <span className="text-white/40 font-body text-[10px]">
+                  ({selectedZone === 'junior' ? 'Ages 6–11' : 'Ages 12–16'})
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedZone(z => z === 'junior' ? 'innovator' : 'junior')}
+                className="text-[#FFD60A] hover:opacity-80 font-body text-[11px] underline cursor-pointer"
+              >
+                Switch to {selectedZone === 'junior' ? 'Future Innovator' : 'Junior Explorer'}
+              </button>
+            </div>
+
             {/* Tabs */}
             <div
               className="flex p-1 mb-6"

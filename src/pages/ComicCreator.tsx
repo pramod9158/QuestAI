@@ -28,6 +28,17 @@ export default function ComicCreator() {
   const [generating, setGenerating] = useState(false);
   const [comicDone, setComicDone] = useState(false);
 
+  React.useEffect(() => {
+    const percent = comicDone
+      ? 100
+      : Math.max(10, Math.round((currentPanel / 6) * 100));
+    localStorage.setItem('play_progress_comic', percent.toString());
+    if (comicDone) {
+      localStorage.setItem('play_completed_comic', 'true');
+      localStorage.setItem('play_progress_comic', '100');
+    }
+  }, [currentPanel, comicDone]);
+
   const handleKeyword = (keyword: string) => {
     const updated = [...panelChoices];
     updated[currentPanel] = keyword;
@@ -36,7 +47,11 @@ export default function ComicCreator() {
 
   const handleNext = () => {
     if (currentPanel < 5) setCurrentPanel(p => p + 1);
-    else setComicDone(true);
+    else {
+      setComicDone(true);
+      localStorage.setItem('play_completed_comic', 'true');
+      localStorage.setItem('play_progress_comic', '100');
+    }
   };
 
   const downloadComic = () => {

@@ -7,6 +7,7 @@ import { XPToast } from '@/components/ui/GameUI';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/contexts/AuthContext';
 import { CheckCircle, ArrowLeft, ExternalLink } from 'lucide-react';
+import { askLessonTutor } from '@/lib/gemini';
 
 export default function LessonPlayer() {
   const { id } = useParams();
@@ -15,9 +16,28 @@ export default function LessonPlayer() {
   const lesson = CURRICULUM.find(l => l.id === id);
   const [showXP, setShowXP] = useState(false);
 
+  // AI Tutor Chat states
+  const [tutorInput, setTutorInput] = useState('');
+  const [tutorAnswer, setTutorAnswer] = useState<string | null>(null);
+  const [askingTutor, setAskingTutor] = useState(false);
+
   if (!lesson) return <div className="p-6 text-white font-body">Lesson not found.</div>;
 
   const completed = profile?.completed_lessons?.includes(lesson.id) ?? false;
+
+  React.useEffect(() => {
+    if (lesson) {
+      const isDone = profile?.completed_lessons?.includes(lesson.id) ?? false;
+      if (!isDone) {
+        const existing = localStorage.getItem(`lesson_progress_${lesson.id}`);
+        if (!existing || existing === '0') {
+          localStorage.setItem(`lesson_progress_${lesson.id}`, '50');
+        }
+      } else {
+        localStorage.setItem(`lesson_progress_${lesson.id}`, '100');
+      }
+    }
+  }, [lesson, profile]);
 
   const handleComplete = async () => {
     if (!completed) {
@@ -30,7 +50,22 @@ export default function LessonPlayer() {
         coins: currentProfileCoins + (lesson.coinsReward || 0),
         completed_lessons: [...currentCompletedLessons, lesson.id],
       });
+      localStorage.setItem(`lesson_progress_${lesson.id}`, '100');
       setShowXP(true);
+    }
+  };
+
+  const handleAskTutor = async () => {
+    if (!tutorInput.trim() || askingTutor) return;
+    setAskingTutor(true);
+    try {
+      const ans = await askLessonTutor(lesson.title, lesson.subtitle, tutorInput);
+      setTutorAnswer(ans);
+      setTutorInput('');
+    } catch (err) {
+      setTutorAnswer("Beep boop! I had trouble connecting. Try again!");
+    } finally {
+      setAskingTutor(false);
     }
   };
 
@@ -138,6 +173,43 @@ export default function LessonPlayer() {
           </div>
           <div className="flex-1 overflow-auto">
             {sandboxContent()}
+          </div>
+        </div>
+      </div>
+
+      {/* AI Lesson Tutor Chat */}
+      <div className="p-4 bg-surface-2 border-t-4 border-black">
+        <div className="border-4 border-black bg-surface p-4 shadow-pixel">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-lg">🤖</span>
+            <h3 className="font-game text-sm text-white">Ask AI Tutor</h3>
+          </div>
+          
+          {tutorAnswer && (
+            <div className="mb-4 bg-black/20 border-l-4 border-[#7C3AED] p-3">
+              <span className="font-pixel text-[6px] text-primary block mb-1">🤖 QUESTBOT AI</span>
+              <p className="text-white font-body text-xs leading-relaxed">{tutorAnswer}</p>
+            </div>
+          )}
+          
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={tutorInput}
+              onChange={(e) => setTutorInput(e.target.value)}
+              placeholder="e.g., How does machine learning find patterns?"
+              onKeyDown={(e) => e.key === 'Enter' && handleAskTutor()}
+              className="flex-1 pixel-input text-xs"
+              disabled={askingTutor}
+            />
+            <Button
+              onClick={handleAskTutor}
+              loading={askingTutor}
+              disabled={!tutorInput.trim()}
+              size="sm"
+            >
+              Ask
+            </Button>
           </div>
         </div>
       </div>

@@ -1,6 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
 
 const ZONES = [
   {
@@ -29,9 +31,18 @@ const ZONES = [
 
 export default function Onboarding() {
   const navigate = useNavigate();
+  const { user, isGuest, updateProfile } = useAuth();
 
-  const handleZoneSelect = (z: 'junior' | 'innovator') => {
-    navigate('/auth', { state: { mode: 'signup', zone: z } });
+  const handleZoneSelect = async (z: 'junior' | 'innovator') => {
+    if (user || isGuest) {
+      await updateProfile({ zone: z });
+      if (user) {
+        await supabase.auth.updateUser({ data: { zone: z } });
+      }
+      navigate('/');
+    } else {
+      navigate('/auth', { state: { mode: 'signup', zone: z } });
+    }
   };
 
   return (

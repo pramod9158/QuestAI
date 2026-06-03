@@ -24,7 +24,7 @@ interface AuthContextType {
   isGuest: boolean;
   isLoading: boolean;
   signUp: (email: string, password: string, username: string, zone?: 'junior' | 'innovator') => Promise<{ error: string | null }>;
-  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  signIn: (email: string, password: string, zone?: 'junior' | 'innovator') => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   continueAsGuest: (username: string, zone: 'junior' | 'innovator') => void;
   refreshProfile: () => Promise<void>;
@@ -39,22 +39,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [guestProfile, setGuestProfileState] = useState<GuestProfile | null>(getGuestProfile);
   const [isLoading, setIsLoading] = useState(true);
-
   const isGuest = !user && !!guestProfile;
 
-  const fetchProfile = useCallback(async (userId: string, email?: string) => {
+  const fetchProfile = useCallback(async (userId: string, email?: string, metaZone?: 'junior' | 'innovator') => {
     try {
       const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
+      
+      let resolvedMetaZone = metaZone;
+      if (!resolvedMetaZone) {
+        const { data: { session } } = await supabase.auth.getSession();
+        resolvedMetaZone = session?.user?.user_metadata?.zone;
+      }
+
       if (data) {
-        setProfile(data as Profile);
+        let currentProfile = data as Profile;
+        if (resolvedMetaZone && currentProfile.zone !== resolvedMetaZone) {
+          const { error: updateErr } = await supabase
+            .from('profiles')
+            .update({ zone: resolvedMetaZone })
+            .eq('id', userId);
+          if (!updateErr) {
+            currentProfile = { ...currentProfile, zone: resolvedMetaZone };
+          }
+        }
+        setProfile(currentProfile);
         await updateStreak(userId);
       } else {
         // Fallback profile creation if none exists in the DB
         const defaultUsername = email ? email.split('@')[0] : `Explorer_${Math.floor(Math.random() * 10000)}`;
+        const fallbackZone = resolvedMetaZone || 'junior';
         const newProfile = {
           id: userId,
           username: defaultUsername,
-          zone: 'junior' as const,
+          zone: fallbackZone,
           avatar_assets: { hat: 'none', suit: 'explorer_default' },
           xp: 0,
           coins: 0,
@@ -79,15 +96,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      if (session?.user) fetchProfile(session.user.id, session.user.email).finally(() => setIsLoading(false));
-      else setIsLoading(false);
+      if (session?.user) {
+        fetchProfile(session.user.id, session.user.email, session.user.user_metadata?.zone)
+          .finally(() => setIsLoading(false));
+      } else {
+        setIsLoading(false);
+      }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
-      if (session?.user) fetchProfile(session.user.id, session.user.email);
-      else setProfile(null);
+      if (session?.user) {
+        fetchProfile(session.user.id, session.user.email, session.user.user_metadata?.zone);
+      } else {
+        setProfile(null);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -129,9 +153,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error: null };
   };
 
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error: error?.message || null };
+  const signIn = async (email: string, password: string, zone?: 'junior' | 'innovator') => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) return { error: error.message };
+    
+    if (data.user && zone) {
+      try {
+        await Promise.all([
+          supabase.auth.updateUser({ data: { zone } }),
+          supabase.from('profiles').update({ zone }).eq('id', data.user.id)
+        ]);
+      } catch (err) {
+        console.warn("Could not update zone during login:", err);
+      }
+    }
+    return { error: null };
   };
 
   const signOut = async () => {
@@ -207,7 +243,7 @@ export function useCurrentProfile() {
       coins: guestProfile.coins,
       current_streak: guestProfile.current_streak,
       completed_lessons: guestProfile.completed_lessons || [],
-      completed_quests: guestProfile.completed_lessons || [], // map to lessons for guest if needed, though login is mandatory
+      completed_quests: (guestProfile as any).completed_quests || [],
     };
   }
   return profile ? {
