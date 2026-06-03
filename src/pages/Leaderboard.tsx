@@ -20,11 +20,11 @@ const MOCK_DATA: LeaderboardEntry[] = [
 ];
 
 const PODIUM = [
-  { rank: '🥇', grad: ['#FFD60A', '#FF9F1C'], glow: 'rgba(255,214,10,0.5)', height: 128, size: 56, delay: 0 },
-  { rank: '🥈', grad: ['#C0C0D0', '#9090A0'], glow: 'rgba(192,192,200,0.35)', height: 96, size: 48, delay: 0.1 },
-  { rank: '🥉', grad: ['#FF8906', '#F25F4C'], glow: 'rgba(255,137,6,0.4)', height: 80, size: 44, delay: 0.2 },
+  { rank: '🥇', gradFrom: '#F59E0B', gradTo: '#FCD34D', border: '#F59E0B', shadow: '#D97706', height: 128, size: 56, delay: 0 },
+  { rank: '🥈', gradFrom: '#C0C0D0', gradTo: '#9090A0', border: '#C0C0D0', shadow: '#6B7280', height: 96, size: 48, delay: 0.1 },
+  { rank: '🥉', gradFrom: '#EF4444', gradTo: '#F59E0B', border: '#EF4444', shadow: '#991B1B', height: 80, size: 44, delay: 0.2 },
 ];
-const PODIUM_ORDER = [1, 0, 2]; // show 2nd, 1st, 3rd
+const PODIUM_ORDER = [1, 0, 2];
 
 export default function Leaderboard() {
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
@@ -52,18 +52,14 @@ export default function Leaderboard() {
     <div className="min-h-full pb-8">
       {/* Header */}
       <div className="relative px-5 pt-6 pb-10 overflow-hidden">
-        <div className="gradient-orb gradient-orb-xp" style={{ width: 200, height: 200, top: -60, right: -40, opacity: 0.4 }} />
-        <h1 className="font-heading font-bold text-2xl text-white flex items-center gap-2 relative">
-          <Trophy className="w-6 h-6" style={{ color: '#FFD60A' }} />
-          Leaderboard
+        <h1 className="font-pixel text-[10px] text-white flex items-center gap-2 relative tracking-wide">
+          <Trophy className="w-5 h-5" style={{ color: '#F59E0B' }} />
+          LEADERBOARD
         </h1>
-        <p className="text-white/50 font-body text-sm mt-1 relative">Top AI Explorers this week!</p>
+        <p className="text-white/50 font-body text-sm mt-2 relative">Top AI Explorers this week!</p>
         <div className="flex items-center gap-2 mt-2 relative">
-          <div
-            className="w-2 h-2 rounded-full animate-pulse"
-            style={{ background: '#2CB67D', boxShadow: '0 0 6px rgba(44,182,125,0.8)' }}
-          />
-          <span className="font-body text-xs" style={{ color: '#2CB67D' }}>Live • Updates in real-time</span>
+          <div className="w-2 h-2 animate-pulse" style={{ background: '#10B981', boxShadow: '0 0 6px rgba(16,185,129,0.8)' }} />
+          <span className="font-pixel text-[6px] tracking-wide" style={{ color: '#10B981' }}>LIVE • UPDATES IN REAL-TIME</span>
         </div>
       </div>
 
@@ -72,37 +68,39 @@ export default function Leaderboard() {
         <div className="px-5 -mt-4">
           <div className="flex items-end justify-center gap-3" style={{ height: 200 }}>
             {PODIUM_ORDER.map((pos) => {
-              const { rank, grad, glow, height, size, delay } = PODIUM[pos];
+              const p = PODIUM[pos];
               const entry = entries[pos];
               return (
                 <motion.div
                   key={pos}
                   initial={{ y: 50, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay, duration: 0.5, type: 'spring', stiffness: 200 }}
+                  transition={{ delay: p.delay, duration: 0.5, type: 'spring', stiffness: 200 }}
                   className="flex flex-col items-center gap-2 flex-1"
                 >
-                  {pos === 0 && (
+                  {pos === 0 ? (
                     <motion.div animate={{ y: [0, -6, 0] }} transition={{ repeat: Infinity, duration: 2.5 }}>
-                      <PixelAvatar username={entry?.username} size={size} colorIndex={pos} />
+                      <PixelAvatar username={entry?.username} size={p.size} colorIndex={pos} />
                     </motion.div>
+                  ) : (
+                    <PixelAvatar username={entry?.username} size={p.size} colorIndex={pos} />
                   )}
-                  {pos !== 0 && <PixelAvatar username={entry?.username} size={size} colorIndex={pos} />}
                   <div className="font-body text-white/80 text-xs text-center truncate w-full">{entry?.username}</div>
                   <div
-                    className="w-full flex flex-col items-center justify-center py-4 rounded-t-2xl"
+                    className="w-full flex flex-col items-center justify-center py-4"
                     style={{
-                      height,
-                      background: `linear-gradient(180deg, rgba(${hexToRgb(grad[0])},0.3) 0%, rgba(${hexToRgb(grad[1])},0.15) 100%)`,
-                      border: `1px solid rgba(${hexToRgb(grad[0])},0.5)`,
-                      borderBottom: 'none',
-                      boxShadow: `0 -4px 20px ${glow}`,
+                      height: p.height,
+                      background: `linear-gradient(180deg, ${p.gradFrom}33 0%, ${p.gradTo}1A 100%)`,
+                      borderLeft: `3px solid ${p.border}`,
+                      borderRight: `3px solid ${p.border}`,
+                      borderTop: `3px solid ${p.border}`,
+                      boxShadow: `0 -3px 0px 0px ${p.shadow}, 4px 0 0px 0px ${p.shadow}`,
                     }}
                   >
-                    <div className="text-3xl">{rank}</div>
+                    <div className="text-3xl">{p.rank}</div>
                     <div
-                      className="font-heading font-bold text-xs mt-1"
-                      style={{ background: `linear-gradient(135deg, ${grad[0]}, ${grad[1]})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
+                      className="font-game text-xs mt-1"
+                      style={{ background: `linear-gradient(135deg, ${p.gradFrom}, ${p.gradTo})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
                     >
                       {entry?.xp} XP
                     </div>
@@ -119,8 +117,12 @@ export default function Leaderboard() {
         {entries.map((entry, i) => {
           const isTop3 = i < 3;
           const rankBadge = ['🥇', '🥈', '🥉'][i];
-          const topGrads = [['#FFD60A', '#FF9F1C'], ['#C0C0D0', '#9090A0'], ['#FF8906', '#F25F4C']];
-          const [gf, gt] = isTop3 ? topGrads[i] : ['rgba(255,255,255,0.2)', 'rgba(255,255,255,0.1)'];
+          const topStyles = [
+            { gradFrom: '#F59E0B', gradTo: '#FCD34D', border: '#F59E0B', shadow: '#D97706' },
+            { gradFrom: '#C0C0D0', gradTo: '#9090A0', border: '#C0C0D0', shadow: '#6B7280' },
+            { gradFrom: '#EF4444', gradTo: '#F59E0B', border: '#EF4444', shadow: '#991B1B' },
+          ];
+          const ts = isTop3 ? topStyles[i] : null;
 
           return (
             <motion.div
@@ -128,30 +130,31 @@ export default function Leaderboard() {
               initial={{ x: -20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: i * 0.04, duration: 0.35 }}
-              className="flex items-center gap-3 p-3 rounded-2xl"
-              style={isTop3 ? {
-                background: `linear-gradient(135deg, rgba(${hexToRgb(gf)},0.18) 0%, rgba(${hexToRgb(gt)},0.08) 100%)`,
-                border: `1px solid rgba(${hexToRgb(gf)},0.4)`,
-                boxShadow: `0 4px 16px rgba(${hexToRgb(gf)},0.15)`,
+              className="flex items-center gap-3 p-3"
+              style={isTop3 && ts ? {
+                background: 'linear-gradient(135deg, #1E1B4B, #16103A)',
+                border: `3px solid ${ts.border}`,
+                boxShadow: `3px 3px 0px 0px ${ts.shadow}`,
               } : {
-                background: 'rgba(255,255,255,0.04)',
-                border: '1px solid rgba(255,255,255,0.08)',
+                background: '#1E1B4B',
+                border: '2px solid rgba(124,58,237,0.2)',
+                boxShadow: '2px 2px 0px rgba(0,0,0,0.3)',
               }}
             >
-              <div className="w-8 text-center font-heading font-bold text-sm">
-                {isTop3 ? rankBadge : <span className="text-white/35">#{i + 1}</span>}
+              <div className="w-8 text-center font-game text-sm">
+                {isTop3 ? rankBadge : <span className="text-white/35 font-pixel text-[7px]">#{i + 1}</span>}
               </div>
               <PixelAvatar username={entry.username} size={40} colorIndex={i} />
               <div className="flex-1 min-w-0">
-                <div className="font-heading font-semibold text-sm text-white truncate">{entry.username}</div>
-                <div className="text-white/40 font-body text-xs">🔥 {entry.current_streak}d streak</div>
+                <div className="font-game text-sm text-white truncate">{entry.username}</div>
+                <div className="text-white/35 font-pixel text-[5px] tracking-wide">🔥 {entry.current_streak}D STREAK</div>
               </div>
               <div className="flex items-center gap-1">
-                <Zap className="w-3.5 h-3.5" style={{ color: '#FFD60A' }} />
+                <Zap className="w-3.5 h-3.5" style={{ color: '#F59E0B' }} />
                 <span
-                  className="font-heading font-bold text-sm"
-                  style={isTop3 ? {
-                    background: `linear-gradient(135deg, ${gf}, ${gt})`,
+                  className="font-game text-sm"
+                  style={isTop3 && ts ? {
+                    background: `linear-gradient(135deg, ${ts.gradFrom}, ${ts.gradTo})`,
                     WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
                   } : { color: 'rgba(255,255,255,0.6)' }}
                 >
@@ -164,11 +167,4 @@ export default function Leaderboard() {
       </div>
     </div>
   );
-}
-
-function hexToRgb(hex: string): string {
-  if (hex.startsWith('rgba') || hex.startsWith('rgb')) return '127,90,240';
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  if (!result) return '127,90,240';
-  return `${parseInt(result[1], 16)},${parseInt(result[2], 16)},${parseInt(result[3], 16)}`;
 }

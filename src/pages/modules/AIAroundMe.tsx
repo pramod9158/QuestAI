@@ -49,7 +49,7 @@ export default function AIAroundMe() {
 
   if (done) {
     return (
-      <div className="min-h-full flex flex-col items-center justify-center p-6 gap-6 bg-pixel-darker">
+      <div className="min-h-full flex flex-col items-center justify-center p-6 gap-6 bg-game">
         <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring' }} className="text-8xl">
           {score >= 6 ? '🏆' : score >= 4 ? '🥈' : '🥉'}
         </motion.div>
@@ -66,7 +66,7 @@ export default function AIAroundMe() {
   }
 
   return (
-    <div className="min-h-full bg-pixel-darker flex flex-col">
+    <div className="min-h-full bg-game flex flex-col">
       {showXP && <XPToast amount={xpAmount} onDone={() => setShowXP(false)} />}
 
       {/* Header */}
@@ -99,7 +99,7 @@ export default function AIAroundMe() {
             animate={{ x: 0, opacity: 1, rotate: 0 }}
             exit={{ x: -200, opacity: 0, rotate: -5 }}
             transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-            className="w-full border-4 border-black bg-pixel-dark shadow-pixel-lg"
+            className="w-full border-4 border-black bg-surface shadow-pixel-lg"
           >
             {/* Card front */}
             <div className="p-8 text-center">

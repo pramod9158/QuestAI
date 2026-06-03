@@ -89,7 +89,7 @@ export default function StoryAdventures() {
     const quest = STORY_QUESTS.find(q => q.id === selectedQuest)!;
     if (!steps) {
       return (
-        <div className="min-h-full flex flex-col items-center justify-center p-6 gap-4 bg-pixel-darker">
+        <div className="min-h-full flex flex-col items-center justify-center p-6 gap-4 bg-game">
           <div className="text-6xl">🚧</div>
           <div className="text-white font-game text-lg text-center">Coming Soon!</div>
           <div className="text-white/60 font-body text-sm text-center">This quest is being prepared. Check back soon!</div>
@@ -102,7 +102,7 @@ export default function StoryAdventures() {
     const isDone = currentStep >= steps.length - 1;
 
     return (
-      <div className="min-h-full bg-pixel-darker flex flex-col">
+      <div className="min-h-full bg-game flex flex-col">
         {showXP && <XPToast amount={quest.xpReward} reason={`${quest.title} complete!`} onDone={() => setShowXP(false)} />}
 
         {/* Quest Header */}
@@ -136,7 +136,7 @@ export default function StoryAdventures() {
                 {step.emoji}
               </motion.div>
 
-              <div className="border-4 border-black bg-pixel-dark p-5 shadow-pixel">
+              <div className="border-4 border-black bg-surface p-5 shadow-pixel">
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="text-white font-game text-base">{step.title}</h2>
                   <SpeakButton text={step.content} />
@@ -210,7 +210,7 @@ export default function StoryAdventures() {
 
   // Quest Map
   return (
-    <div className="min-h-full bg-pixel-darker pb-6">
+    <div className="min-h-full bg-game pb-6">
       <div className="bg-gradient-to-b from-primary/40 to-pixel-darker p-5 pb-8">
         <button onClick={() => navigate('/play')} className="flex items-center gap-2 text-white/60 hover:text-white mb-3 font-body text-sm">
           <ArrowLeft className="w-4 h-4" /> Back to Play
@@ -233,7 +233,7 @@ export default function StoryAdventures() {
               className={`border-4 border-black p-4 flex items-center gap-4 ${
                 isDone ? 'bg-success/20 border-success cursor-pointer' :
                 isLocked ? 'bg-white/5 opacity-50 cursor-not-allowed' :
-                'bg-pixel-dark cursor-pointer shadow-pixel hover:bg-white/5'
+                'bg-surface cursor-pointer shadow-pixel hover:bg-white/5'
               }`}
             >
               <div className={`w-16 h-16 border-4 border-black flex items-center justify-center text-3xl flex-shrink-0 ${

@@ -27,22 +27,23 @@ export function XPToast({ amount, reason, onDone }: XPToastProps) {
           className="fixed top-20 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2 pointer-events-none"
         >
           <div
-            className="px-6 py-3 rounded-2xl flex items-center gap-2 shadow-lg"
+            className="px-6 py-3 flex items-center gap-2"
             style={{
-              background: 'linear-gradient(135deg, #FFD60A 0%, #FF9F1C 100%)',
-              boxShadow: '0 0 30px rgba(255,214,10,0.6), 0 8px 24px rgba(0,0,0,0.4)',
+              background: 'linear-gradient(135deg, #F59E0B 0%, #FCD34D 100%)',
+              border: '3px solid #D97706',
+              boxShadow: '4px 4px 0px 0px #92400E, 0 0 20px rgba(245,158,11,0.5)',
             }}
           >
-            <Zap className="w-5 h-5 text-gray-900" fill="#0D0D1A" />
-            <span className="text-gray-900 font-heading font-800 text-base">+{amount} XP!</span>
+            <Zap className="w-5 h-5 text-gray-900" fill="#0F0A2E" />
+            <span className="text-gray-900 font-game text-base">+{amount} XP!</span>
           </div>
           {reason && (
             <div
-              className="px-4 py-1.5 rounded-xl text-white/90 font-body text-xs"
+              className="px-4 py-1.5 text-white/90 font-body text-xs"
               style={{
-                background: 'rgba(13,13,26,0.85)',
-                backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255,214,10,0.3)',
+                background: '#1E1B4B',
+                border: '2px solid #F59E0B',
+                boxShadow: '2px 2px 0px rgba(0,0,0,0.5)',
               }}
             >
               {reason}
@@ -70,14 +71,15 @@ export function CoinToast({ amount }: CoinToastProps) {
           className="fixed top-32 left-1/2 -translate-x-1/2 z-50 pointer-events-none"
         >
           <div
-            className="px-5 py-3 rounded-2xl flex items-center gap-2"
+            className="px-5 py-3 flex items-center gap-2"
             style={{
-              background: 'linear-gradient(135deg, #FFD60A 0%, #FF9F1C 100%)',
-              boxShadow: '0 0 24px rgba(255,214,10,0.5), 0 8px 20px rgba(0,0,0,0.4)',
+              background: 'linear-gradient(135deg, #F59E0B 0%, #FCD34D 100%)',
+              border: '3px solid #D97706',
+              boxShadow: '4px 4px 0px 0px #92400E',
             }}
           >
             <span className="text-xl">🪙</span>
-            <span className="text-gray-900 font-heading font-bold text-sm">+{amount} Coins!</span>
+            <span className="text-gray-900 font-game text-sm">+{amount} Coins!</span>
           </div>
         </motion.div>
       )}
@@ -85,15 +87,19 @@ export function CoinToast({ amount }: CoinToastProps) {
   );
 }
 
-// ─── XP Bar ───────────────────────────────────────────────────────────────────
+// ─── XP Bar (Pixel Stepped) ──────────────────────────────────────────────────
 interface XPBarProps { current: number; needed: number; level: number; }
 export function XPBar({ current, needed, level }: XPBarProps) {
   const pct = Math.min((current / needed) * 100, 100);
   return (
     <div className="flex items-center gap-2">
       <div
-        className="px-2 py-0.5 rounded-lg text-gray-900 font-heading font-bold text-xs whitespace-nowrap"
-        style={{ background: 'linear-gradient(135deg, #FFD60A 0%, #FF9F1C 100%)', boxShadow: '0 2px 8px rgba(255,214,10,0.4)' }}
+        className="px-2 py-0.5 font-pixel text-[7px] text-gray-900 whitespace-nowrap"
+        style={{
+          background: 'linear-gradient(135deg, #F59E0B 0%, #FCD34D 100%)',
+          border: '2px solid #D97706',
+          boxShadow: '2px 2px 0px 0px #92400E',
+        }}
       >
         Lv.{level}
       </div>
@@ -105,7 +111,7 @@ export function XPBar({ current, needed, level }: XPBarProps) {
           transition={{ duration: 0.8, ease: 'easeOut' }}
         />
       </div>
-      <span className="text-white/50 font-body text-[10px] whitespace-nowrap">{current}/{needed}</span>
+      <span className="text-white/50 font-pixel text-[6px] whitespace-nowrap">{current}/{needed}</span>
     </div>
   );
 }
@@ -115,15 +121,15 @@ interface CoinCounterProps { coins: number; }
 export function CoinCounter({ coins }: CoinCounterProps) {
   return (
     <div
-      className="flex items-center gap-1 px-3 py-1 rounded-xl"
+      className="flex items-center gap-1 px-2 py-1"
       style={{
-        background: 'linear-gradient(135deg, rgba(255,214,10,0.2) 0%, rgba(255,159,28,0.12) 100%)',
-        border: '1px solid rgba(255,214,10,0.4)',
-        boxShadow: '0 2px 8px rgba(255,214,10,0.2)',
+        background: 'linear-gradient(135deg, rgba(245,158,11,0.2), rgba(252,211,77,0.1))',
+        border: '2px solid #F59E0B',
+        boxShadow: '2px 2px 0px 0px #92400E',
       }}
     >
       <span className="text-sm">🪙</span>
-      <span className="font-heading font-bold text-xs" style={{ color: '#FFD60A' }}>{coins}</span>
+      <span className="font-pixel text-[7px]" style={{ color: '#FCD34D' }}>{coins}</span>
     </div>
   );
 }
@@ -135,15 +141,15 @@ export function StreakFlame({ streak }: StreakFlameProps) {
     <motion.div
       animate={streak > 0 ? { scale: [1, 1.08, 1] } : {}}
       transition={{ repeat: Infinity, duration: 1.8 }}
-      className="flex items-center gap-1 px-3 py-1 rounded-xl"
+      className="flex items-center gap-1 px-2 py-1"
       style={{
-        background: 'linear-gradient(135deg, rgba(255,137,6,0.2) 0%, rgba(242,95,76,0.12) 100%)',
-        border: '1px solid rgba(255,137,6,0.45)',
-        boxShadow: '0 2px 8px rgba(255,137,6,0.25)',
+        background: 'linear-gradient(135deg, rgba(239,68,68,0.2), rgba(245,158,11,0.15))',
+        border: '2px solid #EF4444',
+        boxShadow: '2px 2px 0px 0px #991B1B',
       }}
     >
       <span className="text-sm">🔥</span>
-      <span className="font-heading font-bold text-xs" style={{ color: '#FF8906' }}>{streak}d</span>
+      <span className="font-pixel text-[7px]" style={{ color: '#F59E0B' }}>{streak}d</span>
     </motion.div>
   );
 }
@@ -163,13 +169,11 @@ export function Badge({ emoji, name, unlocked = true, size = 'md' }: BadgeProps)
         className="flex items-center justify-center relative"
         style={{
           width: d, height: d,
-          borderRadius: 16,
           background: unlocked
-            ? 'linear-gradient(135deg, rgba(127,90,240,0.25) 0%, rgba(44,182,125,0.15) 100%)'
-            : 'rgba(255,255,255,0.06)',
-          border: unlocked ? '1px solid rgba(127,90,240,0.5)' : '1px solid rgba(255,255,255,0.1)',
-          boxShadow: unlocked ? '0 4px 20px rgba(127,90,240,0.3), inset 0 1px 0 rgba(255,255,255,0.15)' : 'none',
-          backdropFilter: 'blur(8px)',
+            ? 'linear-gradient(135deg, #2D1B69, #1E3A5F)'
+            : '#16103A',
+          border: unlocked ? '3px solid #7C3AED' : '3px solid rgba(255,255,255,0.1)',
+          boxShadow: unlocked ? '3px 3px 0px 0px #5B21B6, 0 0 12px rgba(124,58,237,0.3)' : 'none',
         }}
       >
         <span style={{ fontSize: fontSize[size] }}>{unlocked ? emoji : '🔒'}</span>
@@ -179,36 +183,34 @@ export function Badge({ emoji, name, unlocked = true, size = 'md' }: BadgeProps)
   );
 }
 
-// ─── Progress Ring ────────────────────────────────────────────────────────────
+// ─── Progress Ring → Pixel Progress Box ───────────────────────────────────────
 interface ProgressRingProps { progress: number; size?: number; color?: string; children?: React.ReactNode; }
-export function ProgressRing({ progress, size = 80, color = '#7F5AF0', children }: ProgressRingProps) {
-  const r = (size - 14) / 2;
-  const circ = 2 * Math.PI * r;
-  const offset = circ - (Math.min(progress, 100) / 100) * circ;
-  const gradId = `grad-ring-${Math.round(progress)}`;
+export function ProgressRing({ progress, size = 80, color = '#7C3AED', children }: ProgressRingProps) {
+  const pct = Math.min(progress, 100);
+  const barWidth = size - 16;
   return (
-    <div className="relative" style={{ width: size, height: size }}>
-      <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
-        <defs>
-          <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#FFD60A" />
-            <stop offset="100%" stopColor="#FF9F1C" />
-          </linearGradient>
-        </defs>
-        <circle cx={size / 2} cy={size / 2} r={r} stroke="rgba(255,255,255,0.08)" strokeWidth="7" fill="none" />
-        <motion.circle
-          cx={size / 2} cy={size / 2} r={r}
-          stroke={`url(#${gradId})`}
-          strokeWidth="7" fill="none"
-          strokeDasharray={circ}
-          initial={{ strokeDashoffset: circ }}
-          animate={{ strokeDashoffset: offset }}
+    <div
+      className="relative flex flex-col items-center justify-center"
+      style={{
+        width: size, height: size,
+        background: '#16103A',
+        border: `3px solid ${color}`,
+        boxShadow: `3px 3px 0px 0px rgba(0,0,0,0.6), 0 0 8px ${color}44`,
+      }}
+    >
+      {children}
+      {/* Bottom pixel progress bar */}
+      <div
+        className="absolute bottom-1 left-1/2 -translate-x-1/2"
+        style={{ width: barWidth, height: 4, background: '#0F0A2E', border: '1px solid rgba(255,255,255,0.1)' }}
+      >
+        <motion.div
+          style={{ height: '100%', background: `linear-gradient(90deg, #F59E0B, #FCD34D)` }}
+          initial={{ width: 0 }}
+          animate={{ width: `${pct}%` }}
           transition={{ duration: 1.2, ease: 'easeOut' }}
-          strokeLinecap="round"
-          style={{ filter: 'drop-shadow(0 0 6px rgba(255,214,10,0.7))' }}
         />
-      </svg>
-      <div className="absolute inset-0 flex items-center justify-center">{children}</div>
+      </div>
     </div>
   );
 }
@@ -224,33 +226,33 @@ export function MysteryBox({ onOpen, isOpen, reward }: MysteryBoxProps) {
           : { scale: [1, 1.4, 1], rotate: 360 }}
         transition={!isOpen ? { repeat: Infinity, duration: 2.2 } : { duration: 0.6 }}
         onClick={!isOpen ? onOpen : undefined}
-        className="w-24 h-24 flex items-center justify-center text-5xl cursor-pointer rounded-2xl"
+        className="w-24 h-24 flex items-center justify-center text-5xl cursor-pointer"
         style={{
           background: isOpen
-            ? 'linear-gradient(135deg, #FFD60A, #FF9F1C)'
-            : 'linear-gradient(135deg, #7F5AF0, #2CB67D)',
+            ? 'linear-gradient(135deg, #F59E0B, #FCD34D)'
+            : 'linear-gradient(135deg, #7C3AED, #3B82F6)',
+          border: isOpen ? '4px solid #D97706' : '4px solid #5B21B6',
           boxShadow: isOpen
-            ? '0 0 32px rgba(255,214,10,0.7)'
-            : '0 0 24px rgba(127,90,240,0.5)',
-          border: '1px solid rgba(255,255,255,0.2)',
+            ? '6px 6px 0px 0px #92400E, 0 0 20px rgba(245,158,11,0.5)'
+            : '6px 6px 0px 0px rgba(0,0,0,0.8), 0 0 16px rgba(124,58,237,0.4)',
         }}
       >
         {isOpen ? reward || '🎁' : '❓'}
       </motion.div>
       {!isOpen && <p className="text-white/60 font-body text-xs text-center">Tap to open!</p>}
-      {isOpen && <p className="font-heading font-bold text-sm text-center grad-text-xp">You got: {reward}!</p>}
+      {isOpen && <p className="font-game text-sm text-center grad-text-xp">You got: {reward}!</p>}
     </div>
   );
 }
 
 // ─── Pixel Avatar ─────────────────────────────────────────────────────────────
 const AVATAR_GRADIENTS = [
-  ['#7F5AF0', '#2CB67D'],
-  ['#00C2FF', '#5B5FFF'],
-  ['#FF8906', '#F25F4C'],
-  ['#FFD60A', '#FF9F1C'],
-  ['#2CB67D', '#00C2FF'],
-  ['#F25F4C', '#7F5AF0'],
+  ['#7C3AED', '#3B82F6'],
+  ['#3B82F6', '#8B5CF6'],
+  ['#EF4444', '#F59E0B'],
+  ['#F59E0B', '#FCD34D'],
+  ['#10B981', '#3B82F6'],
+  ['#EC4899', '#7C3AED'],
 ];
 
 interface PixelAvatarProps { username?: string; size?: number; colorIndex?: number; }
@@ -259,14 +261,14 @@ export function PixelAvatar({ username = 'AI', size = 64, colorIndex = 0 }: Pixe
   const initial = username.charAt(0).toUpperCase();
   return (
     <div
-      className="flex items-center justify-center font-heading font-bold text-white select-none"
+      className="flex items-center justify-center font-pixel font-bold text-white select-none"
       style={{
         width: size,
         height: size,
-        borderRadius: Math.round(size * 0.28),
         background: `linear-gradient(135deg, ${from} 0%, ${to} 100%)`,
-        boxShadow: `0 4px 20px rgba(127,90,240,0.4), 0 0 0 2px rgba(255,255,255,0.1)`,
-        fontSize: size * 0.38,
+        border: '3px solid rgba(255,255,255,0.3)',
+        boxShadow: `4px 4px 0px 0px rgba(0,0,0,0.8), 0 0 8px ${from}66`,
+        fontSize: size * 0.3,
       }}
     >
       {initial}
@@ -290,17 +292,17 @@ export function SpeakButton({ text }: SpeakButtonProps) {
     <motion.button
       whileTap={{ scale: 0.92 }}
       onClick={handleSpeak}
-      className="flex items-center gap-2 px-4 py-2 rounded-xl font-body text-sm transition-all"
+      className="flex items-center gap-2 px-4 py-2 font-body text-sm transition-all"
       style={speaking ? {
-        background: 'linear-gradient(135deg, #2CB67D, #00C2FF)',
+        background: 'linear-gradient(135deg, #10B981, #3B82F6)',
         color: 'white',
-        boxShadow: '0 4px 16px rgba(44,182,125,0.4)',
-        border: '1px solid rgba(44,182,125,0.5)',
+        border: '3px solid #047857',
+        boxShadow: '3px 3px 0px 0px rgba(0,0,0,0.6)',
       } : {
-        background: 'rgba(255,255,255,0.08)',
+        background: '#1E1B4B',
         color: 'rgba(255,255,255,0.7)',
-        border: '1px solid rgba(255,255,255,0.15)',
-        backdropFilter: 'blur(8px)',
+        border: '3px solid rgba(124,58,237,0.4)',
+        boxShadow: '3px 3px 0px 0px rgba(0,0,0,0.5)',
       }}
     >
       <span className="text-lg">{speaking ? '🔊' : '🔈'}</span>

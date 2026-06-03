@@ -295,20 +295,25 @@ export default function WeeklyMissions() {
 
 
   return (
-    <div className="min-h-full bg-pixel-darker pb-6">
+    <div className="min-h-full pb-6">
       {showXP && <XPToast amount={toastXP} reason="Mission submitted!" onDone={() => setShowXP(false)} />}
 
       {/* Header */}
-      <div className="bg-gradient-to-b from-primary/30 to-pixel-darker p-5">
-        <h1 className="text-white font-game text-xl flex items-center gap-2">🎯 Weekly Missions</h1>
-        <p className="text-white/60 font-body text-sm mt-1">Real-world field challenges — earn massive XP!</p>
+      <div className="p-5" style={{ background: 'linear-gradient(180deg, rgba(124,58,237,0.2), transparent)' }}>
+        <h1 className="font-pixel text-[10px] text-white flex items-center gap-2 tracking-wide">🎯 WEEKLY MISSIONS</h1>
+        <p className="text-white/55 font-body text-sm mt-1">Real-world field challenges — earn massive XP!</p>
 
         {/* Tabs */}
-        <div className="flex mt-4 border-4 border-black">
+        <div className="flex mt-4 p-1" style={{ background: '#16103A', border: '2px solid rgba(124,58,237,0.3)' }}>
           {(['missions', 'submissions'] as const).map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)}
-              className={`flex-1 py-2 font-game text-xs capitalize transition-colors ${activeTab === tab ? 'bg-primary text-white' : 'bg-pixel-dark text-white/50 hover:text-white'}`}>
-              {tab === 'missions' ? '🎯 Active Missions' : '📋 My Submissions'}
+              className="flex-1 py-2 font-pixel text-[6px] transition-all duration-150 tracking-wide"
+              style={activeTab === tab ? {
+                background: 'linear-gradient(135deg, #7C3AED, #3B82F6)',
+                color: 'white',
+                boxShadow: '2px 2px 0px #5B21B6',
+              } : { color: 'rgba(255,255,255,0.4)' }}>
+              {tab === 'missions' ? '🎯 MISSIONS' : '📋 SUBMISSIONS'}
             </button>
           ))}
         </div>
@@ -325,7 +330,16 @@ export default function WeeklyMissions() {
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.08 }}
-                  className={`border-4 border-black p-5 shadow-pixel ${done ? 'bg-success/20 border-success' : 'bg-pixel-dark'}`}
+                  className="p-5"
+                  style={done ? {
+                    background: 'linear-gradient(135deg, #0D3B2E, #1E1B4B)',
+                    border: '3px solid #10B981',
+                    boxShadow: '4px 4px 0px #047857',
+                  } : {
+                    background: '#1E1B4B',
+                    border: '3px solid rgba(124,58,237,0.4)',
+                    boxShadow: '4px 4px 0px rgba(0,0,0,0.6)',
+                  }}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1">
@@ -358,8 +372,8 @@ export default function WeeklyMissions() {
                     </Button>
                   )}
                   {done && (
-                    <div className="mt-3 bg-success/10 border-t-2 border-success/30 pt-2 text-center">
-                      <span className="text-success font-body text-xs">✅ Mission Completed!</span>
+                    <div className="mt-3 pt-2 text-center" style={{ borderTop: '2px solid rgba(16,185,129,0.3)' }}>
+                      <span className="font-pixel text-[6px] tracking-wide" style={{ color: '#10B981' }}>✅ MISSION COMPLETED!</span>
                     </div>
                   )}
                 </motion.div>
@@ -378,7 +392,7 @@ export default function WeeklyMissions() {
             ) : submissions.map((s, i) => {
               const m = WEEKLY_MISSIONS_DATA.find(m => m.id === s.missionId);
               return (
-                <div key={i} className="border-4 border-black bg-success/10 border-success p-4">
+                <div key={i} className="p-4" style={{ background: 'linear-gradient(135deg, #0D3B2E, #1E1B4B)', border: '3px solid #10B981', boxShadow: '3px 3px 0px #047857' }}>
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-xl">{m?.emoji}</span>
                     <div className="flex-1">
@@ -386,7 +400,7 @@ export default function WeeklyMissions() {
                       <div className="text-white/50 font-body text-xs">{new Date(s.submittedAt).toLocaleDateString()}</div>
                     </div>
                     <div className="flex flex-col items-end gap-1">
-                      <span className="bg-success border-2 border-black text-white font-pixel text-[9px] px-2 py-1">+{s.xp} XP</span>
+                      <span className="font-pixel text-[7px] px-2 py-1 text-white" style={{ background: 'linear-gradient(135deg, #10B981, #3B82F6)', border: '2px solid #047857', boxShadow: '2px 2px 0px rgba(0,0,0,0.5)' }}>+{s.xp} XP</span>
                       {s.score !== undefined && (
                         <span className="bg-primary/20 border border-primary/40 text-primary-light font-pixel text-[8px] px-1">
                           Score: {s.score}%
@@ -424,10 +438,11 @@ export default function WeeklyMissions() {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="w-full max-w-md border-4 border-black bg-pixel-dark my-auto shadow-pixel-lg"
+              className="w-full max-w-md my-auto"
+              style={{ background: '#1E1B4B', border: '4px solid #7C3AED', boxShadow: '6px 6px 0px #5B21B6' }}
             >
               {/* Header */}
-              <div className="border-b-4 border-black p-4 flex items-center gap-3 bg-pixel-darker">
+              <div className="p-4 flex items-center gap-3" style={{ background: '#16103A', borderBottom: '3px solid #7C3AED' }}>
                 <span className="text-3xl">{mission.emoji}</span>
                 <div>
                   <div className="text-white font-game text-sm">{mission.title}</div>
@@ -449,7 +464,7 @@ export default function WeeklyMissions() {
                   </div>
 
                   {/* Circular / Large Score Badge */}
-                  <div className={`relative w-32 h-32 mx-auto flex flex-col items-center justify-center border-8 border-black bg-pixel-darker rounded-full ${
+                  <div className={`relative w-32 h-32 mx-auto flex flex-col items-center justify-center border-8 border-black bg-game rounded-full ${
                     evaluationResult.score >= 50 
                       ? 'shadow-[0_0_15px_rgba(34,197,94,0.3)]' 
                       : 'shadow-[0_0_15px_rgba(239,68,68,0.3)]'
@@ -602,7 +617,7 @@ export default function WeeklyMissions() {
                     )}
 
                     {/* Validation Checklist */}
-                    <div className="border-2 border-black bg-pixel-darker p-3">
+                    <div className="border-2 border-black bg-game p-3">
                       <div className="text-white/50 font-game text-[9px] uppercase tracking-wider mb-2">AI Verification Checklist</div>
                       <div className="space-y-1.5">
                         {validation.requirements.map((req, index) => (

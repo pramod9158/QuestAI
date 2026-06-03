@@ -46,14 +46,14 @@ export function Button({
         variantClasses[variant],
         sizeClasses[size],
         fullWidth ? 'w-full' : '',
-        'flex items-center justify-center gap-2 font-heading font-700 select-none',
+        'flex items-center justify-center gap-2 font-game font-700 select-none',
         className
       )}
       disabled={disabled || loading}
       {...(props as Record<string, unknown>)}
     >
       {loading ? (
-        <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+        <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent animate-spin" style={{ borderRadius: 0 }} />
       ) : icon}
       {children}
     </motion.button>

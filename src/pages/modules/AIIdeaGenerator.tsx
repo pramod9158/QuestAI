@@ -52,7 +52,7 @@ export default function AIIdeaGenerator() {
   ];
 
   return (
-    <div className="min-h-full bg-pixel-darker flex flex-col pb-6">
+    <div className="min-h-full bg-game flex flex-col pb-6">
       {showXP && <XPToast amount={40} reason="3 AI ideas generated!" onDone={() => setShowXP(false)} />}
 
       {/* Header */}

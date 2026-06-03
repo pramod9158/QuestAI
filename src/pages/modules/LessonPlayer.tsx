@@ -198,7 +198,7 @@ function DragDropSandbox() {
       <div className="text-white font-game text-sm text-center">Sort: Smart AI vs Not Smart?</div>
       <div className="grid grid-cols-2 gap-3">
         {items.map(item => (
-          <div key={item} className={`border-4 border-black p-3 ${sorted[item] === 'smart' ? 'bg-success/30' : sorted[item] === 'dumb' ? 'bg-gray-700' : 'bg-pixel-dark'}`}>
+          <div key={item} className={`border-4 border-black p-3 ${sorted[item] === 'smart' ? 'bg-success/30' : sorted[item] === 'dumb' ? 'bg-gray-700' : 'bg-surface'}`}>
             <div className="text-white font-body text-sm text-center mb-2">{item}</div>
             <div className="flex gap-2">
               <button onClick={() => handleSort(item, 'smart')} className={`flex-1 border-2 border-black py-1 text-xs font-body ${sorted[item] === 'smart' ? 'bg-success text-white' : 'bg-white/10 text-white/70'}`}>🤖 Smart</button>
@@ -262,10 +262,10 @@ function QuizSandbox({ lessonId }: { lessonId: string }) {
             key={i}
             onClick={() => handleAnswer(i)}
             className={`w-full border-4 border-black p-3 text-left font-body text-sm transition-all ${
-              selected === null ? 'bg-pixel-dark text-white hover:bg-white/10' :
+              selected === null ? 'bg-surface text-white hover:bg-white/10' :
               i === q.a ? 'bg-success text-white' :
               i === selected ? 'bg-pixel-red text-white' :
-              'bg-pixel-dark text-white/40'
+              'bg-surface text-white/40'
             }`}
           >
             {opt}

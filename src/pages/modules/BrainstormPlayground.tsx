@@ -63,7 +63,7 @@ export default function BrainstormPlayground() {
   };
 
   return (
-    <div className="min-h-full bg-pixel-darker flex flex-col pb-6">
+    <div className="min-h-full bg-game flex flex-col pb-6">
       {showXP && <XPToast amount={60} reason="Brainstorm complete!" onDone={() => setShowXP(false)} />}
 
       {/* Header */}
@@ -111,7 +111,7 @@ export default function BrainstormPlayground() {
           {step === 1 && (
             <motion.div key="prob" initial={{ x: 100, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -100, opacity: 0 }} className="space-y-5">
               <h2 className="text-white font-game text-base">Step 2: What's the Problem? 🔍</h2>
-              <div className="border-4 border-black bg-pixel-dark p-4 flex items-center gap-3">
+              <div className="border-4 border-black bg-surface p-4 flex items-center gap-3">
                 <span className="text-3xl">{CATEGORIES.find(c => c.id === category)?.emoji}</span>
                 <span className="text-white font-game text-sm capitalize">{category}</span>
               </div>
@@ -160,7 +160,7 @@ export default function BrainstormPlayground() {
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setAudience(aud)}
                     className={`border-4 border-black p-4 font-game text-sm transition-all shadow-pixel ${
-                      audience === aud ? 'bg-primary text-white border-primary-dark' : 'bg-pixel-dark text-white/70 hover:bg-white/5'
+                      audience === aud ? 'bg-primary text-white border-primary-dark' : 'bg-surface text-white/70 hover:bg-white/5'
                     }`}
                   >
                     {aud}
@@ -193,7 +193,7 @@ export default function BrainstormPlayground() {
 
               <motion.div
                 initial={{ y: 30 }} animate={{ y: 0 }}
-                className="border-4 border-warning bg-warning/10 p-6 shadow-pixel-orange space-y-4"
+                className="border-4 border-warning bg-warning/10 p-6 shadow-pixel space-y-4"
               >
                 <div className="border-b-2 border-warning/30 pb-3">
                   <div className="text-warning font-body text-xs">🤖 AI Solution Name:</div>

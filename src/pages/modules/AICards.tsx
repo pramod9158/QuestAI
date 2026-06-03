@@ -19,7 +19,7 @@ export default function AICards() {
   const [viewCard, setViewCard] = useState<typeof AI_CARDS_DATA[0] | null>(null);
 
   return (
-    <div className="min-h-full bg-pixel-darker pb-6">
+    <div className="min-h-full bg-game pb-6">
       {/* Header */}
       <div className="bg-gradient-to-b from-yellow-600/30 to-pixel-darker p-5">
         <button onClick={() => navigate('/play')} className="flex items-center gap-2 text-white/60 hover:text-white mb-3 font-body text-sm">
@@ -118,7 +118,7 @@ export default function AICards() {
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25 }}
               onClick={e => e.stopPropagation()}
-              className="w-full max-w-md border-4 border-black bg-pixel-dark shadow-pixel-lg"
+              className="w-full max-w-md border-4 border-black bg-surface shadow-pixel-lg"
             >
               {/* Card header */}
               <div className={`${viewCard.color} border-b-4 border-black p-6 flex flex-col items-center gap-3`}>

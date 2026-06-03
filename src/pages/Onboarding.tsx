@@ -9,10 +9,10 @@ const ZONES = [
     emoji: '🚀',
     title: 'Junior Explorer',
     desc: 'Discover AI magic through games, stories & fun!',
-    gradFrom: '#00C2FF',
-    gradTo: '#5B5FFF',
-    glowColor: 'rgba(0,194,255,0.35)',
-    borderColor: 'rgba(0,194,255,0.4)',
+    gradFrom: '#3B82F6',
+    gradTo: '#8B5CF6',
+    border: '#3B82F6',
+    shadow: '#1D4ED8',
   },
   {
     id: 'innovator',
@@ -20,10 +20,10 @@ const ZONES = [
     emoji: '🧠',
     title: 'Future Innovator',
     desc: 'Dive into AI ethics, prompts, and real-world problem solving!',
-    gradFrom: '#7F5AF0',
-    gradTo: '#2CB67D',
-    glowColor: 'rgba(127,90,240,0.35)',
-    borderColor: 'rgba(127,90,240,0.4)',
+    gradFrom: '#7C3AED',
+    gradTo: '#3B82F6',
+    border: '#7C3AED',
+    shadow: '#5B21B6',
   },
 ];
 
@@ -35,15 +35,7 @@ export default function Onboarding() {
   };
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center p-5 relative overflow-hidden"
-      style={{ background: 'linear-gradient(135deg, #0D0D1A 0%, #1A1040 50%, #0D1A2E 100%)' }}
-    >
-      {/* Ambient orbs */}
-      <div className="gradient-orb gradient-orb-primary" style={{ width: 300, height: 300, top: -80, left: -60, opacity: 0.5 }} />
-      <div className="gradient-orb gradient-orb-mission" style={{ width: 220, height: 220, bottom: -60, right: -50, opacity: 0.4, animationDelay: '-6s' }} />
-      <div className="gradient-orb gradient-orb-xp" style={{ width: 150, height: 150, top: '30%', right: '0%', opacity: 0.2, animationDelay: '-3s' }} />
-
+    <div className="min-h-screen flex items-center justify-center p-5 relative overflow-hidden bg-game">
       <div className="w-full max-w-sm relative z-10">
         <AnimatePresence mode="wait">
           <motion.div
@@ -63,27 +55,16 @@ export default function Onboarding() {
               >
                 🤖
               </motion.div>
-              <h1
-                className="font-heading font-bold text-3xl"
-                style={{
-                  background: 'linear-gradient(135deg, #7F5AF0, #2CB67D)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                }}
-              >
+              <h1 className="font-pixel text-[14px] tracking-wider grad-text-primary">
                 QUEST AI
               </h1>
-              <p className="font-body text-white/50 text-sm mt-2">Your AI Learning Adventure Awaits!</p>
+              <p className="font-body text-white/50 text-sm mt-3">Your AI Learning Adventure Awaits!</p>
             </div>
 
-            {/* Gradient divider */}
-            <div
-              className="w-full h-px"
-              style={{ background: 'linear-gradient(90deg, transparent, rgba(127,90,240,0.6), rgba(44,182,125,0.6), transparent)' }}
-            />
+            {/* Pixel divider */}
+            <div className="pixel-divider w-full" />
 
-            <p className="font-heading font-bold text-white text-xl text-center">How old are you?</p>
+            <p className="font-game text-white text-xl text-center">How old are you?</p>
 
             <div className="w-full flex flex-col gap-4">
               {ZONES.map((z) => (
@@ -92,27 +73,27 @@ export default function Onboarding() {
                   whileHover={{ scale: 1.02, y: -2 }}
                   whileTap={{ scale: 0.97 }}
                   onClick={() => handleZoneSelect(z.id as 'junior' | 'innovator')}
-                  className="w-full p-5 rounded-2xl flex items-center gap-4 text-left cursor-pointer transition-all"
+                  className="w-full p-5 flex items-center gap-4 text-left cursor-pointer transition-all"
                   style={{
-                    background: `linear-gradient(135deg, rgba(${z.gradFrom === '#00C2FF' ? '0,194,255' : '127,90,240'},0.18) 0%, rgba(${z.gradTo === '#5B5FFF' ? '91,95,255' : '44,182,125'},0.10) 100%)`,
-                    border: `1px solid ${z.borderColor}`,
-                    boxShadow: `0 8px 30px ${z.glowColor}, inset 0 1px 0 rgba(255,255,255,0.08)`,
-                    backdropFilter: 'blur(16px)',
+                    background: 'linear-gradient(135deg, #1E1B4B, #16103A)',
+                    border: `3px solid ${z.border}`,
+                    boxShadow: `6px 6px 0px 0px ${z.shadow}`,
                   }}
                 >
                   <div
-                    className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0"
+                    className="w-14 h-14 flex items-center justify-center text-3xl flex-shrink-0"
                     style={{
                       background: `linear-gradient(135deg, ${z.gradFrom}, ${z.gradTo})`,
-                      boxShadow: `0 4px 16px ${z.glowColor}`,
+                      border: '2px solid rgba(0,0,0,0.3)',
+                      boxShadow: '2px 2px 0px rgba(0,0,0,0.5)',
                     }}
                   >
                     {z.emoji}
                   </div>
                   <div>
-                    <div className="text-white font-heading font-bold text-lg">{z.title}</div>
-                    <div className="text-white/50 font-body text-xs mt-0.5">Ages {z.age}</div>
-                    <div className="text-white/70 font-body text-sm mt-1">{z.desc}</div>
+                    <div className="text-white font-game text-lg">{z.title}</div>
+                    <div className="text-white/45 font-pixel text-[6px] mt-0.5 tracking-wide">AGES {z.age}</div>
+                    <div className="text-white/65 font-body text-sm mt-1">{z.desc}</div>
                   </div>
                 </motion.button>
               ))}
@@ -122,7 +103,7 @@ export default function Onboarding() {
               <button
                 onClick={() => navigate('/auth', { state: { mode: 'signup' } })}
                 className="font-body text-sm font-semibold hover:opacity-80 transition-opacity"
-                style={{ color: '#FFD60A' }}
+                style={{ color: '#F59E0B' }}
               >
                 ⭐ New to Quest AI? Sign Up
               </button>

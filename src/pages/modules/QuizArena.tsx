@@ -64,7 +64,7 @@ export default function QuizArena() {
   const pct = score / questions.length * 100;
 
   if (mode === 'lobby') return (
-    <div className="min-h-full bg-pixel-darker flex flex-col pb-6">
+    <div className="min-h-full bg-game flex flex-col pb-6">
       <div className="bg-gradient-to-b from-pixel-red/30 to-pixel-darker p-5">
         <button onClick={() => navigate('/play')} className="flex items-center gap-2 text-white/60 hover:text-white mb-3 font-body text-sm">
           <ArrowLeft className="w-4 h-4" /> Back to Play
@@ -104,7 +104,7 @@ export default function QuizArena() {
   );
 
   if (mode === 'results') return (
-    <div className="min-h-full flex flex-col items-center justify-center p-6 gap-6 bg-pixel-darker">
+    <div className="min-h-full flex flex-col items-center justify-center p-6 gap-6 bg-game">
       {showXP && <XPToast amount={xpEarned} reason="Quiz complete!" onDone={() => setShowXP(false)} />}
       <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring' }} className="text-center">
         <div className="text-8xl mb-4">{pct === 100 ? '🏆' : pct >= 70 ? '🥈' : pct >= 40 ? '🥉' : '💪'}</div>
@@ -112,7 +112,7 @@ export default function QuizArena() {
           {pct === 100 ? 'PERFECT SCORE!' : pct >= 70 ? 'Great Job!' : pct >= 40 ? 'Good Try!' : 'Keep Learning!'}
         </h2>
       </motion.div>
-      <div className="w-full border-4 border-black bg-pixel-dark p-6 shadow-pixel space-y-4">
+      <div className="w-full border-4 border-black bg-surface p-6 shadow-pixel space-y-4">
         <div className="flex justify-between">
           <span className="text-white/60 font-body text-sm">Correct:</span>
           <span className="text-success font-game text-base">{score}/{questions.length}</span>
@@ -142,7 +142,7 @@ export default function QuizArena() {
   );
 
   return (
-    <div className="min-h-full bg-pixel-darker flex flex-col">
+    <div className="min-h-full bg-game flex flex-col">
       {/* Quiz Header */}
       <div className={`p-4 border-b-4 border-black ${mode === 'time-attack' ? 'bg-pixel-red/30' : 'bg-success/20'}`}>
         <div className="flex items-center justify-between">
@@ -174,7 +174,7 @@ export default function QuizArena() {
       <div className="flex-1 p-5 flex flex-col gap-5">
         <AnimatePresence mode="wait">
           <motion.div key={currentQ} initial={{ x: 60, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -60, opacity: 0 }}>
-            <div className="border-4 border-black bg-pixel-dark p-5 shadow-pixel">
+            <div className="border-4 border-black bg-surface p-5 shadow-pixel">
               <div className="text-4xl text-center mb-4">{q.emoji}</div>
               <p className="text-white font-game text-base text-center leading-relaxed">{q.question}</p>
             </div>
@@ -184,11 +184,11 @@ export default function QuizArena() {
         {/* Options */}
         <div className="space-y-3">
           {q.options.map((opt, i) => {
-            let bg = 'bg-pixel-dark hover:bg-white/5';
+            let bg = 'bg-surface hover:bg-white/5';
             if (selected !== null) {
               if (i === q.correct) bg = 'bg-success border-success';
               else if (i === selected) bg = 'bg-pixel-red border-pixel-red';
-              else bg = 'bg-pixel-dark opacity-40';
+              else bg = 'bg-surface opacity-40';
             }
             return (
               <motion.button

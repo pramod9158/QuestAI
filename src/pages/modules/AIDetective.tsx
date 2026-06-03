@@ -49,11 +49,11 @@ export default function AIDetective() {
 
   if (done) {
     return (
-      <div className="min-h-full flex flex-col items-center justify-center p-6 gap-6 bg-pixel-darker">
+      <div className="min-h-full flex flex-col items-center justify-center p-6 gap-6 bg-game">
         <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring' }}>
           <div className="text-8xl text-center">🕵️</div>
         </motion.div>
-        <div className="text-center border-4 border-black bg-pixel-dark p-6 shadow-pixel-lg w-full">
+        <div className="text-center border-4 border-black bg-surface p-6 shadow-pixel-lg w-full">
           <h2 className="text-white font-game text-xl">Case Files Solved!</h2>
           <p className="text-white/60 font-body text-sm mt-2">You completed all {DETECTIVE_CASES.length} cases</p>
           <div className="text-warning font-pixel text-2xl mt-3">+{totalXP} XP</div>
@@ -67,7 +67,7 @@ export default function AIDetective() {
   }
 
   return (
-    <div className="min-h-full bg-pixel-darker flex flex-col">
+    <div className="min-h-full bg-game flex flex-col">
       {showXP && <XPToast amount={xpAmount} onDone={() => setShowXP(false)} />}
 
       {/* Header */}
@@ -95,7 +95,7 @@ export default function AIDetective() {
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
-            className="border-4 border-black bg-pixel-dark shadow-pixel-lg"
+            className="border-4 border-black bg-surface shadow-pixel-lg"
           >
             {/* Scene visualization */}
             <div className="bg-black/30 p-8 text-center border-b-4 border-black">
@@ -137,7 +137,7 @@ export default function AIDetective() {
                 className={`w-full border-4 border-black py-4 font-game text-sm ${
                   answer === 'yes' ? 'bg-success text-white shadow-pixel-green' :
                   answer === 'no' ? 'bg-pixel-red text-white shadow-pixel-red' :
-                  'bg-warning text-black shadow-pixel-orange'
+                  'bg-warning text-black shadow-pixel'
                 } shadow-pixel hover:opacity-90 active:translate-y-1 active:shadow-none transition-all`}
               >
                 {ANSWER_CONFIG[answer].label}
@@ -164,7 +164,7 @@ export default function AIDetective() {
               </div>
 
               {/* Explanation Card */}
-              <div className="border-4 border-black bg-pixel-dark p-5 shadow-pixel">
+              <div className="border-4 border-black bg-surface p-5 shadow-pixel">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-2xl">
                     {caseData.canAIHelp === 'yes' ? '✅' : caseData.canAIHelp === 'no' ? '❌' : '🤔'}

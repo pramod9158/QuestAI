@@ -46,14 +46,8 @@ export default function Auth() {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center p-5 relative overflow-hidden"
-      style={{ background: 'linear-gradient(135deg, #0D0D1A 0%, #1A1040 50%, #0D1A2E 100%)' }}
+      className="min-h-screen flex items-center justify-center p-5 relative overflow-hidden bg-game"
     >
-      {/* Ambient orbs */}
-      <div className="gradient-orb gradient-orb-primary" style={{ width: 280, height: 280, top: -80, left: -60, opacity: 0.5 }} />
-      <div className="gradient-orb gradient-orb-mission" style={{ width: 200, height: 200, bottom: -40, right: -40, opacity: 0.4, animationDelay: '-5s' }} />
-      <div className="gradient-orb gradient-orb-xp" style={{ width: 160, height: 160, top: '40%', right: '5%', opacity: 0.25, animationDelay: '-9s' }} />
-
       <div className="w-full max-w-sm relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -78,47 +72,38 @@ export default function Auth() {
             >
               🤖
             </motion.div>
-            <h1
-              className="font-heading font-bold text-2xl"
-              style={{
-                background: 'linear-gradient(135deg, #7F5AF0, #2CB67D)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-              }}
-            >
+            <h1 className="font-pixel text-[12px] tracking-wider grad-text-primary">
               QUEST AI
             </h1>
-            <p className="text-white/40 font-body text-sm mt-1">Your AI Learning Adventure</p>
+            <p className="text-white/40 font-body text-sm mt-2">Your AI Learning Adventure</p>
           </div>
 
           {/* Card */}
           <div
-            className="rounded-2xl p-6"
+            className="p-6"
             style={{
-              background: 'rgba(255,255,255,0.05)',
-              backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(127,90,240,0.25)',
-              boxShadow: '0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08)',
+              background: '#1E1B4B',
+              border: '3px solid #7C3AED',
+              boxShadow: '6px 6px 0px 0px #5B21B6',
             }}
           >
             {/* Tabs */}
             <div
-              className="flex rounded-xl p-1 mb-6"
-              style={{ background: 'rgba(255,255,255,0.06)' }}
+              className="flex p-1 mb-6"
+              style={{ background: '#16103A', border: '2px solid rgba(124,58,237,0.3)' }}
             >
               {(['login', 'signup'] as const).map((t) => (
                 <button
                   key={t}
                   onClick={() => setTab(t)}
-                  className="flex-1 py-2.5 rounded-xl font-heading font-semibold text-sm transition-all duration-200"
+                  className="flex-1 py-2.5 font-pixel text-[7px] transition-all duration-150 tracking-wide"
                   style={tab === t ? {
-                    background: 'linear-gradient(135deg, #7F5AF0, #2CB67D)',
+                    background: 'linear-gradient(135deg, #7C3AED, #3B82F6)',
                     color: 'white',
-                    boxShadow: '0 4px 12px rgba(127,90,240,0.4)',
-                  } : { color: 'rgba(255,255,255,0.45)' }}
+                    boxShadow: '2px 2px 0px #5B21B6',
+                  } : { color: 'rgba(255,255,255,0.4)' }}
                 >
-                  {t === 'login' ? '🔑 Sign In' : '⭐ Sign Up'}
+                  {t === 'login' ? '🔑 SIGN IN' : '⭐ SIGN UP'}
                 </button>
               ))}
             </div>
@@ -127,8 +112,8 @@ export default function Auth() {
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               {tab === 'signup' && (
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-white/60 font-body text-sm flex items-center gap-2">
-                    <User className="w-4 h-4" /> Username
+                  <label className="text-white/55 font-pixel text-[6px] flex items-center gap-2 tracking-wide">
+                    <User className="w-4 h-4" /> USERNAME
                   </label>
                   <input
                     type="text" value={username} onChange={e => setUsername(e.target.value)}
@@ -137,8 +122,8 @@ export default function Auth() {
                 </div>
               )}
               <div className="flex flex-col gap-1.5">
-                <label className="text-white/60 font-body text-sm flex items-center gap-2">
-                  <Mail className="w-4 h-4" /> Email
+                <label className="text-white/55 font-pixel text-[6px] flex items-center gap-2 tracking-wide">
+                  <Mail className="w-4 h-4" /> EMAIL
                 </label>
                 <input
                   type="email" value={email} onChange={e => setEmail(e.target.value)}
@@ -146,8 +131,8 @@ export default function Auth() {
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className="text-white/60 font-body text-sm flex items-center gap-2">
-                  <Lock className="w-4 h-4" /> Password
+                <label className="text-white/55 font-pixel text-[6px] flex items-center gap-2 tracking-wide">
+                  <Lock className="w-4 h-4" /> PASSWORD
                 </label>
                 <input
                   type="password" value={password} onChange={e => setPassword(e.target.value)}
@@ -157,16 +142,16 @@ export default function Auth() {
 
               {error && (
                 <div
-                  className="px-4 py-3 rounded-xl font-body text-sm text-red-300"
-                  style={{ background: 'rgba(242,95,76,0.15)', border: '1px solid rgba(242,95,76,0.4)' }}
+                  className="px-4 py-3 font-body text-sm text-red-300"
+                  style={{ background: '#3B1414', border: '2px solid #EF4444', boxShadow: '2px 2px 0px #991B1B' }}
                 >
                   {error}
                 </div>
               )}
               {success && (
                 <div
-                  className="px-4 py-3 rounded-xl font-body text-sm text-green-300"
-                  style={{ background: 'rgba(44,182,125,0.15)', border: '1px solid rgba(44,182,125,0.4)' }}
+                  className="px-4 py-3 font-body text-sm text-green-300"
+                  style={{ background: '#0D3B2E', border: '2px solid #10B981', boxShadow: '2px 2px 0px #047857' }}
                 >
                   {success}
                 </div>
@@ -182,7 +167,7 @@ export default function Auth() {
                     type="button"
                     onClick={() => setTab('signup')}
                     className="font-body text-sm font-semibold hover:opacity-80 transition-opacity"
-                    style={{ color: '#FFD60A' }}
+                    style={{ color: '#F59E0B' }}
                   >
                     ⭐ New to Quest AI? Sign Up
                   </button>
@@ -190,7 +175,7 @@ export default function Auth() {
                   <button
                     type="button"
                     onClick={() => setTab('login')}
-                    className="text-white/60 font-body text-sm font-semibold hover:text-white transition-colors"
+                    className="text-white/55 font-body text-sm font-semibold hover:text-white transition-colors"
                   >
                     🔑 Already have an account? Sign In
                   </button>

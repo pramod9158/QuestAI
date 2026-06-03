@@ -26,31 +26,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div
-      className="min-h-screen flex flex-col items-center"
-      style={{ background: 'linear-gradient(135deg, #0D0D1A 0%, #1A1040 50%, #0D1A2E 100%)', backgroundAttachment: 'fixed' }}
+      className="min-h-screen flex flex-col items-center bg-game"
+      style={{ backgroundAttachment: 'fixed' }}
     >
-      {/* Ambient orbs in background */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div
-          className="gradient-orb gradient-orb-primary"
-          style={{ width: 320, height: 320, top: '-80px', left: '-80px', animationDelay: '0s' }}
-        />
-        <div
-          className="gradient-orb gradient-orb-mission"
-          style={{ width: 240, height: 240, top: '40%', right: '-60px', animationDelay: '-4s' }}
-        />
-        <div
-          className="gradient-orb gradient-orb-accent"
-          style={{ width: 200, height: 200, bottom: '10%', left: '10%', animationDelay: '-8s' }}
-        />
-      </div>
-
       {/* Phone container */}
-      <div
-        className="w-full max-w-md min-h-screen flex flex-col relative z-10"
-        style={{ boxShadow: '0 0 80px rgba(0,0,0,0.6)' }}
-      >
-        {/* Top Status Bar */}
+      <div className="w-full max-w-md min-h-screen flex flex-col relative">
+        {/* Top Status Bar — Pixel Style */}
         {!hideNav && profile && (
           <motion.div
             initial={{ y: -50, opacity: 0 }}
@@ -58,27 +39,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             transition={{ type: 'spring', stiffness: 300, damping: 28 }}
             className="sticky top-0 z-40 px-4 py-3 flex flex-col gap-2"
             style={{
-              background: 'rgba(13, 13, 26, 0.85)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
-              borderBottom: '1px solid rgba(127, 90, 240, 0.2)',
-              boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
+              background: 'linear-gradient(180deg, #1E1B4B 0%, #16103A 100%)',
+              borderBottom: '3px solid #7C3AED',
+              boxShadow: '0 4px 0px 0px rgba(0,0,0,0.5)',
             }}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                {/* Logo gradient text */}
                 <span className="text-xl">🤖</span>
-                <span
-                  className="font-heading font-bold text-sm"
-                  style={{
-                    background: 'linear-gradient(135deg, #7F5AF0, #2CB67D)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text',
-                  }}
-                >
-                  QUEST AI
+                <span className="font-pixel text-[8px] text-white tracking-wider grad-text-primary">
+                  AI EXPLORER
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -106,16 +76,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </AnimatePresence>
         </main>
 
-        {/* Bottom Navigation */}
+        {/* Bottom Navigation — Pixel Style */}
         {!hideNav && (
           <nav
             className="sticky bottom-0 z-40 pb-safe"
             style={{
-              background: 'rgba(13, 13, 26, 0.92)',
-              backdropFilter: 'blur(24px)',
-              WebkitBackdropFilter: 'blur(24px)',
-              borderTop: '1px solid rgba(127, 90, 240, 0.2)',
-              boxShadow: '0 -4px 24px rgba(0,0,0,0.4)',
+              background: 'linear-gradient(180deg, #16103A 0%, #1E1B4B 100%)',
+              borderTop: '3px solid #7C3AED',
+              boxShadow: '0 -4px 0px 0px rgba(0,0,0,0.5)',
             }}
           >
             <div className="flex items-center justify-around px-2">
@@ -129,29 +97,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       className="relative"
                     >
                       <div
-                        className="p-2 rounded-xl transition-all duration-200"
+                        className="p-2 transition-all duration-150"
                         style={isActive ? {
-                          background: 'linear-gradient(135deg, #7F5AF0 0%, #2CB67D 100%)',
-                          boxShadow: '0 4px 16px rgba(127,90,240,0.5)',
+                          background: 'linear-gradient(135deg, #7C3AED 0%, #3B82F6 100%)',
+                          boxShadow: '3px 3px 0px 0px #5B21B6, 0 0 12px rgba(124,58,237,0.4)',
+                          border: '2px solid rgba(255,255,255,0.3)',
                         } : {}}
                       >
                         <Icon className="w-5 h-5" />
                       </div>
-                      {isActive && (
-                        <motion.div
-                          layoutId="nav-glow"
-                          className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full"
-                          style={{ background: 'linear-gradient(135deg, #FFD60A, #FF9F1C)', boxShadow: '0 0 6px rgba(255,214,10,0.8)' }}
-                        />
-                      )}
                     </motion.div>
                     <span
-                      className="font-heading font-semibold text-[10px]"
+                      className="font-pixel text-[6px] tracking-wide"
                       style={isActive ? {
-                        background: 'linear-gradient(135deg, #7F5AF0, #2CB67D)',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                        backgroundClip: 'text',
+                        color: '#F59E0B',
+                        textShadow: '0 0 8px rgba(245,158,11,0.6)',
                       } : {}}
                     >
                       {label}

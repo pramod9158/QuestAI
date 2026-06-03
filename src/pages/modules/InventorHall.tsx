@@ -59,7 +59,7 @@ export default function InventorHall() {
   };
 
   return (
-    <div className="min-h-full bg-pixel-darker pb-6">
+    <div className="min-h-full bg-game pb-6">
       <div className="bg-gradient-to-b from-gray-600/30 to-pixel-darker p-5">
         <button onClick={() => navigate('/play')} className="flex items-center gap-2 text-white/60 hover:text-white mb-3 font-body text-sm">
           <ArrowLeft className="w-4 h-4" /> Back to Play
@@ -70,7 +70,7 @@ export default function InventorHall() {
         <div className="flex mt-4 border-4 border-black">
           {(['hall', 'mine'] as const).map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)}
-              className={`flex-1 py-2 font-game text-xs transition-colors ${activeTab === tab ? 'bg-primary text-white' : 'bg-pixel-dark text-white/50 hover:text-white'}`}>
+              className={`flex-1 py-2 font-game text-xs transition-colors ${activeTab === tab ? 'bg-primary text-white' : 'bg-surface text-white/50 hover:text-white'}`}>
               {tab === 'hall' ? '🌍 Global Hall' : '💡 My Inventions'}
             </button>
           ))}
@@ -91,7 +91,7 @@ export default function InventorHall() {
           </div>
         ) : displayList.map((inv, i) => (
           <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
-            className="border-4 border-black bg-pixel-dark p-5 shadow-pixel"
+            className="border-4 border-black bg-surface p-5 shadow-pixel"
           >
             <div className="flex items-start justify-between gap-3 mb-3">
               <div className={`${CATEGORY_COLORS[inv.category] || 'bg-gray-600'} border-2 border-black px-2 py-0.5 font-body text-xs text-white capitalize`}>
