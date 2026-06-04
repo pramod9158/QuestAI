@@ -220,10 +220,14 @@ export default function Home() {
       {/* Daily Login Reward Modal */}
       <DailyRewardModal
         streak={profile.current_streak ?? 1}
-        onClaim={(coins, xp) => {
-          updateProfile({ coins: (profile.coins ?? 0) + coins });
-          setShowXP(true);
-          void xp;
+        onClaim={async (coins, xp) => {
+          await updateProfile({
+            coins: (profile.coins ?? 0) + coins,
+            xp: (profile.xp ?? 0) + xp,
+          });
+          setXpToastInfo({ amount: xp, reason: "Daily login reward!" });
+          setShowCoinsToast(coins);
+          setTimeout(() => setShowCoinsToast(null), 2500);
         }}
       />
 
