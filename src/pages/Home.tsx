@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCurrentProfile, useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { CURRICULUM, STORY_QUESTS, WEEKLY_MISSIONS_DATA } from '@/data/curriculum';
+import { CURRICULUM, STORY_QUESTS, WEEKLY_MISSIONS_DATA, PLAY_MODULES_DATA } from '@/data/curriculum';
 import { getLevel, getXPForNextLevel, getEarnedBadges, getPlatformProgress } from '@/lib/gamification';
 import { ProgressRing, XPToast, CoinToast } from '@/components/ui/GameUI';
 import { Zap, BookOpen, Swords, Target, Trophy, Users, ChevronRight, Flame, Sparkles } from 'lucide-react';
@@ -182,6 +182,27 @@ export default function Home() {
   const userZone = profile.zone || 'junior';
   const filteredCards = MODULE_CARDS.filter(mod => mod.zone === userZone || mod.zone === 'both');
 
+  const rawInventions = JSON.parse(localStorage.getItem('guest_inventions') || '[]');
+  const savedIdeas = JSON.parse(localStorage.getItem('saved_ideas') || '[]');
+
+  const isPlayModuleDone = (path: string) => {
+    const mod = PLAY_MODULES_DATA.find(m => m.path === path);
+    if (!mod) return false;
+    const key = mod.completionKey;
+    if (key === 'quests') {
+      return !!(profile?.completed_quests && profile.completed_quests.length > 0);
+    } else if (key.startsWith('quests_')) {
+      const qId = key.replace('quests_', '');
+      return localStorage.getItem(`quests_${qId}`) === 'true' || !!(profile?.completed_quests && profile.completed_quests.includes(qId));
+    } else if (key === 'inventions') {
+      return rawInventions.length > 0;
+    } else if (key === 'ideas') {
+      return savedIdeas.length > 0;
+    } else {
+      return localStorage.getItem(key) === 'true';
+    }
+  };
+
   return (
     <div className="min-h-full bg-game" style={{ backgroundAttachment: 'fixed' }}>
       {xpToastInfo && (
@@ -350,51 +371,44 @@ export default function Home() {
         )}
 
         {/* 🏆 My Learning Journey (Overall Progress) */}
-        {/* 🏆 My Learning Journey (Overall Progress Redesigned) */}
         <motion.div
           {...fadeUp(0.18)}
-          className="mt-5 p-4 space-y-3 mc-menu-panel"
+          className="mt-5 p-4 space-y-3"
+          style={{
+            background: '#1E1B4B',
+            border: '3px solid #FFD60A',
+            boxShadow: '4px 4px 0px 0px #000000',
+          }}
         >
           <div className="flex items-center justify-between">
-            <h3 className="font-game text-xs text-white uppercase flex items-center gap-1.5" style={{ textShadow: '1.5px 1.5px 0px #000' }}>
+            <h3 className="font-game text-xs text-[#FFD60A] uppercase flex items-center gap-1.5">
               🏆 My Learning Journey
             </h3>
-            <span className="font-pixel text-[6px] text-green-400" style={{ textShadow: '1px 1px 0px #000' }}>{overallPercent}% Completed</span>
+            <span className="font-pixel text-[8px] text-[#FFD60A]">{overallPercent}% Complete</span>
           </div>
 
-          {/* Minecraft HUD XP Bar style */}
-          <div className="w-full h-4 bg-[#101010] border-2 border-black p-[2px] flex items-center shadow-[inset_1.5px_1.5px_0px_#050505]">
+          <div className="w-full h-5 bg-[#0F0A2E] border-2 border-black p-[2px] flex items-center shadow-[inset_2px_2px_0px_rgba(0,0,0,0.5)]">
             <div 
-              className="h-full bg-[#55ff55] shadow-[inset_-2px_0px_0px_#3bcf3b]" 
-              style={{ 
-                width: `${overallPercent}%`, 
-                transition: 'width 0.8s ease',
-                backgroundImage: 'repeating-linear-gradient(90deg, transparent 0px, transparent 6px, rgba(0,0,0,0.15) 6px, rgba(0,0,0,0.15) 8px)' 
-              }} 
+              className="h-full bg-[#FFD60A] shadow-[inset_-2px_0px_0px_rgba(0,0,0,0.2)]" 
+              style={{ width: `${overallPercent}%`, transition: 'width 0.8s ease' }} 
             />
           </div>
 
-          {/* Stats slots (like minecraft inventory slots) */}
-          <div className="grid grid-cols-3 gap-2 pt-1.5 border-t border-[#101010]">
-            <div className="text-center mc-sidebar-stat p-2">
+          <div className="grid grid-cols-3 gap-2 pt-1.5 border-t border-white/5">
+            <div className="text-center bg-[#16103A] border border-black p-2 shadow-[2px_2px_0px_#000]">
               <div className="text-sm">📚</div>
-              <div className="font-game text-[8px] text-white mt-1">Lessons</div>
-              <div className="font-pixel text-[5px] text-white/55 mt-0.5">{completedLessons}/{totalLessons}</div>
-              <div className="font-pixel text-[4px] text-primary-light mt-0.5">{Math.round(completedLessons/(totalLessons || 1)*100)}%</div>
+              <div className="font-game text-[7px] text-white mt-1">Lessons</div>
+              <div className="font-pixel text-[6px] text-white/55 mt-0.5">{completedLessons}/{totalLessons} ({Math.round(completedLessons/(totalLessons || 1)*100)}%)</div>
             </div>
-            
-            <div className="text-center mc-sidebar-stat p-2">
+            <div className="text-center bg-[#16103A] border border-black p-2 shadow-[2px_2px_0px_#000]">
               <div className="text-sm">🎮</div>
-              <div className="font-game text-[8px] text-white mt-1">Play</div>
-              <div className="font-pixel text-[5px] text-white/55 mt-0.5">{playCompletedCount}/{totalPlayModules}</div>
-              <div className="font-pixel text-[4px] text-[#10B981] mt-0.5">{Math.round(playCompletedCount/totalPlayModules*100)}%</div>
+              <div className="font-game text-[7px] text-white mt-1">Play</div>
+              <div className="font-pixel text-[6px] text-white/55 mt-0.5">{playCompletedCount}/{totalPlayModules} ({Math.round(playCompletedCount/totalPlayModules*100)}%)</div>
             </div>
-
-            <div className="text-center mc-sidebar-stat p-2">
+            <div className="text-center bg-[#16103A] border border-black p-2 shadow-[2px_2px_0px_#000]">
               <div className="text-sm">🎯</div>
-              <div className="font-game text-[8px] text-white mt-1">Missions</div>
-              <div className="font-pixel text-[5px] text-white/55 mt-0.5">{completedMissionsCount}/{totalMissions}</div>
-              <div className="font-pixel text-[4px] text-warning mt-0.5">{Math.round(completedMissionsCount/totalMissions*100)}%</div>
+              <div className="font-game text-[7px] text-white mt-1">Missions</div>
+              <div className="font-pixel text-[6px] text-white/55 mt-0.5">{completedMissionsCount}/{totalMissions} ({Math.round(completedMissionsCount/totalMissions*100)}%)</div>
             </div>
           </div>
         </motion.div>
@@ -527,32 +541,42 @@ export default function Home() {
           PLAY MODULES
         </h2>
         <div className="grid grid-cols-2 gap-3">
-          {filteredCards.map((mod, i) => (
-            <motion.div
-              key={mod.path}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05, duration: 0.35 }}
-              whileHover={{ scale: 1.03, y: -2 }}
-              whileTap={{ scale: 0.96 }}
-              onClick={() => navigate(mod.path)}
-              className="p-4 cursor-pointer"
-              style={{
-                background: '#1E1B4B',
-                border: '3px solid #000000',
-                boxShadow: '4px 4px 0px 0px #000000',
-              }}
-            >
-              <div
-                className="w-10 h-10 flex items-center justify-center text-xl mb-3"
-                style={{ background: mod.gradFrom, border: '2px solid #000000', boxShadow: '2px 2px 0px #000000' }}
+          {filteredCards.map((mod, i) => {
+            const isDone = isPlayModuleDone(mod.path);
+            return (
+              <motion.div
+                key={mod.path}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05, duration: 0.35 }}
+                whileHover={!isDone ? { scale: 1.03, y: -2 } : {}}
+                whileTap={!isDone ? { scale: 0.96 } : {}}
+                onClick={() => navigate(mod.path)}
+                className={`p-4 cursor-pointer relative overflow-hidden transition-all ${
+                  isDone ? 'opacity-40 grayscale saturate-50' : ''
+                }`}
+                style={{
+                  background: '#1E1B4B',
+                  border: '3px solid #000000',
+                  boxShadow: isDone ? '2px 2px 0px 0px #000000' : '4px 4px 0px 0px #000000',
+                }}
               >
-                {mod.emoji}
-              </div>
-              <div className="font-game text-sm text-white leading-tight">{mod.title}</div>
-              <div className="text-white/45 font-body text-[11px] mt-1">{mod.desc}</div>
-            </motion.div>
-          ))}
+                {isDone && (
+                  <div className="completed-ribbon-container">
+                    <div className="completed-ribbon">DONE</div>
+                  </div>
+                )}
+                <div
+                  className="w-10 h-10 flex items-center justify-center text-xl mb-3"
+                  style={{ background: mod.gradFrom, border: '2px solid #000000', boxShadow: '2px 2px 0px #000000' }}
+                >
+                  {mod.emoji}
+                </div>
+                <div className="font-game text-sm text-white leading-tight">{mod.title}</div>
+                <div className="text-white/45 font-body text-[11px] mt-1">{mod.desc}</div>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
 

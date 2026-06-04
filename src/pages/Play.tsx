@@ -1,18 +1,15 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useCurrentProfile } from '@/contexts/AuthContext';
 import { PLAY_MODULES_DATA } from '@/data/curriculum';
 import { getPlatformProgress } from '@/lib/gamification';
-import { XPBottle } from '@/components/ui/XPBottle';
-import { Play as PlayIcon, CheckCircle } from 'lucide-react';
+import { CardProgressBadge, CardProgressBar } from '@/components/ui/GameUI';
 
 export default function Play() {
   const navigate = useNavigate();
   const profile = useCurrentProfile();
   const userZone = profile?.zone || 'junior';
-
-  const [activeTab, setActiveTab] = useState<'all' | 'in-progress' | 'completed'>('all');
 
   const filtered = PLAY_MODULES_DATA.filter(mod => mod.zones.includes(userZone));
 
@@ -24,7 +21,7 @@ export default function Play() {
   const totalPlayPercent = stats.playPercent;
   const overallPercent = stats.overallPercent;
 
-  const playStatusList = filtered.map((mod, idx) => {
+  const playStatusList = filtered.map(mod => {
     let isDone = false;
     let percent = 0;
     const key = mod.completionKey;
@@ -56,7 +53,6 @@ export default function Play() {
     }
 
     return {
-      idx,
       title: mod.title,
       emoji: mod.emoji,
       desc: mod.desc,
@@ -67,199 +63,121 @@ export default function Play() {
     };
   });
 
-  const inProgressList = playStatusList.filter(item => !item.isDone);
-  const completedList = playStatusList.filter(item => item.isDone);
-
-  const getDisplayItems = () => {
-    if (activeTab === 'in-progress') return inProgressList;
-    if (activeTab === 'completed') return completedList;
-    return playStatusList;
-  };
-
-  const streak = profile?.current_streak || 0;
-  const totalXp = profile?.xp || 0;
-
   return (
-    <div className="min-h-full pb-16 bg-[#0F0A2E] p-4 md:p-6 bg-stars">
+    <div className="min-h-full pb-8">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="font-pixel text-[10px] text-white flex items-center gap-2 relative tracking-wide uppercase">
+      <div className="relative px-5 pt-6 pb-10 overflow-hidden">
+        <h1 className="font-pixel text-[10px] text-white flex items-center gap-2 relative tracking-wide">
           🎮 PLAY ZONE
         </h1>
-        <p className="text-white/45 font-body text-xs mt-1.5 relative">
+        <p className="text-white/55 font-body text-sm mt-2 relative">
           {userZone === 'junior' 
             ? 'Exactly 20 interactive AI play modules for ages 6–11' 
             : 'Exactly 20 advanced AI creation modules for ages 12–16'}
         </p>
       </div>
 
-      {/* ── MINECRAFT STYLE SPLIT DASHBOARD LAYOUT ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        
-        {/* Left Column: Summary Stats Panel */}
-        <div className="lg:col-span-4 xl:col-span-3 mc-sidebar-panel p-5 flex flex-col items-center">
-          {/* XP Bottle Container */}
-          <div className="relative flex flex-col items-center mb-4">
-            <XPBottle percent={totalPlayPercent} size={88} className="mb-2" />
-            <div className="font-pixel text-lg text-white mt-1" style={{ textShadow: '2px 2px 0px #000' }}>
-              {totalPlayPercent}%
-            </div>
-            <div className="font-pixel text-[5px] text-white/50 mt-1 uppercase tracking-wider">
-              {completedPlayCount} of {filtered.length} completed
+      {/* Play Tab Progress Panel */}
+      <div className="px-5 mb-6 -mt-6">
+        <div
+          className="p-4 space-y-3"
+          style={{
+            background: '#1E1B4B',
+            border: '3px solid #10B981',
+            boxShadow: '4px 4px 0px 0px #000000',
+          }}
+        >
+          <div className="flex items-center gap-1.5 border-b border-white/10 pb-2">
+            <span className="text-sm">🏆</span>
+            <span className="font-game text-[10px] text-white uppercase tracking-wider">Mission Control</span>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3">
+            {/* Play Progress */}
+            <div className="space-y-1">
+              <div className="flex justify-between items-baseline text-[7px] font-pixel text-[#10B981]">
+                <span>PLAY ZONE COMPLETED</span>
+                <span>{completedPlayCount}/20 ({totalPlayPercent}%)</span>
+              </div>
+              <div className="w-full h-3 bg-[#0F0A2E] border border-black p-[1px] flex items-center">
+                <div className="h-full bg-[#10B981]" style={{ width: `${totalPlayPercent}%`, transition: 'width 0.8s ease' }} />
+              </div>
             </div>
           </div>
 
-          {/* Sub-stats vertical list */}
-          <div className="w-full space-y-2.5">
-            <div className="mc-sidebar-stat p-2.5 flex items-center justify-between">
-              <span className="font-pixel text-[5px] text-white/40 uppercase">In Progress</span>
-              <span className="font-game text-xs text-white">{inProgressList.length}</span>
-            </div>
-            
-            <div className="mc-sidebar-stat p-2.5 flex items-center justify-between">
-              <span className="font-pixel text-[5px] text-white/40 uppercase">Completed</span>
-              <span className="font-game text-xs text-green-400">{completedPlayCount} Modules</span>
-            </div>
-
-            <div className="mc-sidebar-stat p-2.5 flex items-center justify-between">
-              <span className="font-pixel text-[5px] text-white/40 uppercase">Streak</span>
-              <span className="font-game text-xs text-red-400">{streak} Days 🔥</span>
-            </div>
-
-            <div className="mc-sidebar-stat p-2.5 flex items-center justify-between">
-              <span className="font-pixel text-[5px] text-white/40 uppercase">Gamerscore</span>
-              <span className="font-game text-xs text-warning">+{totalXp} XP</span>
+          {/* List of play module completions */}
+          <div className="pt-2 border-t border-white/5 space-y-1.5">
+            <span className="text-white/45 font-game text-[8px] block uppercase">Activity Log:</span>
+            <div className="grid grid-cols-2 gap-2 max-h-36 overflow-y-auto pr-1">
+              {playStatusList.map(item => (
+                <div 
+                  key={item.path} 
+                  onClick={() => navigate(item.path)}
+                  className="flex items-center gap-1.5 text-[9px] font-body text-white/80 cursor-pointer hover:text-white"
+                >
+                  <div className="flex items-center gap-1.5 truncate">
+                    <span>{item.percent === 100 ? '✅' : '⏳'}</span>
+                    <span className={item.percent === 100 ? 'line-through text-white/40 truncate' : 'truncate'}>
+                      {item.emoji} {item.title} {item.percent > 0 && item.percent < 100 && `(${item.percent}%)`}
+                    </span>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Right Column: Tabbed Achievements List */}
-        <div className="lg:col-span-8 xl:col-span-9 mc-menu-panel p-4 flex flex-col min-h-[480px]">
-          {/* Minecraft tabs header bar */}
-          <div className="mc-tab-bar mb-4">
-            <button
-              onClick={() => setActiveTab('all')}
-              className={`mc-tab ${activeTab === 'all' ? 'active' : ''}`}
-            >
-              All
-            </button>
-            <button
-              onClick={() => setActiveTab('in-progress')}
-              className={`mc-tab ${activeTab === 'in-progress' ? 'active' : ''}`}
-            >
-              In Progress
-            </button>
-            <button
-              onClick={() => setActiveTab('completed')}
-              className={`mc-tab ${activeTab === 'completed' ? 'active' : ''}`}
-            >
-              Completed
-            </button>
-          </div>
-
-          {/* List contents */}
-          <div className="flex-1 space-y-4">
-            {activeTab === 'all' ? (
-              <>
-                {/* 1. In Progress Section */}
-                {inProgressList.length > 0 && (
-                  <div className="space-y-2">
-                    <div className="font-pixel text-[5px] px-2 py-0.5 bg-[#5555ff] text-white border border-black inline-block uppercase tracking-wider">
-                      In progress
-                    </div>
-                    {inProgressList.map(item => renderPlayCard(item))}
-                  </div>
-                )}
-
-                {/* 2. Completed Section */}
-                {completedList.length > 0 && (
-                  <div className="space-y-2 pt-2">
-                    <div className="font-pixel text-[5px] px-2 py-0.5 bg-green-700 text-white border border-black inline-block uppercase tracking-wider">
-                      Completed
-                    </div>
-                    {completedList.map(item => renderPlayCard(item))}
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="space-y-2">
-                {getDisplayItems().length === 0 ? (
-                  <div className="text-center py-12 text-white/40 font-body text-xs">
-                    No play modules found in this category.
-                  </div>
-                ) : (
-                  getDisplayItems().map(item => renderPlayCard(item))
-                )}
+      {/* Module Grid */}
+      <div className="px-5 grid grid-cols-2 gap-4">
+        {playStatusList.map((mod, i) => (
+          <motion.div
+            key={mod.path}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: i * 0.03, duration: 0.3 }}
+            whileHover={!mod.isDone ? { scale: 1.03, y: -2 } : {}}
+            whileTap={!mod.isDone ? { scale: 0.97 } : {}}
+            onClick={() => navigate(mod.path)}
+            className={`p-4 cursor-pointer flex flex-col justify-between min-h-[140px] relative overflow-hidden transition-all ${
+              mod.isDone ? 'opacity-40 grayscale saturate-50' : ''
+            }`}
+            style={{
+              background: '#1E1B4B',
+              border: '3px solid #000000',
+              boxShadow: mod.isDone ? '2px 2px 0px 0px #000000' : '4px 4px 0px 0px #000000',
+            }}
+          >
+            {mod.isDone && (
+              <div className="completed-ribbon-container">
+                <div className="completed-ribbon">DONE</div>
               </div>
             )}
-          </div>
-        </div>
-
+            <div>
+              <div className="flex justify-between items-start mb-2.5">
+                <div
+                  className="w-10 h-10 flex items-center justify-center text-xl flex-shrink-0"
+                  style={{
+                    background: mod.gradFrom,
+                    border: '2px solid #000000',
+                    boxShadow: '2px 2px 0px #000000',
+                  }}
+                >
+                  {mod.emoji}
+                </div>
+                <CardProgressBadge percent={mod.percent} />
+              </div>
+              <div>
+                <div className="font-game text-xs text-white leading-tight truncate">{mod.title}</div>
+                <div className="text-white/40 font-body text-[10px] mt-1 line-clamp-2 h-7 leading-tight">{mod.desc}</div>
+              </div>
+            </div>
+            <div className="mt-2.5">
+              <CardProgressBar percent={mod.percent} />
+            </div>
+          </motion.div>
+        ))}
       </div>
     </div>
   );
-
-  // Render function for individual Play Cards in Minecraft style
-  function renderPlayCard(item: typeof playStatusList[0]) {
-    return (
-      <motion.div
-        key={item.path}
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        onClick={() => navigate(item.path)}
-        className={`mc-item-card p-4 flex gap-4 items-center justify-between select-none cursor-pointer ${
-          item.isDone ? 'completed' : ''
-        }`}
-      >
-        {/* Left slot */}
-        <div 
-          className="w-12 h-12 flex-shrink-0 flex items-center justify-center border-2 border-[#0a0a0a] shadow-[inset_1.5px_1.5px_0px_#050505,inset_-1.5px_-1.5px_0px_#2c2c2c] text-xl"
-          style={{ background: item.gradFrom }}
-        >
-          {item.emoji}
-        </div>
-
-        {/* Middle contents */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-0.5">
-            <span className="font-pixel text-[4px] text-[#5555ff] uppercase tracking-wider">
-              Play Module {item.idx + 1}
-            </span>
-          </div>
-
-          <h3 className="font-game text-sm text-white leading-tight truncate">
-            {item.title}
-          </h3>
-          <p className="text-white/45 font-body text-xs mt-0.5 line-clamp-1">
-            {item.desc}
-          </p>
-
-          {/* Bottom blue progress bar for active items with partial progress */}
-          {!item.isDone && item.percent > 0 && (
-            <div className="mt-2.5 w-full h-1 bg-[#101010] p-[0.5px] border border-[#0d0d0d]">
-              <div 
-                className="h-full mc-progress-bar-blue" 
-                style={{ width: `${item.percent}%` }} 
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Right slot */}
-        <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
-          <div className="mc-sidebar-stat px-2 py-0.5 font-pixel text-[5px] text-amber-300">
-            G 50
-          </div>
-          <div>
-            {item.isDone ? (
-              <CheckCircle className="w-4 h-4 text-green-400" />
-            ) : (
-              <PlayIcon className="w-4 h-4 text-white animate-pulse" fill="white" />
-            )}
-          </div>
-        </div>
-      </motion.div>
-    );
-  }
 }
-

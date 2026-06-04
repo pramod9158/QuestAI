@@ -3,23 +3,21 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CURRICULUM } from '@/data/curriculum';
 import { Lock, Play, CheckCircle, Zap, Calendar, Award, Trophy, Compass, Flame, Map, LayoutGrid, AlertCircle } from 'lucide-react';
-import { getPlatformProgress, getLevel, getEarnedBadges, BADGES } from '@/lib/gamification';
+import { getPlatformProgress, getLevel } from '@/lib/gamification';
 import { useCurrentProfile } from '@/contexts/AuthContext';
-import { XPBottle } from '@/components/ui/XPBottle';
 
 export default function Learn() {
   const navigate = useNavigate();
   const profile = useCurrentProfile();
   
+  const [viewMode, setViewMode] = useState<'journey' | 'grid'>('journey');
+
   const userZone = profile?.zone || 'junior';
   const completedIds: string[] = profile?.completed_lessons || [];
   
   // Sort and filter the curriculum based on student zone
   const filtered = CURRICULUM.filter(l => l.zone === userZone || l.zone === 'both');
   
-  const [activeTab, setActiveTab] = useState<'all' | 'locked' | 'completed'>('all');
-
-  // Calculate stats for left sidebar
   const stats = getPlatformProgress(profile);
   const doneCount = stats.completedLessons;
   const totalCount = filtered.length || 20;
@@ -28,7 +26,6 @@ export default function Learn() {
   const level = profile ? getLevel(profile.xp) : 1;
   const streak = profile?.current_streak || 0;
   const totalXp = profile?.xp || 0;
-  const badgesEarned = profile ? getEarnedBadges(profile.xp, profile.current_streak) : [];
 
   const getLevelTitle = (lvl: number) => {
     if (lvl < 2) return 'Novice Explorer';
@@ -46,49 +43,77 @@ export default function Learn() {
   // Find the current active lesson index (first incomplete)
   const activeIndex = filtered.findIndex(l => !completedIds.includes(l.id));
 
-
-  // Partition the curriculum lessons
-  const mappedLessons = filtered.map((lesson, idx) => {
-    const isDone = completedIds.includes(lesson.id);
-    const isLocked = idx > activeIndex && activeIndex !== -1;
-    const isCurrent = !isDone && !isLocked;
-    const pVal = isDone ? 100 : parseInt(localStorage.getItem(`lesson_progress_${lesson.id}`) || '0', 10);
-    const duration = getDuration(lesson.xpReward);
-    const completedDate = localStorage.getItem(`lesson_completed_at_${lesson.id}`) || 'Recently';
-    return {
-      ...lesson,
-      idx,
-      isDone,
-      isLocked,
-      isCurrent,
-      pVal,
-      duration,
-      completedDate
-    };
-  });
-
-  const inProgressList = mappedLessons.filter(l => l.isCurrent);
-  const lockedList = mappedLessons.filter(l => l.isLocked);
-  const completedList = mappedLessons.filter(l => l.isDone);
-
-  // Filter lessons based on active tab
-  const getDisplayLessons = () => {
-    if (activeTab === 'locked') return lockedList;
-    if (activeTab === 'completed') return completedList;
-    return mappedLessons;
-  };
-
+  // Handler for ribbon retake replay logic
   const handleCardClick = (lessonId: string, isLocked: boolean) => {
     if (isLocked) return;
     navigate(`/learn/${lessonId}`);
   };
 
   return (
-    <div className="min-h-full pb-16 bg-stars bg-[#0F0A2E] p-4 md:p-6">
+    <div className="min-h-full pb-16 bg-stars bg-[#0F0A2E]">
       
-      {/* Page Title Header */}
-      <div className="mb-6">
-        <h1 className="font-pixel text-[10px] text-white flex items-center gap-2 tracking-wide uppercase">
+      {/* ── REQUIREMENT 7: GLOBAL COURSE PROGRESS HEADER ── */}
+      <div className="sticky top-0 z-30 px-5 pt-4 pb-3 bg-[#0F0A2E]/95 backdrop-blur-md border-b-3 border-black">
+        <div 
+          className="p-4 relative overflow-hidden"
+          style={{
+            background: 'linear-gradient(135deg, #1E1B4B 0%, #16103A 100%)',
+            border: '3px solid #FFD60A',
+            boxShadow: '4px 4px 0px 0px #000000',
+          }}
+        >
+          {/* Header row */}
+          <div className="flex items-center justify-between border-b border-white/10 pb-2 mb-2.5">
+            <div className="flex items-center gap-1.5">
+              <Trophy className="w-4 h-4 text-[#FFD60A]" />
+              <span className="font-game text-xs text-white uppercase tracking-wider">Course Progress</span>
+            </div>
+            <div className="font-pixel text-[6px] text-[#FFD60A] bg-[#FFD60A]/10 px-2 py-0.5 border border-[#FFD60A]/20">
+              {doneCount} / {totalCount} MODULES DONE
+            </div>
+          </div>
+
+          {/* Stats details grid */}
+          <div className="grid grid-cols-3 gap-2 text-center mb-2.5">
+            <div className="bg-black/30 border border-white/5 py-1.5 px-1">
+              <div className="font-pixel text-[5px] text-white/40 uppercase">LEVEL</div>
+              <div className="font-game text-xs text-white mt-0.5 truncate">{getLevelTitle(level)}</div>
+              <div className="font-pixel text-[5px] text-primary/80 mt-0.5">Lv {level}</div>
+            </div>
+            <div className="bg-black/30 border border-white/5 py-1.5 px-1">
+              <div className="font-pixel text-[5px] text-white/40 uppercase">TOTAL XP</div>
+              <div className="font-game text-xs text-warning mt-0.5 truncate">+{totalXp} XP</div>
+              <div className="font-pixel text-[5px] text-white/30 mt-0.5">Earned</div>
+            </div>
+            <div className="bg-black/30 border border-white/5 py-1.5 px-1">
+              <div className="font-pixel text-[5px] text-white/40 uppercase">STREAK</div>
+              <div className="font-game text-xs text-red-400 mt-0.5 truncate">{streak} Days</div>
+              <div className="font-pixel text-[5px] text-white/30 mt-0.5">Flame 🔥</div>
+            </div>
+          </div>
+
+          {/* Progress Bar */}
+          <div className="space-y-1">
+            <div className="flex justify-between items-baseline text-[7px] font-pixel text-[#FFD60A]">
+              <span>COMPLETION RATE</span>
+              <span>{percent}%</span>
+            </div>
+            <div className="w-full h-3.5 bg-[#0F0A2E] border-2 border-black p-[2px] flex items-center shadow-[inset_1px_1px_0px_#000]">
+              <div 
+                className="h-full bg-[#FFD60A] transition-all duration-800 ease-out" 
+                style={{ 
+                  width: `${percent}%`, 
+                  backgroundImage: 'repeating-linear-gradient(90deg, transparent 0px, transparent 4px, rgba(0,0,0,0.15) 4px, rgba(0,0,0,0.15) 6px)' 
+                }} 
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Intro Text */}
+      <div className="px-5 pt-4 pb-2">
+        <h1 className="font-pixel text-[9px] text-white flex items-center gap-2 tracking-wide uppercase">
           📚 {userZone === 'junior' ? 'JUNIOR EXPLORER ZONE' : 'FUTURE INNOVATOR ZONE'}
         </h1>
         <p className="text-white/45 font-body text-xs mt-1.5">
@@ -98,268 +123,337 @@ export default function Learn() {
         </p>
       </div>
 
-      {/* ── MINECRAFT STYLE SPLIT DASHBOARD LAYOUT ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        
-        {/* Left Column: Summary Stats Panel */}
-        <div className="lg:col-span-4 xl:col-span-3 mc-sidebar-panel p-5 flex flex-col items-center">
-          {/* XP Bottle Container */}
-          <div className="relative flex flex-col items-center mb-4">
-            <XPBottle percent={percent} size={88} className="mb-2" />
-            <div className="font-pixel text-lg text-white mt-1" style={{ textShadow: '2px 2px 0px #000' }}>
-              {percent}%
-            </div>
-            <div className="font-pixel text-[5px] text-white/50 mt-1 uppercase tracking-wider">
-              {doneCount} of {totalCount} completed
-            </div>
-          </div>
+      {/* Toggle View Mode Buttons */}
+      <div className="px-5 mb-6 flex gap-2">
+        <button
+          onClick={() => setViewMode('journey')}
+          className={`flex-1 flex items-center justify-center gap-1.5 font-game text-xs py-2 border-3 border-black shadow-[2px_2px_0px_#000] transition-all ${
+            viewMode === 'journey' 
+              ? 'bg-[#7C3AED] text-white' 
+              : 'bg-[#1E1B4B] text-white/50 hover:text-white/80'
+          }`}
+        >
+          <Map className="w-3.5 h-3.5" />
+          Journey Path
+        </button>
+        <button
+          onClick={() => setViewMode('grid')}
+          className={`flex-1 flex items-center justify-center gap-1.5 font-game text-xs py-2 border-3 border-black shadow-[2px_2px_0px_#000] transition-all ${
+            viewMode === 'grid' 
+              ? 'bg-[#7C3AED] text-white' 
+              : 'bg-[#1E1B4B] text-white/50 hover:text-white/80'
+          }`}
+        >
+          <LayoutGrid className="w-3.5 h-3.5" />
+          Grid View
+        </button>
+      </div>
 
-          {/* Sub-stats vertical list */}
-          <div className="w-full space-y-2.5">
-            <div className="mc-sidebar-stat p-2.5 flex items-center justify-between">
-              <span className="font-pixel text-[5px] text-white/40 uppercase">In Progress</span>
-              <span className="font-game text-xs text-white">{inProgressList.length}</span>
+      <div className="px-5">
+        {/* ── REQUIREMENT 9: EMPTY STATE FOR 0% PROGRESS ── */}
+        {doneCount === 0 && (
+          <motion.div 
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="mb-8 p-6 text-center border-4 border-dashed border-[#7C3AED] bg-[#7C3AED]/10 relative z-10"
+            style={{ boxShadow: '4px 4px 0px 0px #000' }}
+          >
+            <div className="text-5xl animate-bounce mb-3">🚀</div>
+            <h2 className="font-game text-base text-white">Start Your AI Adventure</h2>
+            <p className="text-white/60 font-body text-xs mt-1 max-w-xs mx-auto">
+              Unlock the secrets of machine learning, train models, and design systems! Complete Module 1 to begin.
+            </p>
+            <button
+              onClick={() => navigate(`/learn/${filtered[0]?.id}`)}
+              className="mt-4 px-6 py-2.5 bg-warning text-black font-game text-xs uppercase border-3 border-black shadow-[3px_3px_0px_#000] hover:bg-amber-300 transition-colors cursor-pointer"
+            >
+              Start Module 1
+            </button>
+          </motion.div>
+        )}
+
+        {/* ── REQUIREMENT 9: CONGRATULATIONS STATE FOR 100% PROGRESS ── */}
+        {doneCount === totalCount && (
+          <motion.div 
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="mb-8 p-5 text-center bg-[#10B981]/10 border-4 border-dashed border-[#10B981]"
+            style={{ boxShadow: '4px 4px 0px 0px #000' }}
+          >
+            <div className="text-5xl mb-2">🎓</div>
+            <h2 className="font-game text-base text-[#10B981] uppercase tracking-wide">Course Completed!</h2>
+            <p className="text-white/80 font-body text-xs mt-1">
+              Congratulations! You completed all 20 modules of the AI Explorer curriculum!
+            </p>
+
+            {/* Simulated certificate */}
+            <div className="my-5 p-4 border-2 border-black bg-[#1E1B4B] text-center relative overflow-hidden shadow-pixel">
+              <div className="absolute top-0 right-0 w-8 h-8 bg-[#FFD60A] rotate-45 transform translate-x-4 -translate-y-4 border border-black" />
+              <div className="font-pixel text-[5px] text-[#FFD60A]">CERTIFICATE OF ACHIEVEMENT</div>
+              <div className="font-game text-sm text-white mt-2">{profile?.username || 'Explorer'}</div>
+              <p className="font-body text-[10px] text-white/50 mt-1 max-w-[200px] mx-auto leading-tight">
+                Has successfully completed the interactive AI machine learning journey.
+              </p>
+              <div className="font-pixel text-[4px] text-white/30 mt-3 uppercase">QUESTAI PLATFORM</div>
             </div>
             
-            <div className="mc-sidebar-stat p-2.5 flex items-center justify-between">
-              <span className="font-pixel text-[5px] text-white/40 uppercase">Rewards</span>
-              <span className="font-game text-xs text-[#FFD60A]">{badgesEarned.length}/{BADGES.length} Badges</span>
-            </div>
-
-            <div className="mc-sidebar-stat p-2.5 flex items-center justify-between">
-              <span className="font-pixel text-[5px] text-white/40 uppercase">Level</span>
-              <div className="text-right">
-                <span className="font-game text-xs text-white block leading-none">{getLevelTitle(level)}</span>
-                <span className="font-pixel text-[4px] text-primary-light mt-0.5 inline-block">Lv {level}</span>
-              </div>
-            </div>
-
-            <div className="mc-sidebar-stat p-2.5 flex items-center justify-between">
-              <span className="font-pixel text-[5px] text-white/40 uppercase">Streak</span>
-              <span className="font-game text-xs text-red-400">{streak} Days 🔥</span>
-            </div>
-
-            <div className="mc-sidebar-stat p-2.5 flex items-center justify-between">
-              <span className="font-pixel text-[5px] text-white/40 uppercase">Gamerscore</span>
-              <span className="font-game text-xs text-warning">+{totalXp} XP</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column: Tabbed Achievements List */}
-        <div className="lg:col-span-8 xl:col-span-9 mc-menu-panel p-4 flex flex-col min-h-[480px]">
-          {/* Minecraft tabs header bar */}
-          <div className="mc-tab-bar mb-4">
             <button
-              onClick={() => setActiveTab('all')}
-              className={`mc-tab ${activeTab === 'all' ? 'active' : ''}`}
+              onClick={() => navigate('/play/brainstorm')}
+              className="px-5 py-2.5 bg-success text-white font-game text-xs uppercase border-3 border-black shadow-[3px_3px_0px_#000] hover:brightness-110 cursor-pointer"
             >
-              All
+              Create New Inventions
             </button>
-            <button
-              onClick={() => setActiveTab('locked')}
-              className={`mc-tab ${activeTab === 'locked' ? 'active' : ''}`}
-            >
-              Locked
-            </button>
-            <button
-              onClick={() => setActiveTab('completed')}
-              className={`mc-tab ${activeTab === 'completed' ? 'active' : ''}`}
-            >
-              Completed
-            </button>
-          </div>
+          </motion.div>
+        )}
 
-          {/* List contents */}
-          <div className="flex-1 space-y-4">
-            
-            {/* 0% Progress Prompt */}
-            {doneCount === 0 && activeTab === 'all' && (
-              <motion.div 
-                initial={{ scale: 0.98, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="mc-item-card p-5 text-center mb-4"
-              >
-                <div className="text-4xl animate-bounce mb-3.5">🚀</div>
-                <h2 className="font-game text-base text-white">Start Your AI Adventure</h2>
-                <p className="text-white/60 font-body text-xs mt-1 max-w-sm mx-auto">
-                  Unlock the secrets of machine learning, train models, and design systems! Complete Module 1 to begin.
-                </p>
-                <button
-                  onClick={() => navigate(`/learn/${filtered[0]?.id}`)}
-                  className="mt-4 px-5 py-2 mc-sidebar-stat text-warning font-game text-xs uppercase cursor-pointer hover:brightness-110 active:scale-98"
-                >
-                  Start Module 1
-                </button>
-              </motion.div>
-            )}
+        {/* Curriculum modules rendering */}
+        {viewMode === 'journey' ? (
+          /* ── REQUIREMENT 6: LEARNING PATH JOURNEY VIEW ── */
+          <div className="relative">
+            {filtered.map((lesson, idx) => {
+              const isDone = completedIds.includes(lesson.id);
+              const isLocked = idx > activeIndex && activeIndex !== -1;
+              const isActive = idx === activeIndex;
+              const pVal = isDone ? 100 : parseInt(localStorage.getItem(`lesson_progress_${lesson.id}`) || '0', 10);
+              const duration = getDuration(lesson.xpReward);
+              const completedDate = localStorage.getItem(`lesson_completed_at_${lesson.id}`) || 'Recently';
 
-            {/* 100% Course Completed State */}
-            {doneCount === totalCount && activeTab === 'all' && (
-              <motion.div 
-                initial={{ scale: 0.98, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="mc-item-card p-5 text-center mb-4"
-                style={{ borderColor: '#4caf50' }}
-              >
-                <div className="text-4xl mb-2.5">🎓</div>
-                <h2 className="font-game text-base text-green-400 uppercase tracking-wide">Course Completed!</h2>
-                <p className="text-white/80 font-body text-xs mt-1">
-                  Congratulations! You completed all {totalCount} modules of the AI curriculum!
-                </p>
+              // Determine connecting line color leading to the next item
+              let lineStatus: 'completed' | 'current' | 'locked' = 'locked';
+              if (idx < activeIndex || activeIndex === -1) {
+                lineStatus = 'completed';
+              } else if (idx === activeIndex) {
+                lineStatus = 'current';
+              }
 
-                {/* Pixel Certificate */}
-                <div className="my-5 p-4 mc-sidebar-panel text-center relative overflow-hidden max-w-sm mx-auto">
-                  <div className="font-pixel text-[5px] text-[#FFD60A]">CERTIFICATE OF ACHIEVEMENT</div>
-                  <div className="font-game text-sm text-white mt-2.5">{profile?.username || 'Explorer'}</div>
-                  <p className="font-body text-[10px] text-white/50 mt-1 max-w-[220px] mx-auto leading-tight">
-                    Has successfully completed the interactive AI machine learning journey.
-                  </p>
-                  <div className="font-pixel text-[4px] text-white/30 mt-3.5 uppercase">QUESTAI PLATFORM</div>
+              return (
+                <div key={lesson.id} className="flex gap-4">
+                  
+                  {/* Timeline connecting line segment & dots */}
+                  <div className="flex flex-col items-center flex-shrink-0 relative">
+                    <motion.div
+                      whileHover={{ scale: 1.1 }}
+                      className={`w-9 h-9 border-3 border-black flex items-center justify-center text-sm z-10 ${
+                        isDone ? 'bg-success text-white' : 
+                        isActive ? 'bg-[#7C3AED] text-white animate-pulse' : 
+                        'bg-slate-800 text-white/30'
+                      }`}
+                      style={{ 
+                        boxShadow: isDone ? '2px 2px 0px #000' : isActive ? '2px 2px 0px rgba(124,58,237,0.4)' : '2px 2px 0px #000',
+                      }}
+                    >
+                      {isDone ? (
+                        <CheckCircle className="w-4 h-4 text-white" />
+                      ) : isLocked ? (
+                        <Lock className="w-3.5 h-3.5 text-white/30" />
+                      ) : (
+                        <Play className="w-3.5 h-3.5 text-white animate-pulse" fill="white" />
+                      )}
+                    </motion.div>
+                    
+                    {/* The connecting vertical path line */}
+                    {idx < filtered.length - 1 && (
+                      <div 
+                        className={`journey-line-vertical w-1.5 flex-1 my-1.5 ${
+                          lineStatus === 'completed' ? 'completed' : 
+                          lineStatus === 'current' ? 'current' : 'locked'
+                        }`}
+                      />
+                    )}
+                  </div>
+
+                  {/* Module card */}
+                  <div className="flex-1 pb-6 min-w-0">
+                    <motion.div
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: idx * 0.03, duration: 0.3 }}
+                      whileHover={!isLocked && !isDone ? { scale: 1.01, y: -2 } : {}}
+                      onClick={() => handleCardClick(lesson.id, isLocked)}
+                      className={`relative p-4 border-3 border-black overflow-hidden select-none transition-all flex flex-col justify-between ${
+                        isDone ? 'bg-[#1E1B4B]/80 opacity-40 grayscale saturate-50' :
+                        isActive ? 'module-card-active bg-[#1E1B4B]' :
+                        'module-card-locked bg-[#16103A]'
+                      }`}
+                      style={{
+                        cursor: isLocked ? 'not-allowed' : 'pointer',
+                        boxShadow: isActive ? 'none' : isDone ? '2px 2px 0px 0px #000000' : '3px 3px 0px 0px #000000',
+                      }}
+                    >
+                      {/* COMPLETED RIBBON OVERLAY */}
+                      {isDone && (
+                        <div className="completed-ribbon-container">
+                          <div className="completed-ribbon">DONE</div>
+                        </div>
+                      )}
+
+                      {/* Header tags */}
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-pixel text-[5px] text-[#00C2FF] uppercase tracking-wider">
+                          Module {idx + 1}
+                        </span>
+                        
+                        {/* Continue Learning status tag */}
+                        {isActive && (
+                          <span className="badge-pill bg-[#7C3AED] border-black text-white py-0.5 px-1.5">
+                            Continue Learning
+                          </span>
+                        )}
+                        {isDone && (
+                          <span className="flex items-center gap-0.5 text-success font-game text-[9px] uppercase font-bold mr-12">
+                            <CheckCircle className="w-3 h-3" /> Completed
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Lesson title */}
+                      <h3 className="font-game text-sm text-white leading-snug truncate pr-6">
+                        {lesson.title}
+                      </h3>
+                      
+                      {/* Description */}
+                      <p className="text-white/40 font-body text-xs mt-1.5 line-clamp-2">
+                        {lesson.description}
+                      </p>
+
+                      {/* Stats footer (Duration, XP) */}
+                      <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-white/5">
+                        <div className="flex items-center gap-3">
+                          <span className="text-white/50 font-pixel text-[5px] flex items-center gap-1">
+                            ⏱️ {duration}
+                          </span>
+                          <span className="font-pixel text-[5px] flex items-center gap-0.5 text-[#F59E0B]">
+                            <Zap className="w-3 h-3 text-[#F59E0B]" /> +{lesson.xpReward} XP
+                          </span>
+                        </div>
+                        <span className="text-white/30 font-pixel text-[4px] uppercase tracking-wider">
+                          {lesson.zone === 'junior' ? '🚀 JUNIOR' : lesson.zone === 'innovator' ? '🧠 INNOVATOR' : '🌍 ALL'}
+                        </span>
+                      </div>
+
+                      {/* Progress bar */}
+                      {!isLocked && (
+                        <div className="mt-3">
+                          <div className="flex justify-between items-center text-[7px] font-pixel text-white/30 mb-1">
+                            <span>MODULE STATUS</span>
+                            <span className={isDone ? 'text-success' : 'text-primary-light'}>{pVal}%</span>
+                          </div>
+                          <div className="w-full h-2 bg-[#0F0A2E] border border-black p-[1px] flex items-center">
+                            <div 
+                              className={`h-full ${isDone ? 'bg-success' : 'bg-[#7C3AED]'}`} 
+                              style={{ width: `${pVal}%` }} 
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Lock requirements */}
+                      {isLocked && (
+                        <div className="mt-3 flex items-center gap-1.5 text-red-400 font-pixel text-[5px] bg-red-950/20 border border-red-900/35 p-1.5 uppercase">
+                          <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                          <span>Complete Module {idx} to unlock</span>
+                        </div>
+                      )}
+
+                      {/* Completion Date metadata */}
+                      {isDone && completedDate && (
+                        <div className="mt-2 text-white/30 font-pixel text-[4px] flex items-center gap-1 justify-end">
+                          <Calendar className="w-2.5 h-2.5" />
+                          <span>{completedDate}</span>
+                        </div>
+                      )}
+                    </motion.div>
+                  </div>
                 </div>
-                
-                <button
-                  onClick={() => navigate('/play/brainstorm')}
-                  className="px-5 py-2 mc-sidebar-stat text-green-300 font-game text-xs uppercase cursor-pointer hover:brightness-110 active:scale-98"
-                >
-                  Create New Inventions
-                </button>
-              </motion.div>
-            )}
-
-            {/* Render items by active tab */}
-            {activeTab === 'all' ? (
-              // Grouped view for "All" tab matching Minecraft
-              <>
-                {/* 1. In Progress Section */}
-                {inProgressList.length > 0 && (
-                  <div className="space-y-2">
-                    <div className="font-pixel text-[5px] px-2 py-0.5 bg-[#5555ff] text-white border border-black inline-block uppercase tracking-wider">
-                      In progress
-                    </div>
-                    {inProgressList.map(lesson => renderLessonCard(lesson))}
-                  </div>
-                )}
-
-                {/* 2. Completed Section */}
-                {completedList.length > 0 && (
-                  <div className="space-y-2 pt-2">
-                    <div className="font-pixel text-[5px] px-2 py-0.5 bg-green-700 text-white border border-black inline-block uppercase tracking-wider">
-                      Completed
-                    </div>
-                    {completedList.map(lesson => renderLessonCard(lesson))}
-                  </div>
-                )}
-
-                {/* 3. Locked Section */}
-                {lockedList.length > 0 && (
-                  <div className="space-y-2 pt-2">
-                    <div className="font-pixel text-[5px] px-2 py-0.5 bg-[#555555] text-white border border-black inline-block uppercase tracking-wider">
-                      Locked
-                    </div>
-                    {lockedList.map(lesson => renderLessonCard(lesson))}
-                  </div>
-                )}
-              </>
-            ) : (
-              // Filtered list view for Locked and Completed tabs
-              <div className="space-y-2">
-                {getDisplayLessons().length === 0 ? (
-                  <div className="text-center py-12 text-white/40 font-body text-xs">
-                    No modules found in this category.
-                  </div>
-                ) : (
-                  getDisplayLessons().map(lesson => renderLessonCard(lesson))
-                )}
-              </div>
-            )}
-
+              );
+            })}
           </div>
-        </div>
+        ) : (
+          /* Grid View Layout (Req 10: responsive Grid) */
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {filtered.map((lesson, idx) => {
+              const isDone = completedIds.includes(lesson.id);
+              const isLocked = idx > activeIndex && activeIndex !== -1;
+              const isActive = idx === activeIndex;
+              const pVal = isDone ? 100 : parseInt(localStorage.getItem(`lesson_progress_${lesson.id}`) || '0', 10);
+              const duration = getDuration(lesson.xpReward);
+              const completedDate = localStorage.getItem(`lesson_completed_at_${lesson.id}`) || 'Recently';
 
+              return (
+                <motion.div
+                  key={lesson.id}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: idx * 0.02 }}
+                  whileHover={!isLocked && !isDone ? { scale: 1.01 } : {}}
+                  onClick={() => handleCardClick(lesson.id, isLocked)}
+                  className={`relative p-4 border-3 border-black overflow-hidden transition-all flex flex-col justify-between ${
+                    isDone ? 'bg-[#1E1B4B]/80 opacity-40 grayscale saturate-50' :
+                    isActive ? 'module-card-active bg-[#1E1B4B]' :
+                    'module-card-locked bg-[#16103A]'
+                  }`}
+                  style={{
+                    cursor: isLocked ? 'not-allowed' : 'pointer',
+                    boxShadow: isActive ? 'none' : isDone ? '2px 2px 0px 0px #000000' : '3px 3px 0px 0px #000000',
+                  }}
+                >
+                  {isDone && (
+                    <div className="completed-ribbon-container">
+                      <div className="completed-ribbon">DONE</div>
+                    </div>
+                  )}
+
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-pixel text-[5px] text-[#00C2FF] uppercase">
+                        Module {idx + 1}
+                      </span>
+                      {isActive && (
+                        <span className="badge-pill bg-[#7C3AED] text-white py-0.5 px-1.5">
+                          Active
+                        </span>
+                      )}
+                      {isDone && (
+                        <span className="flex items-center gap-0.5 text-success font-game text-[9px] uppercase font-bold mr-12">
+                          <CheckCircle className="w-3 h-3" /> Done
+                        </span>
+                      )}
+                    </div>
+
+                    <h3 className="font-game text-sm text-white truncate pr-6">{lesson.title}</h3>
+                    <p className="text-white/40 font-body text-xs mt-1 line-clamp-2">{lesson.description}</p>
+                  </div>
+
+                  <div className="mt-4">
+                    {/* Stats */}
+                    <div className="flex items-center justify-between text-white/50 font-pixel text-[5px] pt-2 border-t border-white/5">
+                      <span className="flex items-center gap-1">⏱️ {duration}</span>
+                      <span className="flex items-center gap-0.5 text-[#F59E0B]"><Zap className="w-3 h-3" /> +{lesson.xpReward} XP</span>
+                    </div>
+
+                    {/* Progress bar */}
+                    {!isLocked && (
+                      <div className="mt-3">
+                        <div className="w-full h-1.5 bg-[#0F0A2E] border border-black p-[0.5px]">
+                          <div className={`h-full ${isDone ? 'bg-success' : 'bg-[#7C3AED]'}`} style={{ width: `${pVal}%` }} />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Lock text */}
+                    {isLocked && (
+                      <div className="mt-3 flex items-center gap-1.5 text-red-400 font-pixel text-[5px] bg-red-950/20 border border-red-900/35 p-1 uppercase">
+                        <Lock className="w-3 h-3 flex-shrink-0" />
+                        <span>Module {idx} Locked</span>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
-
-  // Helper render function for Lesson Cards matching Minecraft UI
-  function renderLessonCard(lesson: typeof mappedLessons[0]) {
-    return (
-      <motion.div
-        key={lesson.id}
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        onClick={() => handleCardClick(lesson.id, lesson.isLocked)}
-        className={`mc-item-card p-4 flex gap-4 items-center justify-between select-none cursor-pointer ${
-          lesson.isDone ? 'completed' : lesson.isLocked ? 'locked' : ''
-        }`}
-        style={{ cursor: lesson.isLocked ? 'not-allowed' : 'pointer' }}
-      >
-        {/* Left icon thumbnail slot */}
-        <div className="w-12 h-12 flex-shrink-0 flex items-center justify-center bg-[#181818] border-2 border-[#0a0a0a] shadow-[inset_1.5px_1.5px_0px_#050505,inset_-1.5px_-1.5px_0px_#2c2c2c] text-xl">
-          {lesson.emoji}
-        </div>
-
-        {/* Middle title and description */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-0.5">
-            <span className="font-pixel text-[4px] text-[#5555ff] uppercase tracking-wider">
-              Module {lesson.idx + 1}
-            </span>
-            {lesson.isCurrent && (
-              <span className="font-pixel text-[4px] px-1 py-0.2 bg-[#5555ff]/20 text-[#5555ff] border border-[#5555ff]/30 uppercase">
-                Active
-              </span>
-            )}
-          </div>
-          
-          <h3 className="font-game text-sm text-white leading-tight truncate">
-            {lesson.title}
-          </h3>
-          <p className="text-white/45 font-body text-xs mt-0.5 line-clamp-1">
-            {lesson.description}
-          </p>
-
-          {/* Stats sub-row */}
-          <div className="flex items-center gap-3 mt-1.5 font-pixel text-[4px] text-white/30 uppercase">
-            <span>⏱️ {lesson.duration}</span>
-            <span className="text-amber-500 flex items-center gap-0.5">
-              ⚡ +{lesson.xpReward} XP
-            </span>
-            {lesson.isDone && lesson.completedDate && (
-              <span className="text-green-500">
-                ✓ Completed {lesson.completedDate}
-              </span>
-            )}
-          </div>
-
-          {/* Blue progress line at the bottom of active cards */}
-          {lesson.isCurrent && lesson.pVal > 0 && (
-            <div className="mt-2.5 w-full h-1 bg-[#101010] p-[0.5px] border border-[#0d0d0d]">
-              <div 
-                className="h-full mc-progress-bar-blue" 
-                style={{ width: `${lesson.pVal}%` }} 
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Right side lock status or gamerscore XP label */}
-        <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
-          <div className="mc-sidebar-stat px-2 py-0.5 font-pixel text-[5px] text-amber-300">
-            G {lesson.xpReward}
-          </div>
-          <div>
-            {lesson.isDone ? (
-              <CheckCircle className="w-4 h-4 text-green-400" />
-            ) : lesson.isLocked ? (
-              <Lock className="w-4 h-4 text-white/20" />
-            ) : (
-              <Play className="w-4 h-4 text-white animate-pulse" fill="white" />
-            )}
-          </div>
-        </div>
-      </motion.div>
-    );
-  }
 }
-
