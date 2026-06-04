@@ -6,6 +6,8 @@ import { useCurrentProfile } from '@/contexts/AuthContext';
 import { CoinCounter, StreakFlame, XPBar } from '@/components/ui/GameUI';
 import { getLevel, getXPForNextLevel, getPlatformProgress } from '@/lib/gamification';
 import { CURRICULUM } from '@/data/curriculum';
+import { getUnopenedCount } from '@/lib/treasureChest';
+import { Map } from 'lucide-react';
 
 const NAV_ITEMS = [
   { path: '/', label: 'Home', icon: Home },
@@ -114,6 +116,42 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
                 </span>
               </div>
               <div className="flex items-center gap-2">
+                {/* World Map shortcut */}
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => navigate('/worlds')}
+                  className="w-8 h-8 flex items-center justify-center cursor-pointer"
+                  style={{
+                    background: 'linear-gradient(135deg, #7C3AED, #3B82F6)',
+                    border: '2px solid #000',
+                    boxShadow: '2px 2px 0px #000',
+                  }}
+                  title="World Map"
+                >
+                  <Map className="w-3.5 h-3.5 text-white" />
+                </motion.button>
+                {/* Chest notification badge */}
+                {(() => {
+                  const count = getUnopenedCount();
+                  return count > 0 ? (
+                    <motion.button
+                      animate={{ rotate: [-3, 3, -3], y: [0, -2, 0] }}
+                      transition={{ repeat: Infinity, duration: 1.8 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => navigate('/')}
+                      className="relative cursor-pointer text-lg"
+                      title={`${count} treasure chest${count > 1 ? 's' : ''} waiting!`}
+                    >
+                      📦
+                      <span
+                        className="absolute -top-1 -right-1 w-4 h-4 flex items-center justify-center font-pixel text-[5px] text-white"
+                        style={{ background: '#EF4444', border: '1.5px solid #000' }}
+                      >
+                        {count}
+                      </span>
+                    </motion.button>
+                  ) : null;
+                })()}
                 <StreakFlame streak={profile.current_streak ?? 0} />
                 <CoinCounter coins={profile.coins ?? 0} />
               </div>

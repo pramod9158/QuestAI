@@ -28,6 +28,8 @@ import AIIdeaGenerator from '@/pages/modules/AIIdeaGenerator';
 import AICards from '@/pages/modules/AICards';
 import QuizArena from '@/pages/modules/QuizArena';
 import InventorHall from '@/pages/modules/InventorHall';
+import WorldMap from '@/pages/WorldMap';
+import AvatarCustomization from '@/pages/AvatarCustomization';
 
 function AppRoutes() {
   const { isLoading } = useAuth();
@@ -72,6 +74,8 @@ function AppRoutes() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/comic" element={<ComicCreator />} />
+        <Route path="/worlds" element={<WorldMap />} />
+        <Route path="/avatar" element={<AvatarCustomization />} />
       </Route>
       
       <Route path="/dashboard" element={hasProfile ? <Dashboard /> : <Navigate to="/auth" replace />} />
