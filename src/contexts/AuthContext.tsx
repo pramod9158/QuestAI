@@ -91,23 +91,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let active = true;
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!active) return;
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchProfile(session.user.id, session.user.email, session.user.user_metadata?.zone)
-          .finally(() => {
-            if (active) setIsLoading(false);
-          });
-      } else {
-        setIsLoading(false);
-      }
-    }).catch(err => {
-      console.warn("getSession error:", err);
-      if (active) setIsLoading(false);
-    });
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!active) return;
       setSession(session);
