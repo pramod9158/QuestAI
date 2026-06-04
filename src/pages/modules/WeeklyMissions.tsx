@@ -5,9 +5,10 @@ import { XPToast, CardProgressBadge, CardProgressBar } from '@/components/ui/Gam
 import { WEEKLY_MISSIONS_DATA } from '@/data/curriculum';
 import { supabase } from '@/lib/supabase';
 import { useAuth, useCurrentProfile } from '@/contexts/AuthContext';
-import { FileText, CheckCircle, XCircle, Zap, ArrowLeft, HelpCircle, Sparkles } from 'lucide-react';
+import { FileText, CheckCircle, XCircle, Zap, ArrowLeft, HelpCircle, Sparkles, Play, Lock } from 'lucide-react';
 import { generateMissionSuggestions, evaluateMissionSubmission } from '@/lib/gemini';
 import { getPlatformProgress } from '@/lib/gamification';
+import { XPBottle } from '@/components/ui/XPBottle';
 
 interface Submission { 
   missionId: number; 
@@ -228,6 +229,7 @@ export default function WeeklyMissions() {
   const missionPercent = stats.missionPercent;
 
   const [activeTab, setActiveTab] = useState<'missions' | 'submissions'>('missions');
+  const [missionFilter, setMissionFilter] = useState<'all' | 'in-progress' | 'completed'>('all');
   const [selectedMission, setSelectedMission] = useState<number | null>(null);
   const [text, setText] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -475,129 +477,225 @@ export default function WeeklyMissions() {
       <div className="px-4 pt-2">
         {activeTab === 'missions' && (
           <div className="space-y-4">
-            {/* Missions Tab Progress Panel */}
-            <div
-              className="p-4 space-y-3 mb-2"
-              style={{
-                background: '#1E1B4B',
-                border: '3px solid #7C3AED',
-                boxShadow: '4px 4px 0px 0px #000000',
-              }}
-            >
-              <div className="flex items-center gap-1.5 border-b border-white/10 pb-2">
-                <span className="text-sm">🏆</span>
-                <span className="font-game text-[10px] text-white uppercase tracking-wider">Mission Control</span>
-              </div>
+            {/* ── MINECRAFT STYLE SPLIT DASHBOARD LAYOUT ── */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+              
+              {/* Left Column: Summary Stats Panel */}
+              <div className="lg:col-span-4 xl:col-span-3 mc-sidebar-panel p-5 flex flex-col items-center">
+                {/* XP Bottle Container */}
+                <div className="relative flex flex-col items-center mb-4">
+                  <XPBottle percent={missionPercent} size={88} className="mb-2" />
+                  <div className="font-pixel text-lg text-white mt-1" style={{ textShadow: '2px 2px 0px #000' }}>
+                    {missionPercent}%
+                  </div>
+                  <div className="font-pixel text-[5px] text-white/50 mt-1 uppercase tracking-wider">
+                    {completedMissionsCount} of {totalMissionsCount} completed
+                  </div>
+                </div>
 
-              <div className="grid grid-cols-1 gap-3">
-                {/* Missions Progress */}
-                <div className="space-y-1">
-                  <div className="flex justify-between items-baseline text-[7px] font-pixel text-[#A78BFA]">
-                    <span>MISSIONS COMPLETED</span>
-                    <span>{completedMissionsCount}/{totalMissionsCount} ({missionPercent}%)</span>
-                  </div>
-                  <div className="w-full h-3 bg-[#0F0A2E] border border-black p-[1px] flex items-center">
-                    <div className="h-full bg-[#7C3AED]" style={{ width: `${missionPercent}%`, transition: 'width 0.8s ease' }} />
-                  </div>
+                {/* Sub-stats vertical list */}
+                <div className="w-full space-y-2.5">
+                  {(() => {
+                    const activeStreak = currentProfile?.current_streak || 0;
+                    const totalXpEarned = currentProfile?.xp || 0;
+                    const inProgMissions = allMissions.filter(m => {
+                      const done = isSubmitted(m.id);
+                      return !done && parseInt(localStorage.getItem(`mission_progress_${m.id}`) || '0', 10) > 0;
+                    });
+
+                    return (
+                      <>
+                        <div className="mc-sidebar-stat p-2.5 flex items-center justify-between">
+                          <span className="font-pixel text-[5px] text-white/40 uppercase">In Progress</span>
+                          <span className="font-game text-xs text-white">{inProgMissions.length}</span>
+                        </div>
+                        
+                        <div className="mc-sidebar-stat p-2.5 flex items-center justify-between">
+                          <span className="font-pixel text-[5px] text-white/40 uppercase">Completed</span>
+                          <span className="font-game text-xs text-green-400">{completedMissionsCount} Missions</span>
+                        </div>
+
+                        <div className="mc-sidebar-stat p-2.5 flex items-center justify-between">
+                          <span className="font-pixel text-[5px] text-white/40 uppercase">Streak</span>
+                          <span className="font-game text-xs text-red-400">{activeStreak} Days 🔥</span>
+                        </div>
+
+                        <div className="mc-sidebar-stat p-2.5 flex items-center justify-between">
+                          <span className="font-pixel text-[5px] text-white/40 uppercase">Gamerscore</span>
+                          <span className="font-game text-xs text-warning">+{totalXpEarned} XP</span>
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
 
-              {/* Checklist of missions */}
-              <div className="pt-2 border-t border-white/5 space-y-1.5 max-h-36 overflow-y-auto pr-1">
-                <span className="text-white/45 font-game text-[8px] block uppercase">Missions Checklist:</span>
-                {allMissions.map((m) => {
-                  const done = isSubmitted(m.id);
-                  const pVal = done ? 100 : parseInt(localStorage.getItem(`mission_progress_${m.id}`) || '0', 10);
-                  return (
-                    <div key={m.id} className="flex items-center justify-between text-[10px] font-body text-white/80">
-                      <div className="flex items-center gap-1.5 truncate">
-                        <span>{done ? '✅' : pVal > 0 ? '⏳' : '⏳'}</span>
-                        <span className={done ? 'line-through text-white/40 truncate' : 'truncate'}>
-                          {m.emoji} {m.title} {pVal > 0 && pVal < 100 && `(${pVal}%)`}
-                        </span>
-                      </div>
-                      <button
-                        onClick={() => {
-                          const el = document.getElementById(`mission-card-${m.id}`);
-                          if (el) {
-                            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                          }
-                        }}
-                        className="font-pixel text-[6px] px-1.5 py-0.5 border border-black bg-warning text-black hover:bg-amber-300 shadow-[1px_1px_0px_#000] uppercase cursor-pointer"
-                      >
-                        Locate
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+              {/* Right Column: Tabbed Achievements List */}
+              <div className="lg:col-span-8 xl:col-span-9 mc-menu-panel p-4 flex flex-col min-h-[480px]">
+                {/* Minecraft tabs header bar */}
+                <div className="mc-tab-bar mb-4">
+                  <button
+                    onClick={() => setMissionFilter('all')}
+                    className={`mc-tab ${missionFilter === 'all' ? 'active' : ''}`}
+                  >
+                    All
+                  </button>
+                  <button
+                    onClick={() => setMissionFilter('in-progress')}
+                    className={`mc-tab ${missionFilter === 'in-progress' ? 'active' : ''}`}
+                  >
+                    In Progress
+                  </button>
+                  <button
+                    onClick={() => setMissionFilter('completed')}
+                    className={`mc-tab ${missionFilter === 'completed' ? 'active' : ''}`}
+                  >
+                    Completed
+                  </button>
+                </div>
 
-            {allMissions.map((m, i) => {
-              const done = isSubmitted(m.id);
-              const pVal = done ? 100 : parseInt(localStorage.getItem(`mission_progress_${m.id}`) || '0', 10);
-              return (
-                <motion.div
-                  key={m.id}
-                  id={`mission-card-${m.id}`}
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.08 }}
-                  className="p-5"
-                  style={done ? {
-                    background: '#1E1B4B',
-                    border: '3px solid #000000',
-                    boxShadow: '4px 4px 0px #000000',
-                  } : {
-                    background: '#1E1B4B',
-                    border: '3px solid #000000',
-                    boxShadow: '4px 4px 0px #000000',
-                  }}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1">
-                      <div className="flex items-start gap-2 mb-1">
-                        <span className="text-2xl mt-0.5">{m.emoji}</span>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-1.5">
-                            <div className="text-white font-game text-sm truncate">{m.title}</div>
-                            <CardProgressBadge percent={pVal} />
+                {/* List contents */}
+                <div className="flex-1 space-y-4">
+                  {(() => {
+                    const parsedMissions = allMissions.map((m, idx) => {
+                      const done = isSubmitted(m.id);
+                      const pVal = done ? 100 : parseInt(localStorage.getItem(`mission_progress_${m.id}`) || '0', 10);
+                      const inProgress = !done && pVal > 0;
+                      const notStarted = !done && pVal === 0;
+                      return {
+                        ...m,
+                        idx,
+                        done,
+                        pVal,
+                        inProgress,
+                        notStarted
+                      };
+                    });
+
+                    const inProgressAndActiveList = parsedMissions.filter(m => !m.done);
+                    const completedList = parsedMissions.filter(m => m.done);
+
+                    const getDisplayMissions = () => {
+                      if (missionFilter === 'in-progress') return inProgressAndActiveList;
+                      if (missionFilter === 'completed') return completedList;
+                      return parsedMissions;
+                    };
+
+                    if (missionFilter === 'all') {
+                      return (
+                        <>
+                          {/* 1. In Progress Section */}
+                          {inProgressAndActiveList.length > 0 && (
+                            <div className="space-y-2">
+                              <div className="font-pixel text-[5px] px-2 py-0.5 bg-[#5555ff] text-white border border-black inline-block uppercase tracking-wider">
+                                In progress
+                              </div>
+                              {inProgressAndActiveList.map(m => renderMissionCard(m))}
+                            </div>
+                          )}
+
+                          {/* 2. Completed Section */}
+                          {completedList.length > 0 && (
+                            <div className="space-y-2 pt-2">
+                              <div className="font-pixel text-[5px] px-2 py-0.5 bg-green-700 text-white border border-black inline-block uppercase tracking-wider">
+                                Completed
+                              </div>
+                              {completedList.map(m => renderMissionCard(m))}
+                            </div>
+                          )}
+                        </>
+                      );
+                    }
+
+                    return (
+                      <div className="space-y-2">
+                        {getDisplayMissions().length === 0 ? (
+                          <div className="text-center py-12 text-white/40 font-body text-xs">
+                            No missions found in this category.
                           </div>
-                          <span className={`text-xs font-body border border-black px-2 py-0.5 inline-block mt-1 ${
-                            m.difficulty === 'Easy' ? 'bg-success/30 text-green-300' :
-                            m.difficulty === 'Medium' ? 'bg-warning/30 text-yellow-300' :
-                            'bg-pixel-red/30 text-red-300'
-                          }`}>
-                            {m.difficulty}
-                          </span>
-                        </div>
+                        ) : (
+                          getDisplayMissions().map(m => renderMissionCard(m))
+                        )}
                       </div>
-                      <p className="text-white/70 font-body text-sm leading-relaxed mt-2">{m.description}</p>
-                      <div className="flex items-center gap-1 mt-2">
-                        <Zap className="w-4 h-4 text-warning" />
-                        <span className="text-warning font-game text-xs">+{m.xp_reward} XP Reward</span>
-                      </div>
-                      <div className="mt-3.5">
-                        <CardProgressBar percent={pVal} />
-                      </div>
-                    </div>
-                    {done ? (
-                      <CheckCircle className="w-8 h-8 text-success flex-shrink-0" />
-                    ) : null}
-                  </div>
-                  {!done && (
-                    <Button variant="primary" size="sm" fullWidth className="mt-4" onClick={() => setSelectedMission(m.id)}>
-                      Start Mission →
-                    </Button>
-                  )}
-                  {done && (
-                    <div className="mt-3 pt-2 text-center" style={{ borderTop: '2px solid rgba(16,185,129,0.3)' }}>
-                      <span className="font-pixel text-[6px] tracking-wide" style={{ color: '#10B981' }}>✅ MISSION COMPLETED!</span>
-                    </div>
-                  )}
-                </motion.div>
-              );
-            })}
+                    );
+
+                    // Card rendering helper for WeeklyMissions
+                    function renderMissionCard(m: typeof parsedMissions[0]) {
+                      return (
+                        <motion.div
+                          key={m.id}
+                          id={`mission-card-${m.id}`}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          onClick={() => {
+                            if (!m.done) {
+                              setSelectedMission(m.id);
+                            }
+                          }}
+                          className={`mc-item-card p-4 flex gap-4 items-center justify-between select-none cursor-pointer ${
+                            m.done ? 'completed' : ''
+                          }`}
+                          style={{ cursor: m.done ? 'default' : 'pointer' }}
+                        >
+                          {/* Left icon */}
+                          <div className="w-12 h-12 flex-shrink-0 flex items-center justify-center bg-[#181818] border-2 border-[#0a0a0a] shadow-[inset_1.5px_1.5px_0px_#050505,inset_-1.5px_-1.5px_0px_#2c2c2c] text-xl">
+                            {m.emoji}
+                          </div>
+
+                          {/* Middle details */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-0.5">
+                              <span className="font-pixel text-[4px] text-[#5555ff] uppercase tracking-wider">
+                                Mission {m.idx + 1}
+                              </span>
+                              <span className={`font-pixel text-[4px] px-1 py-0.2 border border-black/35 ${
+                                m.difficulty === 'Easy' ? 'bg-success/20 text-green-300' :
+                                m.difficulty === 'Medium' ? 'bg-warning/20 text-yellow-300' :
+                                'bg-red-950/20 text-red-300'
+                              }`}>
+                                {m.difficulty}
+                              </span>
+                            </div>
+
+                            <h3 className="font-game text-sm text-white leading-tight truncate">
+                              {m.title}
+                            </h3>
+                            <p className="text-white/45 font-body text-xs mt-0.5 line-clamp-1">
+                              {m.description}
+                            </p>
+
+                            {/* Bottom blue progress bar for active items with progress */}
+                            {!m.done && m.pVal > 0 && (
+                              <div className="mt-2.5 w-full h-1 bg-[#101010] p-[0.5px] border border-[#0d0d0d]">
+                                <div 
+                                  className="h-full mc-progress-bar-blue" 
+                                  style={{ width: `${m.pVal}%` }} 
+                                />
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Right slot */}
+                          <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                            <div className="mc-sidebar-stat px-2 py-0.5 font-pixel text-[5px] text-amber-300">
+                              G {m.xp_reward}
+                            </div>
+                            <div>
+                              {m.done ? (
+                                <CheckCircle className="w-4 h-4 text-green-400" />
+                              ) : (
+                                <Play className="w-4 h-4 text-white animate-pulse" fill="white" />
+                              )}
+                            </div>
+                          </div>
+                        </motion.div>
+                      );
+                    }
+                  })()}
+                </div>
+              </div>
+
+            </div>
           </div>
         )}
 

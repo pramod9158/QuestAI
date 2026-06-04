@@ -350,44 +350,51 @@ export default function Home() {
         )}
 
         {/* 🏆 My Learning Journey (Overall Progress) */}
+        {/* 🏆 My Learning Journey (Overall Progress Redesigned) */}
         <motion.div
           {...fadeUp(0.18)}
-          className="mt-5 p-4 space-y-3"
-          style={{
-            background: '#1E1B4B',
-            border: '3px solid #FFD60A',
-            boxShadow: '4px 4px 0px 0px #000000',
-          }}
+          className="mt-5 p-4 space-y-3 mc-menu-panel"
         >
           <div className="flex items-center justify-between">
-            <h3 className="font-game text-xs text-[#FFD60A] uppercase flex items-center gap-1.5">
+            <h3 className="font-game text-xs text-white uppercase flex items-center gap-1.5" style={{ textShadow: '1.5px 1.5px 0px #000' }}>
               🏆 My Learning Journey
             </h3>
-            <span className="font-pixel text-[8px] text-[#FFD60A]">{overallPercent}% Complete</span>
+            <span className="font-pixel text-[6px] text-green-400" style={{ textShadow: '1px 1px 0px #000' }}>{overallPercent}% Completed</span>
           </div>
 
-          <div className="w-full h-5 bg-[#0F0A2E] border-2 border-black p-[2px] flex items-center shadow-[inset_2px_2px_0px_rgba(0,0,0,0.5)]">
+          {/* Minecraft HUD XP Bar style */}
+          <div className="w-full h-4 bg-[#101010] border-2 border-black p-[2px] flex items-center shadow-[inset_1.5px_1.5px_0px_#050505]">
             <div 
-              className="h-full bg-[#FFD60A] shadow-[inset_-2px_0px_0px_rgba(0,0,0,0.2)]" 
-              style={{ width: `${overallPercent}%`, transition: 'width 0.8s ease' }} 
+              className="h-full bg-[#55ff55] shadow-[inset_-2px_0px_0px_#3bcf3b]" 
+              style={{ 
+                width: `${overallPercent}%`, 
+                transition: 'width 0.8s ease',
+                backgroundImage: 'repeating-linear-gradient(90deg, transparent 0px, transparent 6px, rgba(0,0,0,0.15) 6px, rgba(0,0,0,0.15) 8px)' 
+              }} 
             />
           </div>
 
-          <div className="grid grid-cols-3 gap-2 pt-1.5 border-t border-white/5">
-            <div className="text-center bg-[#16103A] border border-black p-2 shadow-[2px_2px_0px_#000]">
+          {/* Stats slots (like minecraft inventory slots) */}
+          <div className="grid grid-cols-3 gap-2 pt-1.5 border-t border-[#101010]">
+            <div className="text-center mc-sidebar-stat p-2">
               <div className="text-sm">📚</div>
-              <div className="font-game text-[7px] text-white mt-1">Lessons</div>
-              <div className="font-pixel text-[6px] text-white/55 mt-0.5">{completedLessons}/{totalLessons} ({Math.round(completedLessons/(totalLessons || 1)*100)}%)</div>
+              <div className="font-game text-[8px] text-white mt-1">Lessons</div>
+              <div className="font-pixel text-[5px] text-white/55 mt-0.5">{completedLessons}/{totalLessons}</div>
+              <div className="font-pixel text-[4px] text-primary-light mt-0.5">{Math.round(completedLessons/(totalLessons || 1)*100)}%</div>
             </div>
-            <div className="text-center bg-[#16103A] border border-black p-2 shadow-[2px_2px_0px_#000]">
+            
+            <div className="text-center mc-sidebar-stat p-2">
               <div className="text-sm">🎮</div>
-              <div className="font-game text-[7px] text-white mt-1">Play</div>
-              <div className="font-pixel text-[6px] text-white/55 mt-0.5">{playCompletedCount}/{totalPlayModules} ({Math.round(playCompletedCount/totalPlayModules*100)}%)</div>
+              <div className="font-game text-[8px] text-white mt-1">Play</div>
+              <div className="font-pixel text-[5px] text-white/55 mt-0.5">{playCompletedCount}/{totalPlayModules}</div>
+              <div className="font-pixel text-[4px] text-[#10B981] mt-0.5">{Math.round(playCompletedCount/totalPlayModules*100)}%</div>
             </div>
-            <div className="text-center bg-[#16103A] border border-black p-2 shadow-[2px_2px_0px_#000]">
+
+            <div className="text-center mc-sidebar-stat p-2">
               <div className="text-sm">🎯</div>
-              <div className="font-game text-[7px] text-white mt-1">Missions</div>
-              <div className="font-pixel text-[6px] text-white/55 mt-0.5">{completedMissionsCount}/{totalMissions} ({Math.round(completedMissionsCount/totalMissions*100)}%)</div>
+              <div className="font-game text-[8px] text-white mt-1">Missions</div>
+              <div className="font-pixel text-[5px] text-white/55 mt-0.5">{completedMissionsCount}/{totalMissions}</div>
+              <div className="font-pixel text-[4px] text-warning mt-0.5">{Math.round(completedMissionsCount/totalMissions*100)}%</div>
             </div>
           </div>
         </motion.div>
