@@ -45,11 +45,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
       
-      let resolvedMetaZone = metaZone;
-      if (!resolvedMetaZone) {
-        const { data: { session } } = await supabase.auth.getSession();
-        resolvedMetaZone = session?.user?.user_metadata?.zone;
-      }
+      const resolvedMetaZone = metaZone || 'junior';
 
       if (data) {
         let currentProfile = data as Profile;
@@ -93,31 +89,69 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
+    let active = true;
+
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!active) return;
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
         fetchProfile(session.user.id, session.user.email, session.user.user_metadata?.zone)
-          .finally(() => setIsLoading(false));
+          .finally(() => {
+            if (active) setIsLoading(false);
+          });
       } else {
+        setIsLoading(false);
+      }
+    }).catch(err => {
+      console.warn("getSession error:", err);
+      if (active) setIsLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!active) return;
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        fetchProfile(session.user.id, session.user.email, session.user.user_metadata?.zone)
+          .finally(() => {
+            if (active) setIsLoading(false);
+          });
+      } else {
+        setProfile(null);
         setIsLoading(false);
       }
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchProfile(session.user.id, session.user.email, session.user.user_metadata?.zone);
-      } else {
-        setProfile(null);
-      }
-    });
-
-    return () => subscription.unsubscribe();
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
   }, [fetchProfile]);
 
   const signUp = async (email: string, password: string, username: string, zone: 'junior' | 'innovator' = 'junior') => {
+    // 1. Validate email format
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email.trim())) {
+      return { error: 'Please enter a valid email address (e.g. explorer@school.com)' };
+    }
+
+    // 2. Validate username is not taken
+    try {
+      const { data: existingUser } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('username', username)
+        .maybeSingle();
+
+      if (existingUser) {
+        return { error: 'This username is already taken. Please choose another one!' };
+      }
+    } catch (err) {
+      console.warn('Username check failed:', err);
+    }
+
+    // 3. Supabase Auth Sign Up
     const { data, error } = await supabase.auth.signUp({ 
       email, 
       password,
@@ -129,6 +163,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     });
     if (error) return { error: error.message };
+
+    // 4. Check if email already exists (Supabase returns empty identities array to prevent user enumeration)
+    if (data.user && (!data.user.identities || data.user.identities.length === 0)) {
+      return { error: 'An account with this email address already exists. Try signing in!' };
+    }
+
     // If email confirmation is required, session will be null until confirmed
     // We'll insert the profile only if we have a valid session
     if (data.user && data.session) {
@@ -192,7 +232,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const refreshProfile = async () => {
-    if (user) await fetchProfile(user.id);
+    if (user) await fetchProfile(user.id, user.email, user.user_metadata?.zone);
     else {
       const gp = getGuestProfile();
       if (gp) setGuestProfileState(gp);

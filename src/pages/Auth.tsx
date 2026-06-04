@@ -27,6 +27,15 @@ export default function Auth() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(''); setSuccess(''); setLoading(true);
+
+    // Validate email format
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email.trim())) {
+      setError('Please enter a valid email address (e.g. explorer@school.com)');
+      setLoading(false);
+      return;
+    }
+
     if (tab === 'login') {
       const { error } = await signIn(email, password, selectedZone);
       if (error) setError(error);
