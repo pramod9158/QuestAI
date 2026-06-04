@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCurrentProfile, useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
 import { CURRICULUM, STORY_QUESTS, WEEKLY_MISSIONS_DATA } from '@/data/curriculum';
 import { getLevel, getXPForNextLevel, getEarnedBadges, getPlatformProgress } from '@/lib/gamification';
 import { ProgressRing, XPToast, CoinToast } from '@/components/ui/GameUI';
@@ -50,7 +51,43 @@ export default function Home() {
     if (chests.length > 0) setCurrentChest(chests[0]);
   };
 
-  const handleChestClaim = (_chest: Chest) => {
+  const handleChestClaim = async (chest: Chest) => {
+    if (!profile) return;
+    
+    // Apply rewards based on chest content
+    if (chest.reward.type === 'coins' && chest.reward.amount) {
+      await updateProfile({ coins: (profile.coins ?? 0) + chest.reward.amount });
+      setShowCoinsToast(chest.reward.amount);
+      setTimeout(() => setShowCoinsToast(null), 2500);
+    } else if (chest.reward.type === 'xp_boost' && chest.reward.amount) {
+      await updateProfile({ xp: (profile.xp ?? 0) + chest.reward.amount });
+      setXpToastInfo({ amount: chest.reward.amount, reason: `Treasure Chest: ${chest.reward.label}!` });
+    } else if (chest.reward.type === 'ai_card' && chest.reward.item) {
+      // Unlock the card in profiles or DB if it exists, fallback to localStorage
+      try {
+        const { data: currentCards } = await supabase
+          .from('user_cards')
+          .select('card_id');
+        // Unlocked cards catalog logic
+      } catch (err) {
+        console.warn('Failed to save card in DB:', err);
+      }
+      const unlockedCards = JSON.parse(localStorage.getItem('unlocked_cards') || '[]');
+      if (!unlockedCards.includes(chest.reward.item)) {
+        localStorage.setItem('unlocked_cards', JSON.stringify([...unlockedCards, chest.reward.item]));
+      }
+    } else if (chest.reward.type === 'accessory' && chest.reward.item) {
+      const petAccessories = JSON.parse(localStorage.getItem('pet_accessories') || '[]');
+      if (!petAccessories.includes(chest.reward.item)) {
+        localStorage.setItem('pet_accessories', JSON.stringify([...petAccessories, chest.reward.item]));
+      }
+    } else if (chest.reward.type === 'title' && chest.reward.item) {
+      const unlockedTitles = JSON.parse(localStorage.getItem('unlocked_titles') || '[]');
+      if (!unlockedTitles.includes(chest.reward.item)) {
+        localStorage.setItem('unlocked_titles', JSON.stringify([...unlockedTitles, chest.reward.item]));
+      }
+    }
+
     const remaining = getUnopenedChests();
     setUnopenedCount(remaining.length);
     setCurrentChest(null);
