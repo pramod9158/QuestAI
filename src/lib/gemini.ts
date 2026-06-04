@@ -764,3 +764,33 @@ Maintain a supportive, premium, and professional tone that proves the educationa
     return `Based on our system evaluations, ${username} is demonstrating exceptional capability in ${strengthDesc}, showing a natural ability to connect learning to practical concepts. To expand their cognitive horizon, we recommend reinforcing their computational logic by starting advanced lesson modules. Try asking ${username} about a simple sensor in your home today to spark a fun, shared technology discussion!`;
   }
 }
+
+// Prompt engineering playground helper
+export async function testPromptPlayground(
+  systemPrompt: string,
+  userPrompt: string,
+  temperature: number
+): Promise<string> {
+  let apiFailed = false;
+  try {
+    return await callWithKeyRotation(async (model) => {
+      const fullPrompt = `System Instructions: ${systemPrompt}\n\nUser Input: ${userPrompt}\n\nResponse (adhere strictly to system instructions, speak to a student):`;
+      const result = await model.generateContent(fullPrompt);
+      return result.response.text().trim();
+    });
+  } catch (err) {
+    console.warn('Gemini API testPromptPlayground failed, using fallback:', err);
+    apiFailed = true;
+  }
+  const cleanUser = userPrompt.toLowerCase();
+  let fallbackAns = `I am acting according to your system rule: "${systemPrompt}". You asked me: "${userPrompt}". Since the API is offline, here is a helpful simulation!`;
+  if (systemPrompt.toLowerCase().includes("emoji")) {
+    fallbackAns = "🪐🤖✨🚀🎨";
+  } else if (systemPrompt.toLowerCase().includes("pirate")) {
+    fallbackAns = `Ahoy matey! Ye ask about "${userPrompt}". By the powers, code be our gold! Arrr!`;
+  } else if (systemPrompt.toLowerCase().includes("robot")) {
+    fallbackAns = `BEEP BOOP. Processing: "${userPrompt}". Completed. BEEP.`;
+  }
+  return apiFailed ? `⚠️ [API Quota Exceeded - Fallback Simulator]: ${fallbackAns}` : fallbackAns;
+}
+

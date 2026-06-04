@@ -7,7 +7,7 @@ import { XPToast } from '@/components/ui/GameUI';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/contexts/AuthContext';
 import { CheckCircle, ArrowLeft, ExternalLink } from 'lucide-react';
-import { askLessonTutor } from '@/lib/gemini';
+import { askLessonTutor, testPromptPlayground } from '@/lib/gemini';
 import TeachableMachineTrainer from '@/components/teachable/TeachableMachineTrainer';
 
 export default function LessonPlayer() {
@@ -87,6 +87,12 @@ export default function LessonPlayer() {
         );
       case 'dragdrop':
         return <DragDropSandbox />;
+      case 'comic':
+        return <ComicSandbox />;
+      case 'playground':
+        return <PlaygroundSandbox />;
+      case 'detective':
+        return <DetectiveSandbox />;
       case 'quiz':
         if (completed && !replayQuiz) {
           return (
@@ -412,3 +418,413 @@ function QuizSandbox({ lessonId }: { lessonId: string }) {
     </div>
   );
 }
+
+// ── NEW SANDBOXES ───────────────────────────────────────────
+
+// Comic Builder Sandbox
+function ComicSandbox() {
+  const [panels, setPanels] = useState<Array<{ hero: string; setting: string; speech: string }>>([
+    { hero: '👽', setting: '🪐', speech: 'Hello Earthlings!' },
+    { hero: '🤖', setting: '🌆', speech: 'AI makes logic fun!' },
+    { hero: '🦸', setting: '🏫', speech: 'Let\'s save the day!' },
+  ]);
+  const [activePanel, setActivePanel] = useState(0);
+  const [viewMode, setViewMode] = useState<'edit' | 'preview'>('edit');
+
+  const heroes = ['👽', '🤖', '🦸', '🐶', '🐯', '🦄'];
+  const settings = ['🪐', '🌆', '🏫', '🌳', '🌾', '🌊'];
+
+  const updateActivePanel = (key: 'hero' | 'setting' | 'speech', value: string) => {
+    setPanels(prev => {
+      const copy = [...prev];
+      copy[activePanel] = { ...copy[activePanel], [key]: value };
+      return copy;
+    });
+  };
+
+  return (
+    <div className="p-4 space-y-4">
+      {viewMode === 'edit' ? (
+        <>
+          <div className="text-white font-game text-xs text-center">Design Panel {activePanel + 1}/3</div>
+          
+          <div className="flex gap-2">
+            {[0, 1, 2].map(idx => (
+              <button
+                key={idx}
+                onClick={() => setActivePanel(idx)}
+                className={`flex-1 py-1.5 font-pixel text-[8px] border-2 border-black shadow-[2px_2px_0px_#000] text-center ${
+                  activePanel === idx ? 'bg-[#7C3AED] text-white' : 'bg-surface text-white/50'
+                }`}
+              >
+                Panel {idx + 1}
+              </button>
+            ))}
+          </div>
+
+          <div className="border-4 border-black bg-surface p-4 flex flex-col items-center justify-center relative min-h-[160px] shadow-[4px_4px_0px_#000]">
+            <div className="text-[100px] leading-none opacity-20 absolute pointer-events-none select-none">
+              {panels[activePanel].setting}
+            </div>
+            
+            <motion.div 
+              animate={{ y: [0, -10, 0] }}
+              transition={{ repeat: Infinity, duration: 2 }}
+              className="text-7xl z-10"
+            >
+              {panels[activePanel].hero}
+            </motion.div>
+
+            <div className="mt-3 bg-white border-2 border-black text-black px-3 py-1.5 rounded-xl font-body text-xs relative max-w-[80%] text-center shadow-[2px_2px_0px_#000] z-10">
+              <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-t-2 border-l-2 border-black rotate-45" />
+              {panels[activePanel].speech || 'Type speech...'}
+            </div>
+          </div>
+
+          <div className="space-y-3.5 pt-2">
+            <div>
+              <span className="text-white/60 font-game text-[9px] block mb-1">1. Choose Hero:</span>
+              <div className="flex justify-between gap-1">
+                {heroes.map(h => (
+                  <button
+                    key={h}
+                    onClick={() => updateActivePanel('hero', h)}
+                    className={`text-2xl p-1 border-2 border-black flex-1 text-center transition-colors ${
+                      panels[activePanel].hero === h ? 'bg-[#7C3AED] border-white' : 'bg-surface hover:bg-white/5'
+                    }`}
+                  >
+                    {h}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <span className="text-white/60 font-game text-[9px] block mb-1">2. Choose Setting:</span>
+              <div className="flex justify-between gap-1">
+                {settings.map(s => (
+                  <button
+                    key={s}
+                    onClick={() => updateActivePanel('setting', s)}
+                    className={`text-2xl p-1 border-2 border-black flex-1 text-center transition-colors ${
+                      panels[activePanel].setting === s ? 'bg-[#7C3AED] border-white' : 'bg-surface hover:bg-white/5'
+                    }`}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <span className="text-white/60 font-game text-[9px] block mb-1">3. Write Speech bubble:</span>
+              <input
+                type="text"
+                value={panels[activePanel].speech}
+                onChange={e => updateActivePanel('speech', e.target.value)}
+                maxLength={45}
+                placeholder="e.g. Look at that AI prediction!"
+                className="w-full pixel-input text-xs"
+              />
+            </div>
+          </div>
+
+          <button
+            onClick={() => setViewMode('preview')}
+            className="w-full border-4 border-black bg-[#10B981] py-3 text-white font-game text-xs shadow-pixel active:translate-y-0.5 mt-2 cursor-pointer"
+          >
+            PREVIEW COMIC STRIP 🎨
+          </button>
+        </>
+      ) : (
+        <div className="space-y-4">
+          <div className="text-white font-game text-xs text-center">My AI Adventure Strip</div>
+          
+          <div className="grid grid-cols-3 gap-2">
+            {panels.map((p, idx) => (
+              <div
+                key={idx}
+                className="border-3 border-black bg-surface p-3 aspect-[3/4] flex flex-col items-center justify-between relative overflow-hidden shadow-[2px_2px_0px_#000]"
+              >
+                <div className="text-[60px] opacity-15 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none">
+                  {p.setting}
+                </div>
+                
+                <span className="font-pixel text-[5px] text-[#00C2FF] self-start">#{idx + 1}</span>
+
+                <span className="text-4xl z-10 my-auto">{p.hero}</span>
+
+                <div className="bg-white border border-black text-black px-1.5 py-0.5 rounded-md text-[8px] font-body max-w-full text-center truncate shadow-[1px_1px_0px_#000] z-10">
+                  {p.speech || '...'}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              onClick={() => setViewMode('edit')}
+              className="flex-1 border-3 border-black bg-surface py-2 text-white/70 font-game text-[10px] cursor-pointer"
+            >
+              ← Edit Panels
+            </button>
+            <button
+              onClick={() => {
+                alert('Saved! Your comic is ready.');
+              }}
+              className="flex-1 border-3 border-black bg-[#10B981] py-2 text-white font-game text-[10px] cursor-pointer"
+            >
+              Save Comic ✅
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Prompt Engineering Playground Sandbox
+function PlaygroundSandbox() {
+  const [role, setRole] = useState('Emoji Translator');
+  const [temperature, setTemperature] = useState(0.7);
+  const [promptInput, setPromptInput] = useState('');
+  const [aiOutput, setAiOutput] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const roles = [
+    { name: 'Emoji Translator 🎭', system: 'You translate the user\'s text into emojis ONLY. No words. Be creative!' },
+    { name: 'Pirate Captain 🏴‍☠️', system: 'You speak like a salty 17th-century pirate captain in short sentences. Use Pirate slang!' },
+    { name: 'Robotic Helper 🤖', system: 'You are a robot. End every word with a BEEP or BOOP. Speak robotically.' },
+  ];
+
+  const handleSend = async () => {
+    if (!promptInput.trim() || loading) return;
+    setLoading(true);
+    setAiOutput(null);
+    try {
+      const selectedSystem = roles.find(r => r.name.includes(role))?.system || '';
+      const response = await testPromptPlayground(selectedSystem, promptInput, temperature);
+      setAiOutput(response);
+    } catch (err) {
+      setAiOutput('Beep boop! An error occurred.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="p-4 space-y-4">
+      <div className="text-white font-game text-xs text-center">Prompt Engineering Lab</div>
+
+      <div className="space-y-3">
+        <div>
+          <span className="text-white/60 font-game text-[9px] block mb-1">1. AI System Persona:</span>
+          <div className="grid grid-cols-3 gap-1.5">
+            {roles.map(r => (
+              <button
+                key={r.name}
+                onClick={() => setRole(r.name)}
+                className={`py-2 px-1 text-[8px] font-game border-2 border-black text-center shadow-[1px_1px_0px_#000] leading-tight flex flex-col justify-center items-center h-12 cursor-pointer ${
+                  role === r.name ? 'bg-[#7C3AED] text-white border-white' : 'bg-surface text-white/55 hover:text-white/80'
+                }`}
+              >
+                {r.name}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <div className="flex justify-between items-center mb-1">
+            <span className="text-white/60 font-game text-[9px]">2. Creativity (Temperature):</span>
+            <span className="font-pixel text-[7px] text-[#FFD60A]">{temperature} ({temperature < 0.4 ? 'Focused' : 'Creative'})</span>
+          </div>
+          <input
+            type="range"
+            min="0.1"
+            max="1.0"
+            step="0.1"
+            value={temperature}
+            onChange={e => setTemperature(parseFloat(e.target.value))}
+            className="w-full h-2 bg-black border border-white/20 appearance-none rounded cursor-pointer accent-[#7C3AED]"
+          />
+        </div>
+
+        <div>
+          <span className="text-white/60 font-game text-[9px] block mb-1">3. Write Your Prompt:</span>
+          <textarea
+            value={promptInput}
+            onChange={e => setPromptInput(e.target.value)}
+            placeholder="e.g. What is the sun made of?"
+            className="w-full pixel-input text-xs h-16 resize-none"
+            maxLength={100}
+          />
+        </div>
+      </div>
+
+      <button
+        onClick={handleSend}
+        disabled={!promptInput.trim() || loading}
+        className="w-full border-4 border-black bg-[#7C3AED] py-3 text-white font-game text-xs shadow-pixel active:translate-y-0.5 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+      >
+        {loading ? (
+          <>
+            <span className="animate-spin inline-block mr-1">⚡</span>
+            GENERATING AI RESPONSE...
+          </>
+        ) : (
+          'SEND PROMPT TO AI 🚀'
+        )}
+      </button>
+
+      {aiOutput && (
+        <div className="border-4 border-black bg-black/40 p-4 relative shadow-[4px_4px_0px_#000]">
+          <span className="absolute -top-3 left-4 bg-[#7C3AED] text-white font-game text-[7px] px-2 py-0.5 border-2 border-black">
+            🤖 AI Output
+          </span>
+          <p className="text-white font-body text-xs leading-relaxed mt-1">{aiOutput}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Deepfake Detective Sandbox
+function DetectiveSandbox() {
+  const challenges = [
+    {
+      id: 1,
+      scenario: 'A video of a famous actor promoting a sketchy investment app on Instagram. The voice audio matches their voice, but their lips look slightly blurred and mismatch the syllables.',
+      isDeepfake: true,
+      explanation: 'CORRECT! Mismatched lip sync and fuzzy facial edges are dead giveaways for AI voice cloning and face-swapping deepfakes.',
+      incorrectMsg: 'NOT QUITE! Why would a famous actor promote a sketchy app? Look closely at the lips — they look blurred and out of sync. This is an AI deepfake!',
+    },
+    {
+      id: 2,
+      scenario: 'A photo of the Pope wearing a stylish, oversized white puffer jacket that went viral on Twitter. If you zoom in, the background people have hands with 6 fingers and blurred glasses.',
+      isDeepfake: true,
+      explanation: 'CORRECT! Current AI image generators struggle with rendering realistic hands, often adding extra fingers or merging details in background objects.',
+      incorrectMsg: 'NOT QUITE! Look at the hands of the people in the background — they have 6 fingers! This Pope puffer jacket photo is a famous AI deepfake.',
+    },
+    {
+      id: 3,
+      scenario: 'A video news report showing a massive flood in a city. Multiple verified news organizations on the ground are posting photos of the same flooded streets from different angles.',
+      isDeepfake: false,
+      explanation: 'CORRECT! Multi-angle corroboration from verified, independent on-the-scene journalists confirms the media represents a real-world event.',
+      incorrectMsg: 'NOT QUITE! Because multiple independent, verified journalists are reporting it from different perspectives on the ground, this is real media!',
+    },
+  ];
+
+  const [current, setCurrent] = useState(0);
+  const [selected, setSelected] = useState<'deepfake' | 'real' | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(null);
+  const [score, setScore] = useState(0);
+  const [done, setDone] = useState(false);
+
+  const handleChoice = (choice: 'deepfake' | 'real') => {
+    if (selected !== null) return;
+    setSelected(choice);
+    const challenge = challenges[current];
+    const isCorrect = (choice === 'deepfake' && challenge.isDeepfake) || (choice === 'real' && !challenge.isDeepfake);
+    
+    if (isCorrect) {
+      setScore(s => s + 1);
+      setFeedback(challenge.explanation);
+    } else {
+      setFeedback(challenge.incorrectMsg);
+    }
+  };
+
+  const handleNext = () => {
+    setSelected(null);
+    setFeedback(null);
+    if (current + 1 >= challenges.length) {
+      setDone(true);
+    } else {
+      setCurrent(c => c + 1);
+    }
+  };
+
+  if (done) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full p-6 gap-4 text-center">
+        <div className="text-6xl animate-bounce">🕵️</div>
+        <h4 className="font-game text-sm text-white">Investigation Complete!</h4>
+        <div className="border-4 border-black bg-surface p-4 shadow-pixel w-full">
+          <div className="text-white font-game text-xs">Case Score: {score}/{challenges.length} Correct</div>
+          <p className="text-white/60 font-body text-xs mt-2 leading-relaxed">
+            {score === challenges.length 
+              ? 'Excellent eye! You can easily spot AI deepfakes like a true detective!' 
+              : 'Good job! Pay close attention to hands, ears, and lip synchronization to spot deepfakes.'}
+          </p>
+        </div>
+        <button
+          onClick={() => {
+            setCurrent(0);
+            setSelected(null);
+            setFeedback(null);
+            setScore(0);
+            setDone(false);
+          }}
+          className="w-full border-4 border-black bg-[#7C3AED] py-3 text-white font-game text-xs shadow-pixel active:translate-y-0.5 mt-2 cursor-pointer"
+        >
+          Restart Cases 🔁
+        </button>
+      </div>
+    );
+  }
+
+  const c = challenges[current];
+  return (
+    <div className="p-4 space-y-4">
+      <div className="flex justify-between items-center text-white/50 font-body text-xs">
+        <span>Case File {current + 1}/{challenges.length}</span>
+        <span className="font-game text-[#FF8906] text-[9px]">🕵️ AI DETECTIVE</span>
+      </div>
+
+      <div className="border-4 border-black bg-surface p-4 shadow-[4px_4px_0px_#000]">
+        <span className="font-game text-[8px] text-[#00C2FF] uppercase block mb-1">Clue Description:</span>
+        <p className="text-white font-body text-xs leading-relaxed">{c.scenario}</p>
+      </div>
+
+      {feedback ? (
+        <div className="space-y-3">
+          <div className={`border-4 border-black p-4 ${
+            (selected === 'deepfake' && c.isDeepfake) || (selected === 'real' && !c.isDeepfake)
+              ? 'bg-success/20 border-success text-green-300'
+              : 'bg-pixel-red/25 border-pixel-red text-red-300'
+          }`}>
+            <strong className="font-game text-[9px] block mb-1">
+              {(selected === 'deepfake' && c.isDeepfake) || (selected === 'real' && !c.isDeepfake)
+                ? '✅ CORRECT DETECTION!'
+                : '❌ FALSE ALARM / MISSED DEEPFAKE'}
+            </strong>
+            <p className="font-body text-xs text-white/90 leading-relaxed">{feedback}</p>
+          </div>
+          <button
+            onClick={handleNext}
+            className="w-full border-4 border-black bg-primary py-3 text-white font-game text-xs shadow-pixel active:translate-y-0.5 cursor-pointer"
+          >
+            {current + 1 < challenges.length ? 'NEXT CASE →' : 'FINISH CASE REPORT 📋'}
+          </button>
+        </div>
+      ) : (
+        <div className="flex gap-3">
+          <button
+            onClick={() => handleChoice('deepfake')}
+            className="flex-1 border-4 border-black bg-pixel-red text-white py-3 font-game text-xs shadow-pixel hover:brightness-110 active:translate-y-0.5 cursor-pointer"
+          >
+            🎭 DEEPFAKE
+          </button>
+          <button
+            onClick={() => handleChoice('real')}
+            className="flex-1 border-4 border-black bg-success text-white py-3 font-game text-xs shadow-pixel hover:brightness-110 active:translate-y-0.5 cursor-pointer"
+          >
+            📸 REAL MEDIA
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
