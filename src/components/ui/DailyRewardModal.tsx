@@ -14,6 +14,7 @@ import {
 } from '@/lib/loginRewards';
 
 interface DailyRewardModalProps {
+  username: string;
   streak: number;
   onClaim: (coins: number, xp: number) => void;
 }
@@ -43,7 +44,7 @@ function ConfettiPiece({ color, delay }: { color: string; delay: number }) {
 
 const CONFETTI_COLORS = ['#FFD60A', '#7C3AED', '#3B82F6', '#10B981', '#EF4444', '#EC4899'];
 
-export function DailyRewardModal({ streak, onClaim }: DailyRewardModalProps) {
+export function DailyRewardModal({ username, streak, onClaim }: DailyRewardModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [reward, setReward] = useState<DailyReward | null>(null);
   const [revealed, setRevealed] = useState(false);
@@ -52,17 +53,17 @@ export function DailyRewardModal({ streak, onClaim }: DailyRewardModalProps) {
   useEffect(() => {
     // Small delay to let the page load first
     const timer = setTimeout(() => {
-      if (hasUnclaimedDailyReward()) {
+      if (hasUnclaimedDailyReward(username)) {
         setReward(getDailyReward(streak));
         setIsOpen(true);
       }
     }, 1200);
     return () => clearTimeout(timer);
-  }, [streak]);
+  }, [streak, username]);
 
   function handleClaim() {
     if (!reward) return;
-    claimDailyReward();
+    claimDailyReward(username);
     setShowConfetti(true);
     setTimeout(() => {
       onClaim(reward.coins, reward.xp);

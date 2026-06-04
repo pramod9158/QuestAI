@@ -126,28 +126,36 @@ export function getDailyReward(streak: number): DailyReward {
 
 // ─── Persistence ─────────────────────────────────────────────────────────────
 
-function loadRewardData(): RewardSaveData {
+function getLocalDateString(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function loadRewardData(username: string): RewardSaveData {
   try {
-    const raw = localStorage.getItem(DAILY_REWARD_KEY);
+    const raw = localStorage.getItem(`${DAILY_REWARD_KEY}_${username}`);
     return raw ? JSON.parse(raw) : { lastClaimDate: '', claimedToday: false };
   } catch {
     return { lastClaimDate: '', claimedToday: false };
   }
 }
 
-function saveRewardData(data: RewardSaveData): void {
-  localStorage.setItem(DAILY_REWARD_KEY, JSON.stringify(data));
+function saveRewardData(username: string, data: RewardSaveData): void {
+  localStorage.setItem(`${DAILY_REWARD_KEY}_${username}`, JSON.stringify(data));
 }
 
-export function hasUnclaimedDailyReward(): boolean {
-  const data = loadRewardData();
-  const today = new Date().toISOString().split('T')[0];
+export function hasUnclaimedDailyReward(username: string): boolean {
+  const data = loadRewardData(username);
+  const today = getLocalDateString();
   return data.lastClaimDate !== today;
 }
 
-export function claimDailyReward(): void {
-  const today = new Date().toISOString().split('T')[0];
-  saveRewardData({ lastClaimDate: today, claimedToday: true });
+export function claimDailyReward(username: string): void {
+  const today = getLocalDateString();
+  saveRewardData(username, { lastClaimDate: today, claimedToday: true });
 }
 
 export function getRewardRarityColor(rarity: RewardRarity): string {

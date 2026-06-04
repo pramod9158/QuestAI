@@ -61,10 +61,6 @@ export default function Home() {
   const [showMailboxModal, setShowMailboxModal] = useState(false);
   const [showCoinsToast, setShowCoinsToast] = useState<number | null>(null);
 
-  // Daily login reward states
-  const [showDailyRewardModal, setShowDailyRewardModal] = useState(false);
-  const [rewardRevealed, setRewardRevealed] = useState(false);
-  const [claimingReward, setClaimingReward] = useState(false);
 
   const todayDate = new Date().toISOString().split('T')[0];
 
@@ -76,22 +72,6 @@ export default function Home() {
     }
   }, []);
 
-  useEffect(() => {
-    if (!profile || !profile.username) return;
-    
-    const claimedKey = `daily_reward_claimed_${profile.username}_${todayDate}`;
-    const remindedKey = `daily_reward_reminded_${profile.username}_${todayDate}`;
-    
-    const isClaimed = localStorage.getItem(claimedKey) === 'true';
-    const isReminded = sessionStorage.getItem(remindedKey) === 'true';
-    
-    if (!isClaimed && !isReminded) {
-      const t = setTimeout(() => {
-        setShowDailyRewardModal(true);
-      }, 800);
-      return () => clearTimeout(t);
-    }
-  }, [profile?.username, todayDate]);
 
   const handleClaimEndorsement = async () => {
     if (!unreadEndorsement || !profile) return;
@@ -119,47 +99,6 @@ export default function Home() {
     }, 2500);
   };
 
-  const handleClaimDailyReward = async () => {
-    if (!profile || !profile.username) return;
-    
-    if (!rewardRevealed) {
-      setRewardRevealed(true);
-      return;
-    }
-    
-    setClaimingReward(true);
-    try {
-      const claimedKey = `daily_reward_claimed_${profile.username}_${todayDate}`;
-      const currentXP = profile.xp || 0;
-      const currentCoins = profile.coins || 0;
-      
-      await updateProfile({
-        xp: currentXP + 10,
-        coins: currentCoins + 5
-      });
-      
-      localStorage.setItem(claimedKey, 'true');
-      setShowDailyRewardModal(false);
-      
-      // Show success toasts
-      setXpToastInfo({ amount: 10, reason: "Daily login reward!" });
-      setShowCoinsToast(5);
-      setTimeout(() => {
-        setShowCoinsToast(null);
-      }, 2500);
-    } catch (err) {
-      console.warn("Failed to claim daily reward:", err);
-    } finally {
-      setClaimingReward(false);
-    }
-  };
-
-  const handleRemindDailyReward = () => {
-    if (!profile || !profile.username) return;
-    const remindedKey = `daily_reward_reminded_${profile.username}_${todayDate}`;
-    sessionStorage.setItem(remindedKey, 'true');
-    setShowDailyRewardModal(false);
-  };
 
   // QuestBot Companion states
   const [questBotInput, setQuestBotInput] = useState('');
@@ -219,6 +158,7 @@ export default function Home() {
 
       {/* Daily Login Reward Modal */}
       <DailyRewardModal
+        username={profile.username}
         streak={profile.current_streak ?? 1}
         onClaim={async (coins, xp) => {
           await updateProfile({
@@ -756,123 +696,6 @@ export default function Home() {
                   className="w-full text-center text-white/45 font-body text-xs hover:text-white/70 transition-colors cursor-pointer"
                 >
                   Read later
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* 🎁 Daily Login Reward Modal */}
-      <AnimatePresence>
-        {showDailyRewardModal && profile && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-[2px]">
-            <motion.div
-              initial={{ scale: 0.9, y: 20, opacity: 0 }}
-              animate={{ scale: 1, y: 0, opacity: 1 }}
-              exit={{ scale: 0.9, y: 20, opacity: 0 }}
-              className="w-full max-w-sm p-6 space-y-5 text-center relative border-4 border-[#10B981] bg-[#16103A] shadow-[8px_8px_0px_#000]"
-            >
-              {/* Common Reward Badge */}
-              <div className="flex justify-center">
-                <span className="bg-[#10B981] text-black font-pixel text-[6px] px-2.5 py-0.5 border border-black uppercase font-bold tracking-wider">
-                  Common Reward
-                </span>
-              </div>
-
-              {/* Title & Subtitle */}
-              <div className="space-y-1">
-                <h3 className="font-game text-base text-white tracking-wide">Daily Login Reward!</h3>
-                <p className="text-red-400 font-game text-xs flex items-center justify-center gap-1">
-                  🔥 Day {profile.current_streak || 1} Streak
-                </p>
-              </div>
-
-              {/* Streak Tracker Days Grid */}
-              <div className="grid grid-cols-6 gap-2">
-                {[
-                  { day: 1, label: '1d' },
-                  { day: 2, label: '2d' },
-                  { day: 3, label: '3d' },
-                  { day: 7, label: '7d' },
-                  { day: 14, label: '14d' },
-                  { day: 30, label: '30d' },
-                ].map((item) => {
-                  const isChecked = (profile.current_streak || 1) >= item.day;
-                  return (
-                    <div
-                      key={item.day}
-                      className="flex flex-col items-center gap-1 py-1"
-                    >
-                      <div
-                        className={`w-9 h-9 border-2 border-black flex items-center justify-center font-pixel text-[8px] transition-colors ${
-                          isChecked ? 'bg-[#10B981] text-black shadow-[2px_2px_0px_#000]' : 'bg-black/30 text-white/35'
-                        }`}
-                      >
-                        {isChecked ? '✓' : item.label}
-                      </div>
-                      <span className="font-pixel text-[5px] text-white/40 uppercase tracking-widest">{item.label}</span>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Center Reveal Gift Box Card */}
-              <motion.div
-                whileHover={!rewardRevealed ? { scale: 1.02 } : {}}
-                whileTap={!rewardRevealed ? { scale: 0.98 } : {}}
-                onClick={() => !rewardRevealed && setRewardRevealed(true)}
-                className={`p-6 border-3 border-black relative overflow-hidden cursor-pointer select-none transition-all flex flex-col items-center justify-center min-h-[140px] ${
-                  rewardRevealed 
-                    ? 'bg-gradient-to-br from-[#F59E0B]/20 to-[#FCD34D]/10 border-[#F59E0B]' 
-                    : 'bg-[#1E1B4B] hover:brightness-105'
-                }`}
-                style={{
-                  boxShadow: '4px 4px 0px 0px #000000',
-                }}
-              >
-                {!rewardRevealed ? (
-                  <>
-                    <motion.span 
-                      animate={{ scale: [1, 1.1, 1], rotate: [-2, 2, -2] }}
-                      transition={{ repeat: Infinity, duration: 1.8 }}
-                      className="text-5xl mb-3 block"
-                    >
-                      🎁
-                    </motion.span>
-                    <span className="font-game text-xs text-white">Tap to Reveal!</span>
-                  </>
-                ) : (
-                  <motion.div
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    className="text-center space-y-2"
-                  >
-                    <span className="text-4xl block animate-bounce">🪙</span>
-                    <div className="font-game text-xs text-[#FFD60A]">REWARD UNLOCKED!</div>
-                    <div className="font-pixel text-[6px] text-white/90 bg-black/40 border border-white/5 py-1 px-3 inline-block">
-                      +10 XP  •  +5 COINS
-                    </div>
-                  </motion.div>
-                )}
-              </motion.div>
-
-              {/* Action Buttons */}
-              <div className="space-y-3">
-                <button
-                  type="button"
-                  onClick={handleClaimDailyReward}
-                  disabled={claimingReward}
-                  className="w-full bg-[#10B981] text-black font-game text-xs py-3 border-4 border-black shadow-[4px_4px_0px_#000] cursor-pointer hover:brightness-105 active:translate-y-[2px] active:shadow-[2px_2px_0px_#000] transition-all uppercase font-bold flex items-center justify-center gap-1.5"
-                >
-                  {rewardRevealed ? '✓ Claim Reward!' : '🎁 Open Reward!'}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleRemindDailyReward}
-                  className="w-full text-center text-white/45 font-body text-xs hover:text-white/70 transition-colors cursor-pointer"
-                >
-                  Remind me later
                 </button>
               </div>
             </motion.div>
