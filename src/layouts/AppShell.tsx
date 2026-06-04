@@ -1,10 +1,11 @@
 import React from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, Outlet, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, BookOpen, Gamepad2, Target, User } from 'lucide-react';
+import { Home, BookOpen, Gamepad2, Target, User, ChevronRight } from 'lucide-react';
 import { useCurrentProfile } from '@/contexts/AuthContext';
 import { CoinCounter, StreakFlame, XPBar } from '@/components/ui/GameUI';
-import { getLevel, getXPForNextLevel } from '@/lib/gamification';
+import { getLevel, getXPForNextLevel, getPlatformProgress } from '@/lib/gamification';
+import { CURRICULUM } from '@/data/curriculum';
 
 const NAV_ITEMS = [
   { path: '/', label: 'Home', icon: Home },
@@ -14,15 +15,76 @@ const NAV_ITEMS = [
   { path: '/profile', label: 'Profile', icon: User },
 ];
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+export function AppShell({ children }: { children?: React.ReactNode }) {
   const profile = useCurrentProfile();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const xp = profile?.xp ?? 0;
   const level = getLevel(xp);
   const xpInfo = getXPForNextLevel(xp);
+  const stats = getPlatformProgress(profile);
+  const overallPercent = stats.overallPercent;
 
   const hideNav = ['/auth', '/onboarding'].some(p => location.pathname.startsWith(p));
+  const isMainTab = ['/', '/learn', '/play', '/missions', '/profile'].includes(location.pathname);
+
+  // Compute next action
+  const getNextAction = () => {
+    if (!profile) return null;
+    
+    // 1. Check parent endorsement (Claim Reward)
+    const endorsements = JSON.parse(localStorage.getItem('parent_endorsements') || '[]');
+    const unread = endorsements.find((e: any) => !e.claimed);
+    if (unread) {
+      return {
+        text: 'Claim Parent Stamp Reward!',
+        path: '/',
+        icon: '🎁',
+        color: '#FFD60A',
+        badge: 'CLAIM REWARD'
+      };
+    }
+    
+    // 2. Find first incomplete lesson
+    const userZone = profile.zone || 'junior';
+    const completedIds: string[] = profile.completed_lessons || [];
+    const filtered = CURRICULUM.filter(l => l.zone === userZone || l.zone === 'both');
+    
+    const nextIncompleteIdx = filtered.findIndex(l => !completedIds.includes(l.id));
+    if (nextIncompleteIdx !== -1) {
+      const nextLesson = filtered[nextIncompleteIdx];
+      return {
+        text: `Continue Module ${nextIncompleteIdx + 1}: ${nextLesson.title}`,
+        path: `/learn/${nextLesson.id}`,
+        icon: '⚡',
+        color: '#7C3AED',
+        badge: 'CONTINUE LEARNING'
+      };
+    }
+    
+    // 3. Check quiz progress
+    const playCompleted = localStorage.getItem('play_completed_quiz') === 'true';
+    if (!playCompleted) {
+      return {
+        text: 'Test your skills in the Quiz Arena!',
+        path: '/play/quiz',
+        icon: '🎯',
+        color: '#10B981',
+        badge: 'ATTEMPT QUIZ'
+      };
+    }
+    
+    return {
+      text: 'Create a design in Brainstorm Lab!',
+      path: '/play/brainstorm',
+      icon: '💡',
+      color: '#00C2FF',
+      badge: 'OPEN PLAYGROUND'
+    };
+  };
+
+  const nextAction = getNextAction();
 
   return (
     <div
@@ -30,7 +92,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       style={{ backgroundAttachment: 'fixed' }}
     >
       {/* Phone container */}
-      <div className="w-full max-w-md min-h-screen flex flex-col relative">
+      <div className="w-full max-w-md min-h-screen flex flex-col relative bg-[#0F0A2E]">
         {/* Top Status Bar — Pixel Style */}
         {!hideNav && profile && (
           <motion.div
@@ -57,6 +119,27 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </div>
             </div>
             <XPBar current={xpInfo.current} needed={xpInfo.needed} level={level} />
+            
+            {/* Overall Journey Progress Bar */}
+            <div className="flex items-center gap-2 mt-1">
+              <div
+                className="px-1.5 py-0.5 font-pixel text-[6px] text-white whitespace-nowrap uppercase"
+                style={{
+                  background: 'linear-gradient(135deg, #10B981 0%, #3B82F6 100%)',
+                  border: '2px solid #000000',
+                  boxShadow: '1.5px 1.5px 0px 0px #000000',
+                }}
+              >
+                Overall
+              </div>
+              <div className="flex-1 h-3 bg-[#0F0A2E] border-2 border-black p-[1px] flex items-center shadow-[inset_1px_1px_0px_rgba(0,0,0,0.5)]">
+                <div 
+                  className="h-full bg-gradient-to-r from-emerald-500 to-teal-400" 
+                  style={{ width: `${overallPercent}%`, transition: 'width 0.8s ease' }} 
+                />
+              </div>
+              <span className="text-success font-pixel text-[6px] whitespace-nowrap">{overallPercent}%</span>
+            </div>
           </motion.div>
         )}
 
@@ -71,10 +154,52 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               transition={{ duration: 0.22, ease: 'easeOut' }}
               className="h-full"
             >
-              {children}
+              {children || <Outlet />}
             </motion.div>
           </AnimatePresence>
         </main>
+
+        {/* Recommended Next Action Section */}
+        {!hideNav && profile && isMainTab && nextAction && (
+          <motion.div
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.3 }}
+            onClick={() => navigate(nextAction.path)}
+            className="cursor-pointer flex items-center justify-between gap-3 px-4 py-2.5 hover:brightness-110 active:scale-[0.99] transition-all select-none"
+            style={{
+              background: 'linear-gradient(90deg, #1E1B4B 0%, #16103A 100%)',
+              borderTop: '3px solid #000000',
+            }}
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div
+                className="w-8 h-8 flex items-center justify-center text-lg flex-shrink-0"
+                style={{
+                  background: nextAction.color,
+                  border: '2px solid #000000',
+                  boxShadow: '2px 2px 0px #000000',
+                }}
+              >
+                {nextAction.icon}
+              </div>
+              <div className="min-w-0">
+                <div className="font-pixel text-[6px] tracking-wider text-warning">
+                  RECOMMENDED NEXT STEP
+                </div>
+                <div className="text-white font-game text-[11px] mt-0.5 truncate leading-tight">
+                  {nextAction.text}
+                </div>
+              </div>
+            </div>
+            <div
+              className="flex-shrink-0 px-2 py-1 flex items-center gap-0.5 bg-black/35 border border-white/10 text-white font-game text-[9px] uppercase tracking-wider hover:bg-white/10 transition-colors"
+              style={{ boxShadow: '2px 2px 0px #000' }}
+            >
+              Go <ChevronRight className="w-3 h-3 text-[#FFD60A]" />
+            </div>
+          </motion.div>
+        )}
 
         {/* Bottom Navigation — Pixel Style */}
         {!hideNav && (

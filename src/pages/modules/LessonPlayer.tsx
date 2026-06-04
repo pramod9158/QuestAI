@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/contexts/AuthContext';
 import { CheckCircle, ArrowLeft, ExternalLink } from 'lucide-react';
 import { askLessonTutor } from '@/lib/gemini';
+import TeachableMachineTrainer from '@/components/teachable/TeachableMachineTrainer';
 
 export default function LessonPlayer() {
   const { id } = useParams();
@@ -15,15 +16,12 @@ export default function LessonPlayer() {
   const { profile, guestProfile, isGuest, updateProfile } = useAuth();
   const lesson = CURRICULUM.find(l => l.id === id);
   const [showXP, setShowXP] = useState(false);
+  const [replayQuiz, setReplayQuiz] = useState(false);
 
   // AI Tutor Chat states
   const [tutorInput, setTutorInput] = useState('');
   const [tutorAnswer, setTutorAnswer] = useState<string | null>(null);
   const [askingTutor, setAskingTutor] = useState(false);
-
-  if (!lesson) return <div className="p-6 text-white font-body">Lesson not found.</div>;
-
-  const completed = profile?.completed_lessons?.includes(lesson.id) ?? false;
 
   React.useEffect(() => {
     if (lesson) {
@@ -39,6 +37,10 @@ export default function LessonPlayer() {
     }
   }, [lesson, profile]);
 
+  if (!lesson) return <div className="p-6 text-white font-body">Lesson not found.</div>;
+
+  const completed = profile?.completed_lessons?.includes(lesson.id) ?? false;
+
   const handleComplete = async () => {
     if (!completed) {
       const currentProfileXP = isGuest ? (guestProfile?.xp ?? 0) : (profile?.xp ?? 0);
@@ -51,6 +53,7 @@ export default function LessonPlayer() {
         completed_lessons: [...currentCompletedLessons, lesson.id],
       });
       localStorage.setItem(`lesson_progress_${lesson.id}`, '100');
+      localStorage.setItem(`lesson_completed_at_${lesson.id}`, new Date().toLocaleDateString());
       setShowXP(true);
     }
   };
@@ -72,19 +75,7 @@ export default function LessonPlayer() {
   const sandboxContent = () => {
     switch (lesson.sandboxType) {
       case 'teachable':
-        return (
-          <div className="flex flex-col h-full">
-            <p className="text-white/70 font-body text-xs p-3 bg-blue-game/20 border-b-2 border-black">
-              🎮 Try Google's Teachable Machine — train an AI with your webcam!
-            </p>
-            <iframe
-              src="https://teachablemachine.withgoogle.com/train/image"
-              className="flex-1 w-full"
-              allow="camera; microphone"
-              title="Teachable Machine"
-            />
-          </div>
-        );
+        return <TeachableMachineTrainer />;
       case 'quickdraw':
         return (
           <div className="flex flex-col h-full">
@@ -97,6 +88,28 @@ export default function LessonPlayer() {
       case 'dragdrop':
         return <DragDropSandbox />;
       case 'quiz':
+        if (completed && !replayQuiz) {
+          return (
+            <div className="flex flex-col items-center justify-center h-full gap-4 p-6 text-center">
+              <div 
+                className="w-16 h-16 bg-[#10B981]/25 border-4 border-[#10B981] flex items-center justify-center text-3xl animate-bounce"
+                style={{ boxShadow: '4px 4px 0px #000' }}
+              >
+                🏆
+              </div>
+              <h4 className="font-game text-sm text-white">Quiz Completed!</h4>
+              <p className="text-white/50 font-body text-xs max-w-[220px] leading-relaxed">
+                You've already finished this lesson quiz!
+              </p>
+              <button
+                onClick={() => setReplayQuiz(true)}
+                className="btn-success font-game text-xs px-5 py-2.5 shadow-pixel active:translate-y-1"
+              >
+                Replay Quiz 🔄
+              </button>
+            </div>
+          );
+        }
         return <QuizSandbox lessonId={lesson.id} />;
       default:
         return (
@@ -269,15 +282,67 @@ function DragDropSandbox() {
     <div className="p-4 space-y-4">
       <div className="text-white font-game text-sm text-center">Sort: Smart AI vs Not Smart?</div>
       <div className="grid grid-cols-2 gap-3">
-        {items.map(item => (
-          <div key={item} className={`border-4 border-black p-3 ${sorted[item] === 'smart' ? 'bg-success/30' : sorted[item] === 'dumb' ? 'bg-gray-700' : 'bg-surface'}`}>
-            <div className="text-white font-body text-sm text-center mb-2">{item}</div>
-            <div className="flex gap-2">
-              <button onClick={() => handleSort(item, 'smart')} className={`flex-1 border-2 border-black py-1 text-xs font-body ${sorted[item] === 'smart' ? 'bg-success text-white' : 'bg-white/10 text-white/70'}`}>🤖 Smart</button>
-              <button onClick={() => handleSort(item, 'dumb')} className={`flex-1 border-2 border-black py-1 text-xs font-body ${sorted[item] === 'dumb' ? 'bg-gray-600 text-white' : 'bg-white/10 text-white/70'}`}>📦 Not</button>
+        {items.map(item => {
+          const isSelectedSmart = sorted[item] === 'smart';
+          const isSelectedDumb = sorted[item] === 'dumb';
+          const hasSelected = isSelectedSmart || isSelectedDumb;
+          
+          const isRight = hasSelected && (
+            (answers[item] && isSelectedSmart) || 
+            (!answers[item] && isSelectedDumb)
+          );
+          
+          // Card styles
+          let cardStyle = 'bg-surface border-black';
+          if (score !== null) {
+            cardStyle = isRight ? 'bg-success/20 border-success' : 'bg-pixel-red/25 border-pixel-red animate-shake';
+          } else {
+            if (isSelectedSmart) cardStyle = 'bg-success/25 border-success';
+            else if (isSelectedDumb) cardStyle = 'bg-warning/25 border-warning';
+          }
+          
+          // Smart button styles
+          let smartBtnStyle = 'bg-white/5 text-white/50 hover:bg-white/10 hover:text-white';
+          if (isSelectedSmart) {
+            if (score !== null) {
+              smartBtnStyle = isRight ? 'bg-success text-white shadow-pixel-sm' : 'bg-pixel-red text-white shadow-pixel-sm';
+            } else {
+              smartBtnStyle = 'bg-success text-white shadow-pixel-sm';
+            }
+          }
+          
+          // Dumb button styles
+          let dumbBtnStyle = 'bg-white/5 text-white/50 hover:bg-white/10 hover:text-white';
+          if (isSelectedDumb) {
+            if (score !== null) {
+              dumbBtnStyle = isRight ? 'bg-success text-white shadow-pixel-sm' : 'bg-pixel-red text-white shadow-pixel-sm';
+            } else {
+              dumbBtnStyle = 'bg-warning text-black shadow-pixel-sm';
+            }
+          }
+
+          return (
+            <div key={item} className={`border-4 p-3 transition-all ${cardStyle}`}>
+              <div className="text-white font-game text-xs text-center mb-2.5">{item}</div>
+              <div className="flex gap-2">
+                <button 
+                  disabled={score !== null} 
+                  onClick={() => handleSort(item, 'smart')} 
+                  className={`flex-1 border-2 border-black py-1 text-[10px] font-game disabled:opacity-90 disabled:cursor-not-allowed ${smartBtnStyle}`}
+                >
+                  🤖 Smart
+                </button>
+                <button 
+                  disabled={score !== null} 
+                  onClick={() => handleSort(item, 'dumb')} 
+                  className={`flex-1 border-2 border-black py-1 text-[10px] font-game disabled:opacity-90 disabled:cursor-not-allowed ${dumbBtnStyle}`}
+                >
+                  📦 Not
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
       {Object.keys(sorted).length === items.length && score === null && (
         <button onClick={checkAnswers} className="w-full border-4 border-black bg-primary py-3 text-white font-game text-sm">

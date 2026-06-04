@@ -54,23 +54,26 @@ function AppRoutes() {
       <Route path="/onboarding" element={<Onboarding />} />
       <Route path="/auth" element={<Auth />} />
 
-      {/* Protected routes with AppShell */}
-      <Route path="/" element={hasProfile ? <AppShell><Home /></AppShell> : <Navigate to="/auth" replace />} />
-      <Route path="/learn" element={hasProfile ? <AppShell><Learn /></AppShell> : <Navigate to="/auth" replace />} />
-      <Route path="/learn/:id" element={hasProfile ? <AppShell><LessonPlayer /></AppShell> : <Navigate to="/auth" replace />} />
-      <Route path="/play" element={hasProfile ? <AppShell><Play /></AppShell> : <Navigate to="/auth" replace />} />
-      <Route path="/play/around-me" element={hasProfile ? <AppShell><AIAroundMe /></AppShell> : <Navigate to="/auth" replace />} />
-      <Route path="/play/story" element={hasProfile ? <AppShell><StoryAdventures /></AppShell> : <Navigate to="/auth" replace />} />
-      <Route path="/play/detective" element={hasProfile ? <AppShell><AIDetective /></AppShell> : <Navigate to="/auth" replace />} />
-      <Route path="/play/brainstorm" element={hasProfile ? <AppShell><BrainstormPlayground /></AppShell> : <Navigate to="/auth" replace />} />
-      <Route path="/missions" element={hasProfile ? <AppShell><WeeklyMissions /></AppShell> : <Navigate to="/auth" replace />} />
-      <Route path="/play/idea-generator" element={hasProfile ? <AppShell><AIIdeaGenerator /></AppShell> : <Navigate to="/auth" replace />} />
-      <Route path="/play/cards" element={hasProfile ? <AppShell><AICards /></AppShell> : <Navigate to="/auth" replace />} />
-      <Route path="/play/quiz" element={hasProfile ? <AppShell><QuizArena /></AppShell> : <Navigate to="/auth" replace />} />
-      <Route path="/play/inventor-hall" element={hasProfile ? <AppShell><InventorHall /></AppShell> : <Navigate to="/auth" replace />} />
-      <Route path="/profile" element={hasProfile ? <AppShell><Profile /></AppShell> : <Navigate to="/auth" replace />} />
-      <Route path="/leaderboard" element={hasProfile ? <AppShell><Leaderboard /></AppShell> : <Navigate to="/auth" replace />} />
-      <Route path="/comic" element={hasProfile ? <AppShell><ComicCreator /></AppShell> : <Navigate to="/auth" replace />} />
+      {/* Protected routes inside AppShell layout to prevent remounting and blank screen transitions */}
+      <Route element={hasProfile ? <AppShell /> : <Navigate to="/auth" replace />}>
+        <Route path="/" element={<Home />} />
+        <Route path="/learn" element={<Learn />} />
+        <Route path="/learn/:id" element={<LessonPlayer />} />
+        <Route path="/play" element={<Play />} />
+        <Route path="/play/around-me" element={<AIAroundMe />} />
+        <Route path="/play/story" element={<StoryAdventures />} />
+        <Route path="/play/detective" element={<AIDetective />} />
+        <Route path="/play/brainstorm" element={<BrainstormPlayground />} />
+        <Route path="/missions" element={<WeeklyMissions />} />
+        <Route path="/play/idea-generator" element={<AIIdeaGenerator />} />
+        <Route path="/play/cards" element={<AICards />} />
+        <Route path="/play/quiz" element={<QuizArena />} />
+        <Route path="/play/inventor-hall" element={<InventorHall />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/leaderboard" element={<Leaderboard />} />
+        <Route path="/comic" element={<ComicCreator />} />
+      </Route>
+      
       <Route path="/dashboard" element={hasProfile ? <Dashboard /> : <Navigate to="/auth" replace />} />
 
       {/* Fallback */}

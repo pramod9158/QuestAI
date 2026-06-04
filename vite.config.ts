@@ -13,6 +13,7 @@ export default defineConfig({
       workbox: {
         skipWaiting: true,
         clientsClaim: true,
+        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024, // 4MB – needed for TF.js bundle
       },
       includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
       manifest: {

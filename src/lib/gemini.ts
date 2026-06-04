@@ -1,7 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
-
 // Helper to detect keyboard mashing, spam, or random characters
 export function isGibberish(text: string): boolean {
   const t = text.trim();
@@ -53,6 +51,34 @@ export function isGibberish(text: string): boolean {
   return false;
 }
 
+// Key rotation wrapper to handle quota/rate-limits automatically
+async function callWithKeyRotation<T>(
+  fn: (model: any) => Promise<T>
+): Promise<T> {
+  const keys = [
+    import.meta.env.VITE_GEMINI_API_KEY || '',
+    import.meta.env.VITE_GEMINI_API_KEY_2 || '',
+    import.meta.env.VITE_GEMINI_API_KEY_3 || '',
+  ].filter(key => key !== '' && key !== 'your_gemini_api_key_from_aistudio');
+
+  if (keys.length === 0) {
+    throw new Error('No valid Gemini API keys configured');
+  }
+
+  let lastError: any = null;
+  for (let i = 0; i < keys.length; i++) {
+    try {
+      const genAI = new GoogleGenerativeAI(keys[i]);
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+      return await fn(model);
+    } catch (err: any) {
+      console.warn(`Gemini API call failed with API Key index ${i}. Trying next key if available. Error:`, err);
+      lastError = err;
+    }
+  }
+  throw lastError || new Error('All Gemini API keys failed');
+}
+
 // Simulated fallback ideas by category
 const FALLBACK_IDEAS: Record<string, { name: string; description: string }[]> = {
   school: [
@@ -99,11 +125,8 @@ const FALLBACK_IDEAS: Record<string, { name: string; description: string }[]> = 
 
 // Generate AI ideas using Gemini or fallback to templates
 export async function generateAIIdeas(problem: string, category: string): Promise<{ name: string; description: string }[]> {
-  if (GEMINI_API_KEY && GEMINI_API_KEY !== 'your_gemini_api_key_from_aistudio') {
-    try {
-      const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-
+  try {
+    return await callWithKeyRotation(async (model) => {
       const prompt = `You are a friendly AI educator for children aged 6-16 in India. 
 A student has described a real-world problem: "${problem}" in the category: "${category}".
 Generate exactly 3 creative, simple AI-powered solutions for this problem.
@@ -119,27 +142,23 @@ Only respond with the JSON array, no other text.`;
         const ideas = JSON.parse(jsonMatch[0]);
         if (Array.isArray(ideas) && ideas.length === 3) return ideas;
       }
-    } catch (err) {
-      console.warn('Gemini API failed, using fallback:', err);
-    }
+      throw new Error('Invalid JSON format returned from Gemini');
+    });
+  } catch (err) {
+    console.warn('Gemini API generateAIIdeas failed, using fallback:', err);
+    // Fallback: return category-specific ideas
+    const catKey = category.toLowerCase();
+    const ideas = FALLBACK_IDEAS[catKey] || FALLBACK_IDEAS['school'];
+    return [...ideas].sort(() => Math.random() - 0.5).slice(0, 3);
   }
-
-  // Fallback: return category-specific ideas
-  const catKey = category.toLowerCase();
-  const ideas = FALLBACK_IDEAS[catKey] || FALLBACK_IDEAS['school'];
-  // Shuffle and return 3
-  return [...ideas].sort(() => Math.random() - 0.5).slice(0, 3);
 }
 
 // Generate brainstorm project idea
 export async function generateBrainstormIdea(
   category: string, problem: string, audience: string
 ): Promise<{ name: string; description: string; innovation_score: number }> {
-  if (GEMINI_API_KEY && GEMINI_API_KEY !== 'your_gemini_api_key_from_aistudio') {
-    try {
-      const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-
+  try {
+    return await callWithKeyRotation(async (model) => {
       const prompt = `You are a creative AI educator for children in India.
 A student wants to solve this problem:
 - Category: ${category}
@@ -160,84 +179,84 @@ Create one exciting AI project idea. Respond ONLY with a JSON object:
         const idea = JSON.parse(jsonMatch[0]);
         if (idea.name && idea.description) return idea;
       }
-    } catch (err) {
-      console.warn('Gemini API failed, using fallback:', err);
+      throw new Error('Invalid JSON format returned from Gemini');
+    });
+  } catch (err) {
+    console.warn('Gemini API generateBrainstormIdea failed, using fallback:', err);
+    // Simulated fallback: smart keyword matching
+    const probLower = problem.toLowerCase();
+    let name = '';
+    let description = '';
+    
+    if (category.toLowerCase() === 'sports') {
+      if (probLower.includes('hour') || probLower.includes('short') || probLower.includes('time') || probLower.includes('duration') || probLower.includes('period')) {
+        name = "Smart Scheduler AI";
+        description = `AI analyzes student schedules and physical activity needs to automatically allocate and optimize sports periods for maximum active play.`;
+      } else if (probLower.includes('score') || probLower.includes('stat') || probLower.includes('match') || probLower.includes('run')) {
+        name = "Smart Scoreboard";
+        description = `AI automatically tracks scores, player stats, and highlights during local cricket or football matches.`;
+      } else {
+        name = "Cricket Coach AI";
+        description = `AI analyzes your batting stance using your phone camera and gives tips to improve your game!`;
+      }
+    } else if (category.toLowerCase() === 'school') {
+      if (probLower.includes('homework') || probLower.includes('study') || probLower.includes('learn')) {
+        name = "Smart Homework Helper";
+        description = `An AI that understands your weak subjects and creates personalized exercises just for you!`;
+      } else if (probLower.includes('noise') || probLower.includes('loud') || probLower.includes('sound')) {
+        name = "Classroom Noise Monitor";
+        description = `AI detects when classroom noise is too high and gently reminds students, helping teachers stay focused.`;
+      } else {
+        name = "Lost Item Finder";
+        description = `Take a photo of your school bag — AI tracks which books you packed so you never forget homework!`;
+      }
+    } else if (category.toLowerCase() === 'home') {
+      if (probLower.includes('electricity') || probLower.includes('power') || probLower.includes('save') || probLower.includes('light')) {
+        name = "Smart Electricity Saver";
+        description = `AI learns your family's daily routine and automatically turns off lights and fans in empty rooms.`;
+      } else if (probLower.includes('food') || probLower.includes('waste') || probLower.includes('fridge') || probLower.includes('eat')) {
+        name = "Food Waste Reducer";
+        description = `AI tracks food in your fridge and suggests recipes using ingredients before they go bad.`;
+      } else {
+        name = "Family Safety Guard";
+        description = `AI doorbell recognizes family members and alerts you on your phone when strangers approach.`;
+      }
+    } else if (category.toLowerCase() === 'environment') {
+      if (probLower.includes('water') || probLower.includes('plant') || probLower.includes('soil')) {
+        name = "Plant Water Reminder";
+        description = `AI monitors soil moisture and reminds you when your plants need watering — no more dead plants!`;
+      } else if (probLower.includes('fire') || probLower.includes('forest') || probLower.includes('burn')) {
+        name = "Forest Fire Early Warning";
+        description = `AI analyzes satellite images to spot forest fires before they spread, alerting firefighters.`;
+      } else {
+        name = "River Pollution Detector";
+        description = `AI-powered sensors in rivers detect pollution levels and alert authorities immediately.`;
+      }
+    } else if (category.toLowerCase() === 'transport') {
+      if (probLower.includes('bus') || probLower.includes('late') || probLower.includes('route') || probLower.includes('map')) {
+        name = "Smart Bus Tracker";
+        description = `AI predicts when the school bus will arrive based on traffic patterns and sends alerts to your phone.`;
+      } else if (probLower.includes('traffic') || probLower.includes('jam') || probLower.includes('road')) {
+        name = "Traffic Flow Optimizer";
+        description = `AI analyzes traffic near school gates and suggests the best pickup/drop-off times.`;
+      } else {
+        name = "Safe Route Finder";
+        description = `AI maps the safest walking routes to school, avoiding dangerous crossings and heavy traffic.`;
+      }
+    } else {
+      // Pick the category fallback
+      const catIdeas = FALLBACK_IDEAS[category.toLowerCase()] || FALLBACK_IDEAS['school'];
+      const pick = catIdeas[0];
+      name = pick.name;
+      description = pick.description;
     }
-  }
 
-  // Simulated fallback: smart keyword matching
-  const probLower = problem.toLowerCase();
-  let name = '';
-  let description = '';
-  
-  if (category.toLowerCase() === 'sports') {
-    if (probLower.includes('hour') || probLower.includes('short') || probLower.includes('time') || probLower.includes('duration') || probLower.includes('period')) {
-      name = "Smart Scheduler AI";
-      description = `AI analyzes student schedules and physical activity needs to automatically allocate and optimize sports periods for maximum active play.`;
-    } else if (probLower.includes('score') || probLower.includes('stat') || probLower.includes('match') || probLower.includes('run')) {
-      name = "Smart Scoreboard";
-      description = `AI automatically tracks scores, player stats, and highlights during local cricket or football matches.`;
-    } else {
-      name = "Cricket Coach AI";
-      description = `AI analyzes your batting stance using your phone camera and gives tips to improve your game!`;
-    }
-  } else if (category.toLowerCase() === 'school') {
-    if (probLower.includes('homework') || probLower.includes('study') || probLower.includes('learn')) {
-      name = "Smart Homework Helper";
-      description = `An AI that understands your weak subjects and creates personalized exercises just for you!`;
-    } else if (probLower.includes('noise') || probLower.includes('loud') || probLower.includes('sound')) {
-      name = "Classroom Noise Monitor";
-      description = `AI detects when classroom noise is too high and gently reminds students, helping teachers stay focused.`;
-    } else {
-      name = "Lost Item Finder";
-      description = `Take a photo of your school bag — AI tracks which books you packed so you never forget homework!`;
-    }
-  } else if (category.toLowerCase() === 'home') {
-    if (probLower.includes('electricity') || probLower.includes('power') || probLower.includes('save') || probLower.includes('light')) {
-      name = "Smart Electricity Saver";
-      description = `AI learns your family's daily routine and automatically turns off lights and fans in empty rooms.`;
-    } else if (probLower.includes('food') || probLower.includes('waste') || probLower.includes('fridge') || probLower.includes('eat')) {
-      name = "Food Waste Reducer";
-      description = `AI tracks food in your fridge and suggests recipes using ingredients before they go bad.`;
-    } else {
-      name = "Family Safety Guard";
-      description = `AI doorbell recognizes family members and alerts you on your phone when strangers approach.`;
-    }
-  } else if (category.toLowerCase() === 'environment') {
-    if (probLower.includes('water') || probLower.includes('plant') || probLower.includes('soil')) {
-      name = "Plant Water Reminder";
-      description = `AI monitors soil moisture and reminds you when your plants need watering — no more dead plants!`;
-    } else if (probLower.includes('fire') || probLower.includes('forest') || probLower.includes('burn')) {
-      name = "Forest Fire Early Warning";
-      description = `AI analyzes satellite images to spot forest fires before they spread, alerting firefighters.`;
-    } else {
-      name = "River Pollution Detector";
-      description = `AI-powered sensors in rivers detect pollution levels and alert authorities immediately.`;
-    }
-  } else if (category.toLowerCase() === 'transport') {
-    if (probLower.includes('bus') || probLower.includes('late') || probLower.includes('route') || probLower.includes('map')) {
-      name = "Smart Bus Tracker";
-      description = `AI predicts when the school bus will arrive based on traffic patterns and sends alerts to your phone.`;
-    } else if (probLower.includes('traffic') || probLower.includes('jam') || probLower.includes('road')) {
-      name = "Traffic Flow Optimizer";
-      description = `AI analyzes traffic near school gates and suggests the best pickup/drop-off times.`;
-    } else {
-      name = "Safe Route Finder";
-      description = `AI maps the safest walking routes to school, avoiding dangerous crossings and heavy traffic.`;
-    }
-  } else {
-    // Pick the category fallback
-    const catIdeas = FALLBACK_IDEAS[category.toLowerCase()] || FALLBACK_IDEAS['school'];
-    const pick = catIdeas[0];
-    name = pick.name;
-    description = pick.description;
+    return {
+      name,
+      description,
+      innovation_score: Math.floor(Math.random() * 20) + 75
+    };
   }
-
-  return {
-    name,
-    description,
-    innovation_score: Math.floor(Math.random() * 20) + 75
-  };
 }
 
 // Generate real-time hints and suggestions for weekly missions based on the current draft
@@ -246,11 +265,8 @@ export async function generateMissionSuggestions(
   missionGoal: string,
   currentDraft: string
 ): Promise<string[]> {
-  if (GEMINI_API_KEY && GEMINI_API_KEY !== 'your_gemini_api_key_from_aistudio') {
-    try {
-      const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-
+  try {
+    return await callWithKeyRotation(async (model) => {
       const prompt = `You are a helpful and friendly AI assistant for an educational platform teaching AI to children (aged 6-16).
 The child is working on a weekly mission: "${missionTitle}".
 The mission goal is: "${missionGoal}".
@@ -271,36 +287,36 @@ Do not include any formatting, explanation, markdown, or other text outside the 
           return suggestions;
         }
       }
-    } catch (err) {
-      console.warn('Gemini API failed to generate suggestions:', err);
+      throw new Error('Invalid JSON format returned from Gemini');
+    });
+  } catch (err) {
+    console.warn('Gemini API generateMissionSuggestions failed, using fallback:', err);
+    // Fallback suggestions based on mission title
+    if (missionTitle.includes('Home')) {
+      return [
+        "Check if your phone uses Face ID or fingerprint to unlock.",
+        "Think about YouTube or Netflix showing videos they think you will like.",
+        "Look for smart speakers like Alexa, Siri, or Google Assistant."
+      ];
+    } else if (missionTitle.includes('Time')) {
+      return [
+        "Observe the queue/line at the school canteen or library.",
+        "Think about waiting for the school bus or sitting in traffic.",
+        "Consider how a booking app or predictive timetable could tell you when to go."
+      ];
+    } else if (missionTitle.includes('Problem')) {
+      return [
+        "Look for local issues like overflowing trash bins or water leaks.",
+        "Notice dark streetlights or potholes on your way home.",
+        "Think about how smart cameras or sensors could alert the local authorities."
+      ];
+    } else {
+      return [
+        "Think about what computers, apps, or websites the adult uses every day.",
+        "Ask them if they use spreadsheets, email, or digital records for tracking.",
+        "Ask them if any smart technology helps speed up their daily tasks."
+      ];
     }
-  }
-
-  // Fallback suggestions based on mission title
-  if (missionTitle.includes('Home')) {
-    return [
-      "Check if your phone uses Face ID or fingerprint to unlock.",
-      "Think about YouTube or Netflix showing videos they think you will like.",
-      "Look for smart speakers like Alexa, Siri, or Google Assistant."
-    ];
-  } else if (missionTitle.includes('Time')) {
-    return [
-      "Observe the queue/line at the school canteen or library.",
-      "Think about waiting for the school bus or sitting in traffic.",
-      "Consider how a booking app or predictive timetable could tell you when to go."
-    ];
-  } else if (missionTitle.includes('Problem')) {
-    return [
-      "Look for local issues like overflowing trash bins or water leaks.",
-      "Notice dark streetlights or potholes on your way home.",
-      "Think about how smart cameras or sensors could alert the local authorities."
-    ];
-  } else {
-    return [
-      "Think about what computers, apps, or websites the adult uses every day.",
-      "Ask them if they use spreadsheets, email, or digital records for tracking.",
-      "Ask them if any smart technology helps speed up their daily tasks."
-    ];
   }
 }
 
@@ -311,11 +327,8 @@ export async function evaluateMissionSubmission(
   submissionText: string
 ): Promise<{ score: number; feedback: string; passed: boolean }> {
   let apiFailed = false;
-  if (GEMINI_API_KEY && GEMINI_API_KEY !== 'your_gemini_api_key_from_aistudio') {
-    try {
-      const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-
+  try {
+    return await callWithKeyRotation(async (model) => {
       const prompt = `You are a supportive, encouraging, and friendly AI educator. 
 A student has submitted an observation for a weekly challenge.
 - Mission Title: "${missionTitle}"
@@ -355,10 +368,11 @@ Do not include any formatting, markdown, or other text outside the JSON object.`
           };
         }
       }
-    } catch (err) {
-      console.warn('Gemini API failed to evaluate submission:', err);
-      apiFailed = true;
-    }
+      throw new Error('Invalid JSON format returned from Gemini');
+    });
+  } catch (err) {
+    console.warn('Gemini API evaluateMissionSubmission failed, using fallback:', err);
+    apiFailed = true;
   }
 
   // Fallback: evaluate using basic length & keyword presence (simple heuristic)
@@ -481,11 +495,8 @@ export async function generateParentAssistantResponse(
   parentMessage: string
 ): Promise<string> {
   let apiFailed = false;
-  if (GEMINI_API_KEY && GEMINI_API_KEY !== 'your_gemini_api_key_from_aistudio') {
-    try {
-      const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-
+  try {
+    return await callWithKeyRotation(async (model) => {
       const prompt = `You are a friendly, encouraging, and knowledgeable AI educational counselor at QuestAI, a platform that teaches AI and design thinking to children.
 A parent wants to know about their child's progress. Here is the child's data:
 - Name: ${studentData.username}
@@ -506,10 +517,10 @@ Suggest 1 specific activity or next step they can do on the platform to continue
 
       const result = await model.generateContent(prompt);
       return result.response.text().trim();
-    } catch (err) {
-      console.warn('Gemini API failed to generate parent dashboard response:', err);
-      apiFailed = true;
-    }
+    });
+  } catch (err) {
+    console.warn('Gemini API generateParentAssistantResponse failed, using fallback:', err);
+    apiFailed = true;
   }
 
   // Local fallback summaries
@@ -542,11 +553,8 @@ export async function evaluateStoryReflection(
   reflectionText: string
 ): Promise<{ feedback: string; bonusXp: number }> {
   let apiFailed = false;
-  if (GEMINI_API_KEY && GEMINI_API_KEY !== 'your_gemini_api_key_from_aistudio') {
-    try {
-      const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-
+  try {
+    return await callWithKeyRotation(async (model) => {
       const prompt = `You are a supportive, high-energy robot tutor companion for children learning AI.
 The child is doing a story adventure quest titled "${questTitle}".
 They just read a scenario and were asked: "${questionText}".
@@ -576,10 +584,11 @@ Do not include any formatting, markdown, or other text outside the JSON object.`
           };
         }
       }
-    } catch (err) {
-      console.warn('Gemini API failed to evaluate story reflection:', err);
-      apiFailed = true;
-    }
+      throw new Error('Invalid JSON format returned from Gemini');
+    });
+  } catch (err) {
+    console.warn('Gemini API evaluateStoryReflection failed, using fallback:', err);
+    apiFailed = true;
   }
 
   // Fallback
@@ -618,11 +627,8 @@ export async function askLessonTutor(
   question: string
 ): Promise<string> {
   let apiFailed = false;
-  if (GEMINI_API_KEY && GEMINI_API_KEY !== 'your_gemini_api_key_from_aistudio') {
-    try {
-      const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-
+  try {
+    return await callWithKeyRotation(async (model) => {
       const prompt = `You are a supportive, high-energy robot tutor companion for kids learning AI.
 The child is studying the lesson: "${lessonTitle}" (${lessonSubtitle}).
 They asked this question: "${question}".
@@ -631,10 +637,10 @@ Provide a kid-friendly, simple, and exciting answer (max 3 sentences) in plain E
 
       const result = await model.generateContent(prompt);
       return result.response.text().trim();
-    } catch (err) {
-      console.warn('Gemini API failed in askLessonTutor:', err);
-      apiFailed = true;
-    }
+    });
+  } catch (err) {
+    console.warn('Gemini API askLessonTutor failed, using fallback:', err);
+    apiFailed = true;
   }
   const fallbackAns = "Beep boop! That's a great question about " + lessonTitle + "! AI is like a smart helper that learns from patterns to solve it. Keep exploring! 🤖✨";
   return apiFailed ? `⚠️ [API Quota Exceeded - Fallback Answer]: ${fallbackAns}` : fallbackAns;
@@ -643,11 +649,8 @@ Provide a kid-friendly, simple, and exciting answer (max 3 sentences) in plain E
 // Ask general QuestBot questions on the Home screen
 export async function askHomeQuestBot(question: string): Promise<string> {
   let apiFailed = false;
-  if (GEMINI_API_KEY && GEMINI_API_KEY !== 'your_gemini_api_key_from_aistudio') {
-    try {
-      const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-
+  try {
+    return await callWithKeyRotation(async (model) => {
       const prompt = `You are QuestBot, a friendly and funny robot assistant for kids learning AI.
 The child asks: "${question}".
 
@@ -655,10 +658,10 @@ Provide an exciting, simple, and encouraging response (max 3 sentences). Explain
 
       const result = await model.generateContent(prompt);
       return result.response.text().trim();
-    } catch (err) {
-      console.warn('Gemini API failed in askHomeQuestBot:', err);
-      apiFailed = true;
-    }
+    });
+  } catch (err) {
+    console.warn('Gemini API askHomeQuestBot failed, using fallback:', err);
+    apiFailed = true;
   }
   const fallbackAns = "Beep boop! I am QuestBot. I love learning about AI! Try asking me things like 'What is a sensor?' or 'How does AI recognize faces?'. 🤖";
   return apiFailed ? `⚠️ [API Quota Exceeded - Fallback Answer]: ${fallbackAns}` : fallbackAns;
@@ -668,11 +671,8 @@ Provide an exciting, simple, and encouraging response (max 3 sentences). Explain
 export async function generateParentCustomMission(
   topic: string
 ): Promise<{ title: string; description: string; tasks: string[]; xp_reward: number }> {
-  if (GEMINI_API_KEY && GEMINI_API_KEY !== 'your_gemini_api_key_from_aistudio') {
-    try {
-      const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-
+  try {
+    return await callWithKeyRotation(async (model) => {
       const prompt = `You are an educational designer at QuestAI. A parent wants to generate a custom, real-world AI exploration mission for their child.
 The parent's suggested topic is: "${topic}".
 
@@ -696,21 +696,22 @@ Do not include any formatting, markdown, or other text outside the JSON object.`
       if (jsonMatch) {
         return JSON.parse(jsonMatch[0]);
       }
-    } catch (err) {
-      console.warn('Gemini API failed in generateParentCustomMission:', err);
-    }
+      throw new Error('Invalid JSON format returned from Gemini');
+    });
+  } catch (err) {
+    console.warn('Gemini API generateParentCustomMission failed, using fallback:', err);
+    // Fallback custom mission
+    return {
+      title: `Explore ${topic || 'Technology'}`,
+      description: `Observe and study how ${topic || 'technology'} is used in your daily life.`,
+      tasks: [
+        `Find one example of ${topic || 'technology'} at home.`,
+        `Explain to your parent how it works.`,
+        `Write down one way AI could make it even smarter.`
+      ],
+      xp_reward: 75
+    };
   }
-  // Fallback custom mission
-  return {
-    title: `Explore ${topic || 'Technology'}`,
-    description: `Observe and study how ${topic || 'technology'} is used in your daily life.`,
-    tasks: [
-      `Find one example of ${topic || 'technology'} at home.`,
-      `Explain to your parent how it works.`,
-      `Write down one way AI could make it even smarter.`
-    ],
-    xp_reward: 75
-  };
 }
 
 // Generate a professional AI cognitive learning diagnostic summary for parents
@@ -725,11 +726,8 @@ export async function generateParentSkillAnalysis(
     skills: { computational: number; observation: number; creative: number; ethics: number; solving: number };
   }
 ): Promise<string> {
-  if (GEMINI_API_KEY && GEMINI_API_KEY !== 'your_gemini_api_key_from_aistudio') {
-    try {
-      const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-
+  try {
+    return await callWithKeyRotation(async (model) => {
       const prompt = `You are a professional educational psychologist and child learning consultant at QuestAI.
 Analyze the child's learning metrics and provide a warm, detailed, and highly constructive diagnostic report for their parents.
 Child's details:
@@ -751,20 +749,18 @@ Maintain a supportive, premium, and professional tone that proves the educationa
 
       const result = await model.generateContent(prompt);
       return result.response.text().trim();
-    } catch (err) {
-      console.warn('Gemini API failed in generateParentSkillAnalysis:', err);
-    }
+    });
+  } catch (err) {
+    console.warn('Gemini API generateParentSkillAnalysis failed, using fallback:', err);
+    // Smart fallback report
+    const { username, skills } = studentData;
+    const highestSkill = Object.entries(skills).reduce((a, b) => a[1] > b[1] ? a : b)[0];
+    let strengthDesc = "analytical computational thinking";
+    if (highestSkill === 'observation') strengthDesc = "keen observation of real-world smart technology";
+    else if (highestSkill === 'creative') strengthDesc = "imaginative AI design thinking and creative problem formulation";
+    else if (highestSkill === 'ethics') strengthDesc = "ethical mindfulness and digital safety awareness";
+    else if (highestSkill === 'solving') strengthDesc = "determined critical thinking and systematic problem-solving";
+
+    return `Based on our system evaluations, ${username} is demonstrating exceptional capability in ${strengthDesc}, showing a natural ability to connect learning to practical concepts. To expand their cognitive horizon, we recommend reinforcing their computational logic by starting advanced lesson modules. Try asking ${username} about a simple sensor in your home today to spark a fun, shared technology discussion!`;
   }
-
-  // Smart fallback report
-  const { username, skills } = studentData;
-  const highestSkill = Object.entries(skills).reduce((a, b) => a[1] > b[1] ? a : b)[0];
-  let strengthDesc = "analytical computational thinking";
-  if (highestSkill === 'observation') strengthDesc = "keen observation of real-world smart technology";
-  else if (highestSkill === 'creative') strengthDesc = "imaginative AI design thinking and creative problem formulation";
-  else if (highestSkill === 'ethics') strengthDesc = "ethical mindfulness and digital safety awareness";
-  else if (highestSkill === 'solving') strengthDesc = "determined critical thinking and systematic problem-solving";
-
-  return `Based on our system evaluations, ${username} is demonstrating exceptional capability in ${strengthDesc}, showing a natural ability to connect learning to practical concepts. To expand their cognitive horizon, we recommend reinforcing their computational logic by starting advanced lesson modules. Try asking ${username} about a simple sensor in your home today to spark a fun, shared technology discussion!`;
 }
-

@@ -274,39 +274,55 @@ export default function Home() {
             See all <ChevronRight className="w-3 h-3" />
           </button>
         </div>
-        <motion.div
-          whileHover={{ scale: 1.01 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={() => navigate('/learn')}
-          className="p-4 flex items-center gap-4 cursor-pointer"
-          style={{
-            background: '#1E1B4B',
-            border: '3px solid #000000',
-            boxShadow: '4px 4px 0px 0px #000000',
-          }}
-        >
-          <div
-            className="w-14 h-14 flex items-center justify-center text-3xl flex-shrink-0"
-            style={{ background: '#3B82F6', border: '2px solid #000000', boxShadow: '2px 2px 0px #000000' }}
-          >
-            {CURRICULUM[completedLessons]?.emoji || '📺'}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="font-game text-sm text-white truncate">
-              {CURRICULUM[completedLessons]?.title || 'Start Learning!'}
-            </div>
-            <div className="text-white/45 font-body text-xs mt-0.5 truncate">
-              {CURRICULUM[completedLessons]?.subtitle || 'Your AI journey begins here'}
-            </div>
-            <div className="flex items-center gap-1 mt-2">
-              <Zap className="w-3 h-3" style={{ color: '#F59E0B' }} />
-              <span className="font-pixel text-[6px]" style={{ color: '#F59E0B' }}>
-                +{CURRICULUM[completedLessons]?.xpReward || 30} XP
-              </span>
-            </div>
-          </div>
-          <ChevronRight className="w-5 h-5 text-white/30 flex-shrink-0" />
-        </motion.div>
+        {(() => {
+          const zoneCurriculum = CURRICULUM.filter(l => l.zone === userZone || l.zone === 'both');
+          const nextLesson = zoneCurriculum[completedLessons];
+          return (
+            <motion.div
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => navigate(nextLesson ? `/learn/${nextLesson.id}` : '/learn')}
+              className="p-4 flex items-center gap-4 cursor-pointer"
+              style={{
+                background: '#1E1B4B',
+                border: '3px solid #000000',
+                boxShadow: '4px 4px 0px 0px #000000',
+              }}
+            >
+              <div
+                className="w-14 h-14 flex items-center justify-center text-3xl flex-shrink-0"
+                style={{ 
+                  background: nextLesson ? '#7C3AED' : '#10B981', 
+                  border: '2px solid #000000', 
+                  boxShadow: '2px 2px 0px #000000' 
+                }}
+              >
+                {nextLesson ? nextLesson.emoji : '🎉'}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="font-game text-sm text-white truncate">
+                  {nextLesson ? nextLesson.title : 'Curriculum Completed!'}
+                </div>
+                <div className="text-white/45 font-body text-xs mt-0.5 truncate">
+                  {nextLesson ? nextLesson.subtitle : 'Amazing job, you are an AI expert!'}
+                </div>
+                {nextLesson ? (
+                  <div className="flex items-center gap-1 mt-2">
+                    <Zap className="w-3 h-3" style={{ color: '#F59E0B' }} />
+                    <span className="font-pixel text-[6px]" style={{ color: '#F59E0B' }}>
+                      +{nextLesson.xpReward} XP
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1 mt-2 text-[#10B981] font-pixel text-[6px]">
+                    ★ 20/20 MODULES COMPLETED
+                  </div>
+                )}
+              </div>
+              <ChevronRight className="w-5 h-5 text-white/30 flex-shrink-0" />
+            </motion.div>
+          );
+        })()}
       </div>
 
       {/* ── Module Grid ── */}
