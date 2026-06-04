@@ -57,16 +57,34 @@ export function getXPForNextLevel(xp: number): { current: number; needed: number
 
 // --- Badge System ---
 export const BADGES = [
-  { id: 'first_steps', name: 'First Steps', emoji: '👟', description: 'Completed your first lesson', condition: (xp: number) => xp >= 10 },
+  // Original 10 badges
+  { id: 'first_steps',      name: 'First Steps',      emoji: '👟', description: 'Completed your first lesson',         condition: (xp: number) => xp >= 10 },
   { id: 'vision_detective', name: 'Vision Detective', emoji: '🔍', description: 'Trained your first image classifier', condition: (xp: number) => xp >= 50 },
-  { id: 'master_trainer', name: 'Master Trainer', emoji: '🏆', description: 'AI classifier hit 90%+ accuracy', condition: (xp: number) => xp >= 200 },
-  { id: 'idea_wizard', name: 'Idea Wizard', emoji: '🧙', description: 'Generated 5 AI ideas', condition: (xp: number) => xp >= 150 },
-  { id: 'story_hero', name: 'Story Hero', emoji: '⚔️', description: 'Completed 3 story adventures', condition: (xp: number) => xp >= 300 },
-  { id: 'quiz_champion', name: 'Quiz Champion', emoji: '🎯', description: 'Scored 100% in a quiz', condition: (xp: number) => xp >= 100 },
-  { id: 'mission_expert', name: 'Mission Expert', emoji: '🚀', description: 'Completed 3 weekly missions', condition: (xp: number) => xp >= 250 },
-  { id: 'ai_explorer', name: 'AI Explorer', emoji: '🌟', description: 'Reached Level 5', condition: (xp: number) => xp >= 400 },
-  { id: 'inventor', name: 'Inventor', emoji: '💡', description: 'Created your first invention', condition: (xp: number) => xp >= 120 },
-  { id: 'streak_master', name: 'Streak Master', emoji: '🔥', description: 'Maintained a 7-day streak', condition: (_xp: number, streak?: number) => (streak || 0) >= 7 },
+  { id: 'master_trainer',   name: 'Master Trainer',   emoji: '🏆', description: 'AI classifier hit 90%+ accuracy',    condition: (xp: number) => xp >= 200 },
+  { id: 'idea_wizard',      name: 'Idea Wizard',      emoji: '🧙', description: 'Generated 5 AI ideas',               condition: (xp: number) => xp >= 150 },
+  { id: 'story_hero',       name: 'Story Hero',       emoji: '⚔️', description: 'Completed 3 story adventures',       condition: (xp: number) => xp >= 300 },
+  { id: 'quiz_champion',    name: 'Quiz Champion',    emoji: '🎯', description: 'Scored 100% in a quiz',              condition: (xp: number) => xp >= 100 },
+  { id: 'mission_expert',   name: 'Mission Expert',   emoji: '🚀', description: 'Completed 3 weekly missions',        condition: (xp: number) => xp >= 250 },
+  { id: 'ai_explorer',      name: 'AI Explorer',      emoji: '🌟', description: 'Reached Level 5',                    condition: (xp: number) => xp >= 400 },
+  { id: 'inventor',         name: 'Inventor',         emoji: '💡', description: 'Created your first invention',       condition: (xp: number) => xp >= 120 },
+  { id: 'streak_master',    name: 'Streak Master',    emoji: '🔥', description: 'Maintained a 7-day streak',          condition: (_xp: number, streak?: number) => (streak || 0) >= 7 },
+
+  // Extended badge set (+15 new badges)
+  { id: 'first_quest',      name: 'Quest Starter',    emoji: '🗺️', description: 'Completed your first story quest',   condition: (xp: number) => xp >= 80 },
+  { id: 'streak_3',         name: '3-Day Hero',       emoji: '🔥', description: 'Logged in 3 days in a row',          condition: (_xp: number, streak?: number) => (streak || 0) >= 3 },
+  { id: 'streak_5',         name: 'High Five Streak', emoji: '✋', description: 'Logged in 5 days in a row',          condition: (_xp: number, streak?: number) => (streak || 0) >= 5 },
+  { id: 'streak_14',        name: '2-Week Champion',  emoji: '📅', description: 'Maintained a 14-day streak',         condition: (_xp: number, streak?: number) => (streak || 0) >= 14 },
+  { id: 'streak_30',        name: 'Monthly Legend',   emoji: '🌙', description: 'Maintained a 30-day streak',         condition: (_xp: number, streak?: number) => (streak || 0) >= 30 },
+  { id: 'level_3',          name: 'Rising Star',      emoji: '⭐', description: 'Reached Level 3',                    condition: (xp: number) => xp >= 200 },
+  { id: 'level_10',         name: 'AI Pioneer',       emoji: '🚀', description: 'Reached Level 10',                   condition: (xp: number) => xp >= 900 },
+  { id: 'level_20',         name: 'AI Master',        emoji: '🧠', description: 'Reached Level 20',                   condition: (xp: number) => xp >= 1900 },
+  { id: 'xp_500',           name: 'XP Collector',     emoji: '⚡', description: 'Earned 500 XP total',                condition: (xp: number) => xp >= 500 },
+  { id: 'xp_1000',          name: 'XP Legend',        emoji: '💫', description: 'Earned 1000 XP total',               condition: (xp: number) => xp >= 1000 },
+  { id: 'world_1',          name: 'World Explorer',   emoji: '🌍', description: 'Completed World 1: AI Around Me',    condition: (xp: number) => xp >= 180 },
+  { id: 'world_2',          name: 'Vision Master',    emoji: '👁️', description: 'Completed World 2: Robot Vision',    condition: (xp: number) => xp >= 350 },
+  { id: 'card_collector',   name: 'Card Collector',   emoji: '🃏', description: 'Collected 3 AI Hero Cards',          condition: (xp: number) => xp >= 130 },
+  { id: 'prompt_master',    name: 'Prompt Master',    emoji: '✨', description: 'Mastered AI prompt engineering',      condition: (xp: number) => xp >= 220 },
+  { id: 'ai_legend',        name: 'AI Legend',        emoji: '👑', description: 'Reached the pinnacle of AI mastery', condition: (xp: number) => xp >= 2000 },
 ];
 
 export function getEarnedBadges(xp: number, streak = 0): typeof BADGES {

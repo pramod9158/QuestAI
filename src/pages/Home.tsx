@@ -7,6 +7,11 @@ import { getLevel, getXPForNextLevel, getEarnedBadges, getPlatformProgress } fro
 import { ProgressRing, XPToast } from '@/components/ui/GameUI';
 import { Zap, BookOpen, Swords, Target, Trophy, Users, ChevronRight, Flame, Sparkles } from 'lucide-react';
 import { askHomeQuestBot } from '@/lib/gemini';
+import { PetCompanion } from '@/components/ui/PetCompanion';
+import { DailyRewardModal } from '@/components/ui/DailyRewardModal';
+import { TreasureChestModal } from '@/components/ui/TreasureChestModal';
+import { getUnopenedChests, getUnopenedCount, type Chest } from '@/lib/treasureChest';
+import { Map } from 'lucide-react';
 
 const MODULE_CARDS = [
   { path: '/play/around-me', emoji: '🌍', title: 'AI Around Me', desc: 'Discover AI in your world', gradFrom: '#3B82F6', gradTo: '#8B5CF6', border: '#3B82F6', shadow: '#1D4ED8', zone: 'junior' },
@@ -31,6 +36,25 @@ export default function Home() {
   const { updateProfile } = useAuth();
   const [showXP, setShowXP] = useState(false);
   const [timeOfDay, setTimeOfDay] = useState('');
+
+  // Treasure chest states
+  const [currentChest, setCurrentChest] = useState<Chest | null>(null);
+  const [unopenedCount, setUnopenedCount] = useState(0);
+
+  useEffect(() => {
+    setUnopenedCount(getUnopenedCount());
+  }, []);
+
+  const handleOpenNextChest = () => {
+    const chests = getUnopenedChests();
+    if (chests.length > 0) setCurrentChest(chests[0]);
+  };
+
+  const handleChestClaim = (_chest: Chest) => {
+    const remaining = getUnopenedChests();
+    setUnopenedCount(remaining.length);
+    setCurrentChest(null);
+  };
 
   // Parent mailbox states
   const [unreadEndorsement, setUnreadEndorsement] = useState<any | null>(null);
@@ -114,6 +138,25 @@ export default function Home() {
     <div className="min-h-full bg-game" style={{ backgroundAttachment: 'fixed' }}>
       {showXP && <XPToast amount={10} reason="Daily login bonus!" onDone={() => setShowXP(false)} />}
 
+      {/* Daily Login Reward Modal */}
+      <DailyRewardModal
+        streak={profile.current_streak ?? 1}
+        onClaim={(coins, xp) => {
+          updateProfile({ coins: (profile.coins ?? 0) + coins });
+          setShowXP(true);
+          void xp;
+        }}
+      />
+
+      {/* Treasure Chest Modal */}
+      {currentChest && (
+        <TreasureChestModal
+          chest={currentChest}
+          onClaim={handleChestClaim}
+          onClose={() => setCurrentChest(null)}
+        />
+      )}
+
       {/* ── Hero Section ── */}
       <div className="relative overflow-hidden px-5 pt-6 pb-10">
         <div className="relative flex items-start justify-between">
@@ -164,6 +207,66 @@ export default function Home() {
           </div>
           <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: '#93C5FD' }} />
         </motion.div>
+
+        {/* 🗺️ World Map Adventure Banner */}
+        <motion.div
+          {...fadeUp(0.18)}
+          onClick={() => navigate('/worlds')}
+          className="mt-4 p-4 flex items-center gap-3 cursor-pointer active:scale-98 transition-transform"
+          style={{
+            background: '#1E1B4B',
+            border: '3px solid #7C3AED',
+            boxShadow: '4px 4px 0px 0px #000000',
+          }}
+        >
+          <div
+            className="w-10 h-10 flex items-center justify-center text-xl flex-shrink-0"
+            style={{
+              background: 'linear-gradient(135deg, #7C3AED, #3B82F6)',
+              border: '2px solid #000000',
+              boxShadow: '2px 2px 0px #000000',
+            }}
+          >
+            🗺️
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-game text-sm text-white">AI Adventure World Map</div>
+            <div className="text-white/50 font-body text-xs">Explore 5 worlds • Defeat boss challenges</div>
+          </div>
+          <ChevronRight className="w-4 h-4 flex-shrink-0 text-purple-400" />
+        </motion.div>
+
+        {/* 📦 Treasure Chest Notification */}
+        {unopenedCount > 0 && (
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            onClick={handleOpenNextChest}
+            className="mt-4 p-3 flex items-center justify-between cursor-pointer active:scale-98 transition-transform"
+            style={{
+              background: '#1E1B4B',
+              border: '3px solid #F59E0B',
+              boxShadow: '4px 4px 0px 0px #000000',
+            }}
+          >
+            <div className="flex items-center gap-2.5">
+              <motion.span
+                animate={{ rotate: [-5, 5, -5], y: [0, -3, 0] }}
+                transition={{ repeat: Infinity, duration: 1.8 }}
+                className="text-2xl"
+              >
+                📦
+              </motion.span>
+              <div>
+                <div className="font-game text-[10px] text-yellow-300 uppercase">{unopenedCount} Treasure Chest{unopenedCount > 1 ? 's' : ''} Waiting!</div>
+                <div className="font-body text-xs text-white/60">Tap to open your reward</div>
+              </div>
+            </div>
+            <button className="bg-yellow-500 text-black font-game text-[9px] px-2.5 py-1 uppercase border-2 border-black shadow-[2px_2px_0px_#000] cursor-pointer">
+              Open
+            </button>
+          </motion.div>
+        )}
 
         {/* 📬 Parent Mailbox Banner */}
         {unreadEndorsement && (
@@ -228,6 +331,31 @@ export default function Home() {
             </div>
           </div>
         </motion.div>
+      </div>
+
+      {/* ── AI Pet Companion ── */}
+      <div className="px-5 mt-2">
+        <div
+          className="p-3"
+          style={{
+            background: '#1E1B4B',
+            border: '3px solid #000000',
+            boxShadow: '4px 4px 0px 0px #000000',
+          }}
+        >
+          <div className="flex items-center justify-between mb-1">
+            <h2 className="font-pixel text-[7px] text-white flex items-center gap-2 tracking-wide">
+              🤖 YOUR AI PET
+            </h2>
+            <button
+              onClick={() => navigate('/profile')}
+              className="font-body text-[10px] text-white/40 hover:text-white/70 transition-colors cursor-pointer"
+            >
+              View Profile ›
+            </button>
+          </div>
+          <PetCompanion xp={profile.xp} />
+        </div>
       </div>
 
       {/* ── Stats Row (Yellow bordered as in screenshot) ── */}
