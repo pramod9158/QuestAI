@@ -489,22 +489,11 @@ export default function WeeklyMissions() {
                 <span className="font-game text-[10px] text-white uppercase tracking-wider">Mission Control</span>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                {/* Bar 1: Overall Progress */}
-                <div className="space-y-1">
-                  <div className="flex justify-between items-baseline text-[7px] font-pixel text-[#FFD60A]">
-                    <span>OVERALL</span>
-                    <span>{overallPercent}%</span>
-                  </div>
-                  <div className="w-full h-3 bg-[#0F0A2E] border border-black p-[1px] flex items-center">
-                    <div className="h-full bg-[#FFD60A]" style={{ width: `${overallPercent}%`, transition: 'width 0.8s ease' }} />
-                  </div>
-                </div>
-
-                {/* Bar 2: Missions Progress */}
+              <div className="grid grid-cols-1 gap-3">
+                {/* Missions Progress */}
                 <div className="space-y-1">
                   <div className="flex justify-between items-baseline text-[7px] font-pixel text-[#A78BFA]">
-                    <span>MISSIONS</span>
+                    <span>MISSIONS COMPLETED</span>
                     <span>{completedMissionsCount}/{totalMissionsCount} ({missionPercent}%)</span>
                   </div>
                   <div className="w-full h-3 bg-[#0F0A2E] border border-black p-[1px] flex items-center">
