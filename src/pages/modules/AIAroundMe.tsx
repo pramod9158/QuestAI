@@ -78,9 +78,14 @@ export default function AIAroundMe() {
           <p className="text-white/70 font-body text-sm mt-2">{score}/{SWIPE_CARDS.length} correct answers</p>
           <p className="text-warning font-game text-lg mt-2">+{totalXP} XP earned!</p>
         </div>
-        <Button variant="primary" onClick={() => { setCurrentIndex(0); setDone(false); setScore(0); setTotalXP(0); setAnswered(null); }}>
-          Play Again 🔄
-        </Button>
+        <div className="flex gap-3 w-full">
+          <Button variant="ghost" className="flex-1" onClick={() => { setCurrentIndex(0); setDone(false); setScore(0); setTotalXP(0); setAnswered(null); }}>
+            Play Again 🔄
+          </Button>
+          <Button variant="success" className="flex-1" onClick={() => navigate('/play')}>
+            Next Module →
+          </Button>
+        </div>
       </div>
     );
   }

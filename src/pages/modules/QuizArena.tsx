@@ -169,7 +169,14 @@ export default function QuizArena() {
           </div>
         </div>
       </div>
-      <Button variant="primary" onClick={restart} icon={<RotateCcw className="w-4 h-4" />}>Play Again!</Button>
+      <div className="flex gap-3 w-full max-w-[280px]">
+        <Button variant="ghost" className="flex-1" onClick={restart} icon={<RotateCcw className="w-4 h-4" />}>
+          Play Again
+        </Button>
+        <Button variant="success" className="flex-1" onClick={() => navigate('/play')}>
+          Next Module →
+        </Button>
+      </div>
     </div>
   );
 

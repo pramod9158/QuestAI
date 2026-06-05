@@ -23,6 +23,11 @@ export default function LessonPlayer() {
   const [tutorAnswer, setTutorAnswer] = useState<string | null>(null);
   const [askingTutor, setAskingTutor] = useState(false);
 
+  const userZone = profile?.zone || 'junior';
+  const completedIds = profile?.completed_lessons || [];
+  const filtered = CURRICULUM.filter(l => l.zone === userZone || l.zone === 'both');
+  const activeIndex = filtered.findIndex(l => !completedIds.includes(l.id));
+
   React.useEffect(() => {
     if (lesson) {
       const isDone = profile?.completed_lessons?.includes(lesson.id) ?? false;
@@ -37,6 +42,19 @@ export default function LessonPlayer() {
     }
   }, [lesson, profile]);
 
+  React.useEffect(() => {
+    if (lesson) {
+      const lessonIndex = filtered.findIndex(l => l.id === lesson.id);
+      if (lessonIndex === -1) {
+        navigate('/learn', { replace: true });
+        return;
+      }
+      if (activeIndex !== -1 && lessonIndex > activeIndex) {
+        navigate(`/learn/${filtered[activeIndex].id}`, { replace: true });
+      }
+    }
+  }, [lesson, activeIndex, filtered, navigate]);
+
   if (!lesson) return <div className="p-6 text-white font-body">Lesson not found.</div>;
 
   const completed = profile?.completed_lessons?.includes(lesson.id) ?? false;
@@ -47,14 +65,25 @@ export default function LessonPlayer() {
       const currentProfileCoins = isGuest ? (guestProfile?.coins ?? 0) : (profile?.coins ?? 0);
       const currentCompletedLessons = profile?.completed_lessons || [];
       
+      const newCompleted = [...currentCompletedLessons, lesson.id];
+
       await updateProfile({
         xp: currentProfileXP + lesson.xpReward,
         coins: currentProfileCoins + (lesson.coinsReward || 0),
-        completed_lessons: [...currentCompletedLessons, lesson.id],
+        completed_lessons: newCompleted,
       });
       localStorage.setItem(`lesson_progress_${lesson.id}`, '100');
       localStorage.setItem(`lesson_completed_at_${lesson.id}`, new Date().toLocaleDateString());
       setShowXP(true);
+
+      setTimeout(() => {
+        const nextIncomplete = filtered.find(l => !newCompleted.includes(l.id));
+        if (nextIncomplete) {
+          navigate(`/learn/${nextIncomplete.id}`, { replace: true });
+        } else {
+          navigate('/learn', { replace: true });
+        }
+      }, 2000);
     }
   };
 

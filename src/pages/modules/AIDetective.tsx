@@ -94,9 +94,14 @@ export default function AIDetective() {
           <div className="text-warning font-pixel text-2xl mt-3">+{totalXP} XP</div>
           <p className="text-white/40 font-body text-xs mt-1">Total earned</p>
         </div>
-        <Button variant="primary" onClick={() => { setCurrentIndex(0); setDone(false); setSelected(null); setTotalXP(0); }}>
-          🔁 Play Again
-        </Button>
+        <div className="flex gap-3 w-full">
+          <Button variant="ghost" className="flex-1" onClick={() => { setCurrentIndex(0); setDone(false); setSelected(null); setTotalXP(0); }}>
+            🔁 Play Again
+          </Button>
+          <Button variant="success" className="flex-1" onClick={() => navigate('/play')}>
+            Next Module →
+          </Button>
+        </div>
       </div>
     );
   }

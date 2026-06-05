@@ -21,36 +21,50 @@ export default function Play() {
   const totalPlayPercent = stats.playPercent;
   const overallPercent = stats.overallPercent;
 
-  const playStatusList = filtered.map(mod => {
-    let isDone = false;
-    let percent = 0;
+  const isModDone = (path: string) => {
+    const mod = PLAY_MODULES_DATA.find(m => m.path === path);
+    if (!mod) return false;
     const key = mod.completionKey;
     if (key === 'quests') {
-      isDone = !!(profile?.completed_quests && profile.completed_quests.length > 0);
-      percent = isDone ? 100 : 0;
+      return !!(profile?.completed_quests && profile.completed_quests.length > 0);
     } else if (key.startsWith('quests_')) {
       const qId = key.replace('quests_', '');
-      isDone = localStorage.getItem(`quests_${qId}`) === 'true' || !!(profile?.completed_quests && profile.completed_quests.includes(qId));
-      if (isDone) {
-        percent = 100;
-      } else {
-        percent = parseInt(localStorage.getItem(`play_progress_story_${qId}`) || '0', 10);
-      }
+      return localStorage.getItem(`quests_${qId}`) === 'true' || !!(profile?.completed_quests && profile.completed_quests.includes(qId));
     } else if (key === 'inventions') {
-      isDone = rawInventions.length > 0;
-      percent = isDone ? 100 : localStorage.getItem('play_progress_brainstorm') ? 50 : 0;
+      return rawInventions.length > 0;
     } else if (key === 'ideas') {
-      isDone = savedIdeas.length > 0;
-      percent = isDone ? 100 : localStorage.getItem('play_progress_idea-generator') ? 50 : 0;
+      return savedIdeas.length > 0;
     } else {
-      isDone = localStorage.getItem(key) === 'true';
-      if (isDone) {
-        percent = 100;
+      return localStorage.getItem(key) === 'true';
+    }
+  };
+
+  const activePlayIndex = filtered.findIndex(mod => !isModDone(mod.path));
+
+  const playStatusList = filtered.map((mod, i) => {
+    const isDone = isModDone(mod.path);
+    let percent = 0;
+    const key = mod.completionKey;
+    if (isDone) {
+      percent = 100;
+    } else {
+      if (key === 'quests') {
+        percent = 0;
+      } else if (key.startsWith('quests_')) {
+        const qId = key.replace('quests_', '');
+        percent = parseInt(localStorage.getItem(`play_progress_story_${qId}`) || '0', 10);
+      } else if (key === 'inventions') {
+        percent = localStorage.getItem('play_progress_brainstorm') ? 50 : 0;
+      } else if (key === 'ideas') {
+        percent = localStorage.getItem('play_progress_idea-generator') ? 50 : 0;
       } else {
         const progKey = key.replace('play_completed_', 'play_progress_');
         percent = parseInt(localStorage.getItem(progKey) || '0', 10);
       }
     }
+
+    const isLocked = activePlayIndex !== -1 && i > activePlayIndex;
+    const isActive = activePlayIndex !== -1 && i === activePlayIndex;
 
     return {
       title: mod.title,
@@ -58,6 +72,8 @@ export default function Play() {
       desc: mod.desc,
       gradFrom: mod.gradFrom,
       isDone,
+      isLocked,
+      isActive,
       percent,
       path: mod.path
     };
@@ -112,12 +128,19 @@ export default function Play() {
               {playStatusList.map(item => (
                 <div 
                   key={item.path} 
-                  onClick={() => navigate(item.path)}
+                  onClick={() => {
+                    if (item.isLocked) {
+                      const activeMod = filtered[activePlayIndex];
+                      if (activeMod) navigate(activeMod.path);
+                    } else {
+                      navigate(item.path);
+                    }
+                  }}
                   className="flex items-center gap-1.5 text-[9px] font-body text-white/80 cursor-pointer hover:text-white"
                 >
                   <div className="flex items-center gap-1.5 truncate">
-                    <span>{item.percent === 100 ? '✅' : '⏳'}</span>
-                    <span className={item.percent === 100 ? 'line-through text-white/40 truncate' : 'truncate'}>
+                    <span>{item.isDone ? '✅' : item.isLocked ? '🔒' : '⏳'}</span>
+                    <span className={item.isDone ? 'line-through text-white/40 truncate' : item.isLocked ? 'text-white/30 truncate' : 'truncate'}>
                       {item.emoji} {item.title} {item.percent > 0 && item.percent < 100 && `(${item.percent}%)`}
                     </span>
                   </div>
@@ -136,21 +159,34 @@ export default function Play() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: i * 0.03, duration: 0.3 }}
-            whileHover={!mod.isDone ? { scale: 1.03, y: -2 } : {}}
-            whileTap={!mod.isDone ? { scale: 0.97 } : {}}
-            onClick={() => navigate(mod.path)}
+            whileHover={!mod.isDone && !mod.isLocked ? { scale: 1.03, y: -2 } : {}}
+            whileTap={!mod.isDone && !mod.isLocked ? { scale: 0.97 } : {}}
+            onClick={() => {
+              if (mod.isLocked) {
+                const activeMod = filtered[activePlayIndex];
+                if (activeMod) navigate(activeMod.path);
+              } else {
+                navigate(mod.path);
+              }
+            }}
             className={`p-4 cursor-pointer flex flex-col justify-between min-h-[140px] relative overflow-hidden transition-all ${
-              mod.isDone ? 'opacity-40 grayscale saturate-50' : ''
+              mod.isDone ? 'opacity-40 grayscale saturate-50' : 
+              mod.isLocked ? 'opacity-35 grayscale saturate-50' : ''
             }`}
             style={{
               background: '#1E1B4B',
-              border: '3px solid #000000',
-              boxShadow: mod.isDone ? '2px 2px 0px 0px #000000' : '4px 4px 0px 0px #000000',
+              border: mod.isLocked ? '3px solid #374151' : '3px solid #000000',
+              boxShadow: mod.isDone || mod.isLocked ? '2px 2px 0px 0px #000000' : '4px 4px 0px 0px #000000',
             }}
           >
             {mod.isDone && (
               <div className="completed-ribbon-container">
                 <div className="completed-ribbon">DONE</div>
+              </div>
+            )}
+            {mod.isLocked && (
+              <div className="completed-ribbon-container">
+                <div className="completed-ribbon bg-gray-600" style={{ background: '#374151' }}>LOCKED</div>
               </div>
             )}
             <div>

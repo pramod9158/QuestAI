@@ -226,9 +226,14 @@ export default function ComicCreator() {
             <Button variant="success" fullWidth onClick={downloadComic} icon={<Download className="w-4 h-4" />}>
               📥 Download Comic PDF!
             </Button>
-            <Button variant="ghost" fullWidth onClick={() => { setPanelChoices(Array(6).fill('')); setCurrentPanel(0); setComicDone(false); }}>
-              🔄 Create Another Comic
-            </Button>
+            <div className="flex gap-3">
+              <Button variant="ghost" className="flex-1" onClick={() => { setPanelChoices(Array(6).fill('')); setCurrentPanel(0); setComicDone(false); }}>
+                🔄 Again
+              </Button>
+              <Button variant="primary" className="flex-1" onClick={() => navigate('/play')}>
+                Next Module →
+              </Button>
+            </div>
           </motion.div>
         )}
       </div>

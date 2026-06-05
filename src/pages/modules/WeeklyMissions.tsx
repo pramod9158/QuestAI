@@ -326,6 +326,7 @@ export default function WeeklyMissions() {
 
 
   const isSubmitted = (id: number) => submissions.some(s => s.missionId === id && s.status === 'approved');
+  const activeMissionIndex = allMissions.findIndex(m => !isSubmitted(m.id));
 
   const validation = mission ? (
     mission.isCustom
@@ -535,6 +536,7 @@ export default function WeeklyMissions() {
 
             {allMissions.map((m, i) => {
               const done = isSubmitted(m.id);
+              const isLocked = activeMissionIndex !== -1 && i > activeMissionIndex;
               const pVal = done ? 100 : parseInt(localStorage.getItem(`mission_progress_${m.id}`) || '0', 10);
               return (
                 <motion.div
@@ -543,11 +545,11 @@ export default function WeeklyMissions() {
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.08 }}
-                  className={`p-5 relative overflow-hidden transition-all ${done ? 'opacity-40 grayscale saturate-50' : ''}`}
+                  className={`p-5 relative overflow-hidden transition-all ${done ? 'opacity-40 grayscale saturate-50' : isLocked ? 'opacity-35 grayscale saturate-50 pointer-events-none' : ''}`}
                   style={{
                     background: '#1E1B4B',
                     border: '3px solid #000000',
-                    boxShadow: done ? '2px 2px 0px #000000' : '4px 4px 0px #000000',
+                    boxShadow: done ? '2px 2px 0px #000000' : isLocked ? '1.5px 1.5px 0px #000000' : '4px 4px 0px #000000',
                   }}
                 >
                   {done && (
@@ -586,10 +588,15 @@ export default function WeeklyMissions() {
                       <CheckCircle className="w-8 h-8 text-success flex-shrink-0" />
                     ) : null}
                   </div>
-                  {!done && (
+                  {!done && !isLocked && (
                     <Button variant="primary" size="sm" fullWidth className="mt-4" onClick={() => setSelectedMission(m.id)}>
                       Start Mission →
                     </Button>
+                  )}
+                  {isLocked && (
+                    <div className="mt-4 p-2 text-center bg-red-950/20 border border-red-900/35">
+                      <span className="font-pixel text-[6px] text-red-400">🔒 COMPLETE PREVIOUS MISSIONS TO UNLOCK</span>
+                    </div>
                   )}
                   {done && (
                     <div className="mt-3 pt-2 text-center" style={{ borderTop: '2px solid rgba(16,185,129,0.3)' }}>
@@ -744,10 +751,19 @@ export default function WeeklyMissions() {
                       variant="success"
                       fullWidth
                       onClick={() => {
+                        const currentIdx = allMissions.findIndex(m => m.id === mission.id);
+                        const nextIncomplete = allMissions.find((m, idx) => idx > currentIdx && !isSubmitted(m.id));
+
                         setSelectedMission(null);
                         setText('');
                         setShowXP(true);
                         resetAIStates();
+
+                        if (nextIncomplete) {
+                          setTimeout(() => {
+                            setSelectedMission(nextIncomplete.id);
+                          }, 2500);
+                        }
                       }}
                     >
                       Claim Rewards & Return! 🎒

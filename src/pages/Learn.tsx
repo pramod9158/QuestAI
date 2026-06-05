@@ -45,7 +45,13 @@ export default function Learn() {
 
   // Handler for ribbon retake replay logic
   const handleCardClick = (lessonId: string, isLocked: boolean) => {
-    if (isLocked) return;
+    if (isLocked) {
+      const activeLesson = filtered[activeIndex];
+      if (activeLesson) {
+        navigate(`/learn/${activeLesson.id}`);
+      }
+      return;
+    }
     navigate(`/learn/${lessonId}`);
   };
 

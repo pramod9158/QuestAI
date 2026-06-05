@@ -242,10 +242,16 @@ export default function BrainstormPlayground() {
               </motion.div>
 
               <div className="flex gap-3">
-                <Button variant="ghost" onClick={() => { setStep(2); setResult(null); setSaved(false); }}>🔄 Try Again</Button>
-                <Button variant="success" fullWidth onClick={handleSave} disabled={saved}>
-                  {saved ? '✅ Saved!' : <><Save className="w-4 h-4" /> Save Invention</>}
-                </Button>
+                <Button variant="ghost" className="flex-1" onClick={() => { setStep(2); setResult(null); setSaved(false); }}>🔄 Try Again</Button>
+                {saved ? (
+                  <Button variant="success" className="flex-1" onClick={() => navigate('/play')}>
+                    Next Module →
+                  </Button>
+                ) : (
+                  <Button variant="success" className="flex-1" onClick={handleSave}>
+                    <Save className="w-4 h-4" /> Save Invention
+                  </Button>
+                )}
               </div>
               {saved && (
                 <p className="text-success font-body text-xs text-center">

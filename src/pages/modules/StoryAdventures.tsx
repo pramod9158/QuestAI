@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { STORY_QUESTS } from '@/data/curriculum';
 import { Button } from '@/components/ui/Button';
@@ -28,6 +28,10 @@ const QUEST_STEPS = {
 
 export default function StoryAdventures() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const questParam = searchParams.get('quest');
+
   const { profile, guestProfile, isGuest, updateProfile } = useAuth();
   const currentProfile = useCurrentProfile();
   const userZone = currentProfile?.zone || 'junior';
@@ -39,6 +43,14 @@ export default function StoryAdventures() {
   const [currentStep, setCurrentStep] = useState(0);
   const [showXP, setShowXP] = useState(false);
   const completedQuests = profile?.completed_quests || [];
+
+  React.useEffect(() => {
+    if (questParam && QUEST_STEPS[questParam as keyof typeof QUEST_STEPS]) {
+      setSelectedQuest(questParam);
+    } else {
+      setSelectedQuest(null);
+    }
+  }, [questParam]);
 
   // Interactive Reflection states
   const [reflectionText, setReflectionText] = useState('');
@@ -130,7 +142,7 @@ export default function StoryAdventures() {
 
         {/* Quest Header */}
       <div className="bg-surface-2 p-5">
-          <button onClick={() => { setSelectedQuest(null); setCurrentStep(0); handleNextStep(); }} className="flex items-center gap-2 text-white/60 hover:text-white font-body text-sm mb-3">
+          <button onClick={() => { navigate('/play/story'); setSelectedQuest(null); setCurrentStep(0); handleNextStep(); }} className="flex items-center gap-2 text-white/60 hover:text-white font-body text-sm mb-3">
             <ArrowLeft className="w-4 h-4" /> Quest Map
           </button>
           <h1 className="text-white font-game text-lg">{quest.title}</h1>
@@ -215,7 +227,7 @@ export default function StoryAdventures() {
                     <div className="text-white font-game text-lg">Quest Complete!</div>
                     <div className="text-warning font-pixel text-sm mt-1">+{quest.xpReward} XP Earned!</div>
                   </div>
-                  <Button variant="success" fullWidth onClick={() => { handleQuestComplete(quest.id, quest.xpReward); setSelectedQuest(null); setCurrentStep(0); handleNextStep(); }}>
+                  <Button variant="success" fullWidth onClick={() => { handleQuestComplete(quest.id, quest.xpReward); setSelectedQuest(null); setCurrentStep(0); handleNextStep(); navigate('/play'); }}>
                     Claim Reward & Return! 🗺️
                   </Button>
                 </div>
@@ -254,7 +266,11 @@ export default function StoryAdventures() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.06 }}
-              onClick={() => !isLocked && setSelectedQuest(quest.id)}
+              onClick={() => {
+                if (!isLocked) {
+                  navigate(`/play/story?quest=${quest.id}`);
+                }
+              }}
               className={`border-4 border-black p-4 flex items-center gap-4 ${
                 isDone ? 'bg-success/20 border-success cursor-pointer' :
                 isLocked ? 'bg-white/5 opacity-50 cursor-not-allowed' :

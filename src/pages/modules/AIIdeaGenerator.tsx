@@ -201,9 +201,14 @@ export default function AIIdeaGenerator() {
                 );
               })}
 
-              <Button variant="ghost" fullWidth onClick={handleGenerate} loading={loading}>
-                🔄 Generate 3 More Ideas
-              </Button>
+              <div className="flex gap-3">
+                <Button variant="ghost" className="flex-1" onClick={handleGenerate} loading={loading}>
+                  🔄 More Ideas
+                </Button>
+                <Button variant="success" className="flex-1" onClick={() => navigate('/play')}>
+                  Next Module →
+                </Button>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

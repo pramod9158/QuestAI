@@ -1,8 +1,9 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth, useCurrentProfile } from '@/contexts/AuthContext';
 import { AppShell } from '@/layouts/AppShell';
+import { PLAY_MODULES_DATA } from '@/data/curriculum';
 
 // Pages
 import Onboarding from '@/pages/Onboarding';
@@ -30,6 +31,60 @@ import QuizArena from '@/pages/modules/QuizArena';
 import InventorHall from '@/pages/modules/InventorHall';
 import WorldMap from '@/pages/WorldMap';
 import AvatarCustomization from '@/pages/AvatarCustomization';
+
+function PlayZoneGuard({ children }: { children: React.ReactNode }) {
+  const profile = useCurrentProfile();
+  const location = useLocation();
+
+  if (!profile) return <>{children}</>;
+
+  const userZone = profile.zone || 'junior';
+  const filtered = PLAY_MODULES_DATA.filter(mod => mod.zones.includes(userZone));
+
+  const rawInventions = JSON.parse(localStorage.getItem('guest_inventions') || '[]');
+  const savedIdeas = JSON.parse(localStorage.getItem('saved_ideas') || '[]');
+
+  const isModDone = (path: string) => {
+    const mod = PLAY_MODULES_DATA.find(m => m.path === path);
+    if (!mod) return false;
+    const key = mod.completionKey;
+    if (key === 'quests') {
+      return !!(profile?.completed_quests && profile.completed_quests.length > 0);
+    } else if (key.startsWith('quests_')) {
+      const qId = key.replace('quests_', '');
+      return localStorage.getItem(`quests_${qId}`) === 'true' || !!(profile?.completed_quests && profile.completed_quests.includes(qId));
+    } else if (key === 'inventions') {
+      return rawInventions.length > 0;
+    } else if (key === 'ideas') {
+      return savedIdeas.length > 0;
+    } else {
+      return localStorage.getItem(key) === 'true';
+    }
+  };
+
+  const activePlayIndex = filtered.findIndex(mod => !isModDone(mod.path));
+
+  if (activePlayIndex === -1) {
+    return <>{children}</>;
+  }
+
+  const activeMod = filtered[activePlayIndex];
+  const currentPath = location.pathname + location.search;
+
+  if (location.pathname === '/play') {
+    return <Navigate to={activeMod.path} replace />;
+  }
+
+  const matchedIndex = filtered.findIndex(mod => {
+    return currentPath === mod.path || currentPath.split('?')[0] === mod.path.split('?')[0];
+  });
+
+  if (matchedIndex !== -1 && matchedIndex > activePlayIndex) {
+    return <Navigate to={activeMod.path} replace />;
+  }
+
+  return <>{children}</>;
+}
 
 function AppRoutes() {
   const { isLoading } = useAuth();
@@ -61,19 +116,19 @@ function AppRoutes() {
         <Route path="/" element={<Home />} />
         <Route path="/learn" element={<Learn />} />
         <Route path="/learn/:id" element={<LessonPlayer />} />
-        <Route path="/play" element={<Play />} />
-        <Route path="/play/around-me" element={<AIAroundMe />} />
-        <Route path="/play/story" element={<StoryAdventures />} />
-        <Route path="/play/detective" element={<AIDetective />} />
-        <Route path="/play/brainstorm" element={<BrainstormPlayground />} />
+        <Route path="/play" element={<PlayZoneGuard><Play /></PlayZoneGuard>} />
+        <Route path="/play/around-me" element={<PlayZoneGuard><AIAroundMe /></PlayZoneGuard>} />
+        <Route path="/play/story" element={<PlayZoneGuard><StoryAdventures /></PlayZoneGuard>} />
+        <Route path="/play/detective" element={<PlayZoneGuard><AIDetective /></PlayZoneGuard>} />
+        <Route path="/play/brainstorm" element={<PlayZoneGuard><BrainstormPlayground /></PlayZoneGuard>} />
         <Route path="/missions" element={<WeeklyMissions />} />
-        <Route path="/play/idea-generator" element={<AIIdeaGenerator />} />
-        <Route path="/play/cards" element={<AICards />} />
-        <Route path="/play/quiz" element={<QuizArena />} />
-        <Route path="/play/inventor-hall" element={<InventorHall />} />
+        <Route path="/play/idea-generator" element={<PlayZoneGuard><AIIdeaGenerator /></PlayZoneGuard>} />
+        <Route path="/play/cards" element={<PlayZoneGuard><AICards /></PlayZoneGuard>} />
+        <Route path="/play/quiz" element={<PlayZoneGuard><QuizArena /></PlayZoneGuard>} />
+        <Route path="/play/inventor-hall" element={<PlayZoneGuard><InventorHall /></PlayZoneGuard>} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
-        <Route path="/comic" element={<ComicCreator />} />
+        <Route path="/comic" element={<PlayZoneGuard><ComicCreator /></PlayZoneGuard>} />
         <Route path="/worlds" element={<WorldMap />} />
         <Route path="/avatar" element={<AvatarCustomization />} />
       </Route>

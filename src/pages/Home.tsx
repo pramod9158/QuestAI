@@ -203,6 +203,10 @@ export default function Home() {
     }
   };
 
+  const filteredPlay = PLAY_MODULES_DATA.filter(m => m.zones.includes(userZone));
+  const activePlayIndex = filteredPlay.findIndex(m => !isPlayModuleDone(m.path));
+  const activePlayMod = activePlayIndex !== -1 ? filteredPlay[activePlayIndex] : null;
+
   return (
     <div className="min-h-full bg-game" style={{ backgroundAttachment: 'fixed' }}>
       {xpToastInfo && (
@@ -543,27 +547,46 @@ export default function Home() {
         <div className="grid grid-cols-2 gap-3">
           {filteredCards.map((mod, i) => {
             const isDone = isPlayModuleDone(mod.path);
+            const cardIndexInPlay = filteredPlay.findIndex(m => {
+              return m.path === mod.path || m.path.split('?')[0] === mod.path.split('?')[0];
+            });
+            const isLocked = !isDone && activePlayIndex !== -1 && cardIndexInPlay !== -1 && cardIndexInPlay > activePlayIndex;
+
             return (
               <motion.div
                 key={mod.path}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05, duration: 0.35 }}
-                whileHover={!isDone ? { scale: 1.03, y: -2 } : {}}
-                whileTap={!isDone ? { scale: 0.96 } : {}}
-                onClick={() => navigate(mod.path)}
+                whileHover={!isDone && !isLocked ? { scale: 1.03, y: -2 } : {}}
+                whileTap={!isDone && !isLocked ? { scale: 0.96 } : {}}
+                onClick={() => {
+                  if (isLocked) {
+                    if (activePlayMod) {
+                      navigate(activePlayMod.path);
+                    }
+                  } else {
+                    navigate(mod.path);
+                  }
+                }}
                 className={`p-4 cursor-pointer relative overflow-hidden transition-all ${
-                  isDone ? 'opacity-40 grayscale saturate-50' : ''
+                  isDone ? 'opacity-40 grayscale saturate-50' : 
+                  isLocked ? 'opacity-35 grayscale saturate-50' : ''
                 }`}
                 style={{
                   background: '#1E1B4B',
-                  border: '3px solid #000000',
-                  boxShadow: isDone ? '2px 2px 0px 0px #000000' : '4px 4px 0px 0px #000000',
+                  border: isLocked ? '3px solid #374151' : '3px solid #000000',
+                  boxShadow: isDone || isLocked ? '2px 2px 0px 0px #000000' : '4px 4px 0px 0px #000000',
                 }}
               >
                 {isDone && (
                   <div className="completed-ribbon-container">
                     <div className="completed-ribbon">DONE</div>
+                  </div>
+                )}
+                {isLocked && (
+                  <div className="completed-ribbon-container">
+                    <div className="completed-ribbon bg-gray-600" style={{ background: '#374151' }}>LOCKED</div>
                   </div>
                 )}
                 <div
