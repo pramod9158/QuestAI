@@ -7,9 +7,7 @@ import { CURRICULUM, STORY_QUESTS, WEEKLY_MISSIONS_DATA, PLAY_MODULES_DATA } fro
 import { getLevel, getXPForNextLevel, getEarnedBadges, getPlatformProgress } from '@/lib/gamification';
 import { ProgressRing, XPToast, CoinToast } from '@/components/ui/GameUI';
 import { Zap, BookOpen, Swords, Target, Trophy, Users, ChevronRight, Flame, Sparkles } from 'lucide-react';
-import { askHomeQuestBot } from '@/lib/gemini';
-import { PetCompanion } from '@/components/ui/PetCompanion';
-import { DailyRewardModal } from '@/components/ui/DailyRewardModal';
+
 import { TreasureChestModal } from '@/components/ui/TreasureChestModal';
 import { getUnopenedChests, getUnopenedCount, type Chest } from '@/lib/treasureChest';
 import { Map } from 'lucide-react';
@@ -137,24 +135,7 @@ export default function Home() {
   };
 
 
-  // QuestBot Companion states
-  const [questBotInput, setQuestBotInput] = useState('');
-  const [questBotAnswer, setQuestBotAnswer] = useState<string | null>(null);
-  const [askingQuestBot, setAskingQuestBot] = useState(false);
 
-  const handleAskQuestBot = async () => {
-    if (!questBotInput.trim() || askingQuestBot) return;
-    setAskingQuestBot(true);
-    try {
-      const response = await askHomeQuestBot(questBotInput);
-      setQuestBotAnswer(response);
-      setQuestBotInput('');
-    } catch (err) {
-      setQuestBotAnswer("Beep boop! I failed to compute that. Try again!");
-    } finally {
-      setAskingQuestBot(false);
-    }
-  };
 
   useEffect(() => {
     const h = new Date().getHours();
@@ -218,20 +199,7 @@ export default function Home() {
       )}
       {showCoinsToast && <CoinToast amount={showCoinsToast} />}
 
-      {/* Daily Login Reward Modal */}
-      <DailyRewardModal
-        username={profile.username}
-        streak={profile.current_streak ?? 1}
-        onClaim={async (coins, xp) => {
-          await updateProfile({
-            coins: (profile.coins ?? 0) + coins,
-            xp: (profile.xp ?? 0) + xp,
-          });
-          setXpToastInfo({ amount: xp, reason: "Daily login reward!" });
-          setShowCoinsToast(coins);
-          setTimeout(() => setShowCoinsToast(null), 2500);
-        }}
-      />
+
 
       {/* Treasure Chest Modal */}
       {currentChest && (
@@ -418,30 +386,7 @@ export default function Home() {
         </motion.div>
       </div>
 
-      {/* ── AI Pet Companion ── */}
-      <div className="px-5 mt-2">
-        <div
-          className="p-3"
-          style={{
-            background: '#1E1B4B',
-            border: '3px solid #000000',
-            boxShadow: '4px 4px 0px 0px #000000',
-          }}
-        >
-          <div className="flex items-center justify-between mb-1">
-            <h2 className="font-pixel text-[7px] text-white flex items-center gap-2 tracking-wide">
-              🤖 YOUR AI PET
-            </h2>
-            <button
-              onClick={() => navigate('/profile')}
-              className="font-body text-[10px] text-white/40 hover:text-white/70 transition-colors cursor-pointer"
-            >
-              View Profile ›
-            </button>
-          </div>
-          <PetCompanion xp={profile.xp} />
-        </div>
-      </div>
+
 
       {/* ── Stats Row (Yellow bordered as in screenshot) ── */}
       <div className="px-5 -mt-6 grid grid-cols-3 gap-3 relative z-10">
@@ -584,16 +529,16 @@ export default function Home() {
                     <div className="completed-ribbon">DONE</div>
                   </div>
                 )}
-                {isLocked && (
+                 {isLocked && (
                   <div className="completed-ribbon-container">
-                    <div className="completed-ribbon bg-gray-600" style={{ background: '#374151' }}>LOCKED</div>
+                    <div className="completed-ribbon bg-gray-600" style={{ background: '#374151' }}>🔒 LOCKED</div>
                   </div>
                 )}
                 <div
                   className="w-10 h-10 flex items-center justify-center text-xl mb-3"
-                  style={{ background: mod.gradFrom, border: '2px solid #000000', boxShadow: '2px 2px 0px #000000' }}
+                  style={{ background: isLocked ? '#374151' : mod.gradFrom, border: '2px solid #000000', boxShadow: '2px 2px 0px #000000' }}
                 >
-                  {mod.emoji}
+                  {isLocked ? '🔒' : mod.emoji}
                 </div>
                 <div className="font-game text-sm text-white leading-tight">{mod.title}</div>
                 <div className="text-white/45 font-body text-[11px] mt-1">{mod.desc}</div>
@@ -685,57 +630,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ── QuestBot AI Companion Chat ── */}
-      <div className="px-5 mt-6 mb-8">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-pixel text-[8px] text-white flex items-center gap-2 tracking-wide">
-            <Sparkles className="w-4 h-4" style={{ color: '#7C3AED' }} />
-            QUESTBOT COMPANION
-          </h2>
-        </div>
-        <div
-          className="p-4 space-y-4"
-          style={{
-            background: '#1E1B4B',
-            border: '3px solid #000000',
-            boxShadow: '4px 4px 0px 0px #000000',
-          }}
-        >
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-[#7C3AED] border-2 border-black flex items-center justify-center text-lg">🤖</div>
-            <div>
-              <div className="font-game text-xs text-white">QuestBot AI</div>
-              <div className="text-white/40 font-body text-[10px]">Ask me anything about Artificial Intelligence!</div>
-            </div>
-          </div>
-
-          {questBotAnswer && (
-            <div className="bg-black/30 border-l-4 border-[#7C3AED] p-3 text-xs font-body leading-relaxed text-white/90">
-              {questBotAnswer}
-            </div>
-          )}
-
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={questBotInput}
-              onChange={(e) => setQuestBotInput(e.target.value)}
-              placeholder="e.g. What is a neural network?"
-              onKeyDown={(e) => e.key === 'Enter' && handleAskQuestBot()}
-              className="flex-1 pixel-input text-xs text-white placeholder-white/35"
-              disabled={askingQuestBot}
-            />
-            <button
-              onClick={handleAskQuestBot}
-              disabled={askingQuestBot || !questBotInput.trim()}
-              className="btn-primary p-2 flex items-center justify-center cursor-pointer text-xs"
-              style={{ minHeight: '40px' }}
-            >
-              Ask
-            </button>
-          </div>
-        </div>
-      </div>
 
       {/* 📬 Mailbox Modal */}
       <AnimatePresence>

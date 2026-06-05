@@ -186,7 +186,7 @@ export default function Play() {
             )}
             {mod.isLocked && (
               <div className="completed-ribbon-container">
-                <div className="completed-ribbon bg-gray-600" style={{ background: '#374151' }}>LOCKED</div>
+                <div className="completed-ribbon bg-gray-600" style={{ background: '#374151' }}>🔒 LOCKED</div>
               </div>
             )}
             <div>
@@ -194,12 +194,12 @@ export default function Play() {
                 <div
                   className="w-10 h-10 flex items-center justify-center text-xl flex-shrink-0"
                   style={{
-                    background: mod.gradFrom,
+                    background: mod.isLocked ? '#374151' : mod.gradFrom,
                     border: '2px solid #000000',
                     boxShadow: '2px 2px 0px #000000',
                   }}
                 >
-                  {mod.emoji}
+                  {mod.isLocked ? '🔒' : mod.emoji}
                 </div>
                 <CardProgressBadge percent={mod.percent} />
               </div>
