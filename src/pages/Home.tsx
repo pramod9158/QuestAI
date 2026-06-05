@@ -8,7 +8,6 @@ import { getLevel, getXPForNextLevel, getEarnedBadges, getPlatformProgress } fro
 import { ProgressRing, XPToast, CoinToast } from '@/components/ui/GameUI';
 import { Zap, BookOpen, Swords, Target, Trophy, Users, ChevronRight, Flame, Sparkles } from 'lucide-react';
 import { askHomeQuestBot } from '@/lib/gemini';
-import { PetCompanion } from '@/components/ui/PetCompanion';
 import { DailyRewardModal } from '@/components/ui/DailyRewardModal';
 import { TreasureChestModal } from '@/components/ui/TreasureChestModal';
 import { getUnopenedChests, getUnopenedCount, type Chest } from '@/lib/treasureChest';
@@ -418,33 +417,8 @@ export default function Home() {
         </motion.div>
       </div>
 
-      {/* ── AI Pet Companion ── */}
-      <div className="px-5 mt-2">
-        <div
-          className="p-3"
-          style={{
-            background: '#1E1B4B',
-            border: '3px solid #000000',
-            boxShadow: '4px 4px 0px 0px #000000',
-          }}
-        >
-          <div className="flex items-center justify-between mb-1">
-            <h2 className="font-pixel text-[7px] text-white flex items-center gap-2 tracking-wide">
-              🤖 YOUR AI PET
-            </h2>
-            <button
-              onClick={() => navigate('/profile')}
-              className="font-body text-[10px] text-white/40 hover:text-white/70 transition-colors cursor-pointer"
-            >
-              View Profile ›
-            </button>
-          </div>
-          <PetCompanion xp={profile.xp} />
-        </div>
-      </div>
-
       {/* ── Stats Row (Yellow bordered as in screenshot) ── */}
-      <div className="px-5 -mt-6 grid grid-cols-3 gap-3 relative z-10">
+      <div className="px-5 mt-5 grid grid-cols-3 gap-3 relative z-10">
         {[
           { icon: '🔥', label: 'Streak', value: `${profile.current_streak} days`, gradFrom: '#EF4444', gradTo: '#F59E0B', borderColor: '#F59E0B', shadowColor: '#D97706' },
           { icon: '⚡', label: 'Total XP', value: profile.xp.toString(), gradFrom: '#F59E0B', gradTo: '#FCD34D', borderColor: '#F59E0B', shadowColor: '#D97706' },
