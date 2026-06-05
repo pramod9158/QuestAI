@@ -8,7 +8,6 @@ import { getLevel, getXPForNextLevel, getEarnedBadges, getPlatformProgress } fro
 import { ProgressRing, XPToast, CoinToast } from '@/components/ui/GameUI';
 import { Zap, BookOpen, Swords, Target, Trophy, Users, ChevronRight, Flame, Sparkles } from 'lucide-react';
 import { askHomeQuestBot } from '@/lib/gemini';
-import { DailyRewardModal } from '@/components/ui/DailyRewardModal';
 import { TreasureChestModal } from '@/components/ui/TreasureChestModal';
 import { getUnopenedChests, getUnopenedCount, type Chest } from '@/lib/treasureChest';
 import { Map } from 'lucide-react';
@@ -217,20 +216,6 @@ export default function Home() {
       )}
       {showCoinsToast && <CoinToast amount={showCoinsToast} />}
 
-      {/* Daily Login Reward Modal */}
-      <DailyRewardModal
-        username={profile.username}
-        streak={profile.current_streak ?? 1}
-        onClaim={async (coins, xp) => {
-          await updateProfile({
-            coins: (profile.coins ?? 0) + coins,
-            xp: (profile.xp ?? 0) + xp,
-          });
-          setXpToastInfo({ amount: xp, reason: "Daily login reward!" });
-          setShowCoinsToast(coins);
-          setTimeout(() => setShowCoinsToast(null), 2500);
-        }}
-      />
 
       {/* Treasure Chest Modal */}
       {currentChest && (
