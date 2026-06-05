@@ -7,7 +7,7 @@ import { XPToast } from '@/components/ui/GameUI';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/contexts/AuthContext';
 import { CheckCircle, ArrowLeft, ExternalLink } from 'lucide-react';
-import { testPromptPlayground } from '@/lib/gemini';
+import { askLessonTutor, testPromptPlayground } from '@/lib/gemini';
 import TeachableMachineTrainer from '@/components/teachable/TeachableMachineTrainer';
 
 export default function LessonPlayer() {
@@ -18,7 +18,10 @@ export default function LessonPlayer() {
   const [showXP, setShowXP] = useState(false);
   const [replayQuiz, setReplayQuiz] = useState(false);
 
-
+  // AI Tutor Chat states
+  const [tutorInput, setTutorInput] = useState('');
+  const [tutorAnswer, setTutorAnswer] = useState<string | null>(null);
+  const [askingTutor, setAskingTutor] = useState(false);
 
   const userZone = profile?.zone || 'junior';
   const completedIds = profile?.completed_lessons || [];
@@ -84,6 +87,19 @@ export default function LessonPlayer() {
     }
   };
 
+  const handleAskTutor = async () => {
+    if (!tutorInput.trim() || askingTutor) return;
+    setAskingTutor(true);
+    try {
+      const ans = await askLessonTutor(lesson.title, lesson.subtitle, tutorInput);
+      setTutorAnswer(ans);
+      setTutorInput('');
+    } catch (err) {
+      setTutorAnswer("Beep boop! I had trouble connecting. Try again!");
+    } finally {
+      setAskingTutor(false);
+    }
+  };
 
   const sandboxContent = () => {
     switch (lesson.sandboxType) {
@@ -209,7 +225,42 @@ export default function LessonPlayer() {
         </div>
       </div>
 
-
+      {/* AI Lesson Tutor Chat */}
+      <div className="p-4 bg-surface-2 border-t-4 border-black">
+        <div className="border-4 border-black bg-surface p-4 shadow-pixel">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-lg">🤖</span>
+            <h3 className="font-game text-sm text-white">Ask AI Tutor</h3>
+          </div>
+          
+          {tutorAnswer && (
+            <div className="mb-4 bg-black/20 border-l-4 border-[#7C3AED] p-3">
+              <span className="font-pixel text-[6px] text-primary block mb-1">🤖 QUESTBOT AI</span>
+              <p className="text-white font-body text-xs leading-relaxed">{tutorAnswer}</p>
+            </div>
+          )}
+          
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={tutorInput}
+              onChange={(e) => setTutorInput(e.target.value)}
+              placeholder="e.g., How does machine learning find patterns?"
+              onKeyDown={(e) => e.key === 'Enter' && handleAskTutor()}
+              className="flex-1 pixel-input text-xs"
+              disabled={askingTutor}
+            />
+            <Button
+              onClick={handleAskTutor}
+              loading={askingTutor}
+              disabled={!tutorInput.trim()}
+              size="sm"
+            >
+              Ask
+            </Button>
+          </div>
+        </div>
+      </div>
 
       {/* Complete Button */}
       <div
