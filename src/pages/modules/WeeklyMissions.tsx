@@ -536,7 +536,7 @@ export default function WeeklyMissions() {
 
             {allMissions.map((m, i) => {
               const done = isSubmitted(m.id);
-              const isLocked = activeMissionIndex !== -1 && i > activeMissionIndex;
+              const isLocked = false; // Bypass locking
               const pVal = done ? 100 : parseInt(localStorage.getItem(`mission_progress_${m.id}`) || '0', 10);
               return (
                 <motion.div

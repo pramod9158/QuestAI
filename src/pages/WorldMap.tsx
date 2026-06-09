@@ -338,11 +338,8 @@ export default function WorldMap() {
   // Calculate world unlock state
   const worldStates = WORLDS.map((world, i) => {
     const progress = getWorldProgress(world, completedLessons);
-    const prevWorld = i > 0 ? WORLDS[i - 1] : null;
-    const prevProgress = prevWorld ? getWorldProgress(prevWorld, completedLessons) : null;
-    const isUnlocked = i === 0 || (prevProgress?.percent ?? 0) >= 50;
-    const isCurrent = isUnlocked && progress.percent < 100 &&
-      (i === 0 || (WORLDS[i - 1] && getWorldProgress(WORLDS[i - 1], completedLessons).percent >= 50));
+    const isUnlocked = true; // Bypass locking
+    const isCurrent = isUnlocked && progress.percent < 100;
     return { world, progress, isUnlocked, isCurrent };
   });
 

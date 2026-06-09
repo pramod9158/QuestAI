@@ -509,7 +509,7 @@ export default function Home() {
             const cardIndexInPlay = filteredPlay.findIndex(m => {
               return m.path === mod.path || m.path.split('?')[0] === mod.path.split('?')[0];
             });
-            const isLocked = !isDone && activePlayIndex !== -1 && cardIndexInPlay !== -1 && cardIndexInPlay > activePlayIndex;
+            const isLocked = false; // Bypass locking
 
             return (
               <motion.div
