@@ -63,7 +63,7 @@ export default function Play() {
       }
     }
 
-    const isLocked = false; // Bypass locking
+    const isLocked = activePlayIndex !== -1 && i > activePlayIndex;
     const isActive = activePlayIndex !== -1 && i === activePlayIndex;
 
     return {

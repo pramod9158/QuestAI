@@ -218,7 +218,7 @@ export default function Learn() {
           <div className="relative">
             {filtered.map((lesson, idx) => {
               const isDone = completedIds.includes(lesson.id);
-              const isLocked = false; // Bypass locking
+              const isLocked = idx > activeIndex && activeIndex !== -1;
               const isActive = idx === activeIndex;
               const pVal = isDone ? 100 : parseInt(localStorage.getItem(`lesson_progress_${lesson.id}`) || '0', 10);
               const duration = getDuration(lesson.xpReward);
@@ -379,7 +379,7 @@ export default function Learn() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {filtered.map((lesson, idx) => {
               const isDone = completedIds.includes(lesson.id);
-              const isLocked = false; // Bypass locking
+              const isLocked = idx > activeIndex && activeIndex !== -1;
               const isActive = idx === activeIndex;
               const pVal = isDone ? 100 : parseInt(localStorage.getItem(`lesson_progress_${lesson.id}`) || '0', 10);
               const duration = getDuration(lesson.xpReward);

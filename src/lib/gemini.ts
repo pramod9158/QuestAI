@@ -65,22 +65,18 @@ async function callWithKeyRotation<T>(
     throw new Error('No valid Gemini API keys configured');
   }
 
-  const models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
   let lastError: any = null;
-
-  for (const modelName of models) {
-    for (let i = 0; i < keys.length; i++) {
-      try {
-        const genAI = new GoogleGenerativeAI(keys[i]);
-        const model = genAI.getGenerativeModel({ model: modelName });
-        return await fn(model);
-      } catch (err: any) {
-        console.warn(`Gemini API call failed with model ${modelName} and API Key index ${i}. Trying next key or model. Error:`, err);
-        lastError = err;
-      }
+  for (let i = 0; i < keys.length; i++) {
+    try {
+      const genAI = new GoogleGenerativeAI(keys[i]);
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+      return await fn(model);
+    } catch (err: any) {
+      console.warn(`Gemini API call failed with API Key index ${i}. Trying next key if available. Error:`, err);
+      lastError = err;
     }
   }
-  throw lastError || new Error('All Gemini API keys and fallback models failed');
+  throw lastError || new Error('All Gemini API keys failed');
 }
 
 // Simulated fallback ideas by category
