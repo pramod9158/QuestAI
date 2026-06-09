@@ -31,6 +31,7 @@ export default function LessonPlayer() {
   const completed = lesson ? (profile?.completed_lessons?.includes(lesson.id) ?? false) : false;
   const [videoFinished, setVideoFinished] = useState(completed);
   const iframeRef = React.useRef<HTMLIFrameElement>(null);
+  const handleCompleteRef = React.useRef<() => void>(() => {});
 
   React.useEffect(() => {
     setVideoFinished(completed);
@@ -53,6 +54,8 @@ export default function LessonPlayer() {
 
     let player: any = null;
     let checkInterval: ReturnType<typeof setInterval> | null = null;
+    let timeTrackingInterval: ReturnType<typeof setInterval> | null = null;
+    let maxTimeWatched = 0;
 
     const initPlayer = () => {
       if (iframeRef.current && (window as any).YT && (window as any).YT.Player) {
@@ -62,6 +65,32 @@ export default function LessonPlayer() {
               onStateChange: (event: any) => {
                 if (event.data === (window as any).YT.PlayerState.ENDED) {
                   setVideoFinished(true);
+                  if (handleCompleteRef.current) {
+                    handleCompleteRef.current();
+                  }
+                }
+
+                // Prevent skipping forward
+                if (event.data === (window as any).YT.PlayerState.PLAYING) {
+                  if (!timeTrackingInterval) {
+                    timeTrackingInterval = setInterval(() => {
+                      if (player && typeof player.getCurrentTime === 'function') {
+                        const currentTime = player.getCurrentTime();
+                        if (currentTime > maxTimeWatched + 2) {
+                          player.seekTo(maxTimeWatched, true);
+                        } else {
+                          if (currentTime > maxTimeWatched) {
+                            maxTimeWatched = currentTime;
+                          }
+                        }
+                      }
+                    }, 500);
+                  }
+                } else {
+                  if (timeTrackingInterval) {
+                    clearInterval(timeTrackingInterval);
+                    timeTrackingInterval = null;
+                  }
                 }
               },
             },
@@ -91,6 +120,7 @@ export default function LessonPlayer() {
 
     return () => {
       if (checkInterval) clearInterval(checkInterval);
+      if (timeTrackingInterval) clearInterval(timeTrackingInterval);
       if (player && typeof player.destroy === 'function') {
         try {
           player.destroy();
@@ -157,6 +187,10 @@ export default function LessonPlayer() {
       }, 2000);
     }
   };
+
+  React.useEffect(() => {
+    handleCompleteRef.current = handleComplete;
+  }, [handleComplete]);
 
   const handleAskTutor = async () => {
     if (!tutorInput.trim() || askingTutor) return;

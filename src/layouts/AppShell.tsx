@@ -22,6 +22,17 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
   const location = useLocation();
   const navigate = useNavigate();
 
+  const [theme, setTheme] = React.useState(() => localStorage.getItem('app-theme') || 'dark');
+
+  React.useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('app-theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  };
+
   const xp = profile?.xp ?? 0;
   const level = getLevel(xp);
   const xpInfo = getXPForNextLevel(xp);
@@ -116,6 +127,20 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
                 </span>
               </div>
               <div className="flex items-center gap-2">
+                {/* Theme Toggle Button */}
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
+                  onClick={toggleTheme}
+                  className="w-8 h-8 flex items-center justify-center cursor-pointer font-body"
+                  style={{
+                    background: theme === 'dark' ? '#16103A' : '#FFFFFF',
+                    border: '2px solid #000',
+                    boxShadow: '2px 2px 0px #000',
+                  }}
+                  title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                >
+                  <span className="text-sm select-none">{theme === 'dark' ? '☀️' : '🌙'}</span>
+                </motion.button>
                 {/* World Map shortcut */}
                 <motion.button
                   whileTap={{ scale: 0.9 }}
