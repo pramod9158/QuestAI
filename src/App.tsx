@@ -33,56 +33,7 @@ import WorldMap from '@/pages/WorldMap';
 import AvatarCustomization from '@/pages/AvatarCustomization';
 
 function PlayZoneGuard({ children }: { children: React.ReactNode }) {
-  const profile = useCurrentProfile();
-  const location = useLocation();
-
-  if (!profile) return <>{children}</>;
-
-  const userZone = profile.zone || 'junior';
-  const filtered = PLAY_MODULES_DATA.filter(mod => mod.zones.includes(userZone));
-
-  const rawInventions = JSON.parse(localStorage.getItem('guest_inventions') || '[]');
-  const savedIdeas = JSON.parse(localStorage.getItem('saved_ideas') || '[]');
-
-  const isModDone = (path: string) => {
-    const mod = PLAY_MODULES_DATA.find(m => m.path === path);
-    if (!mod) return false;
-    const key = mod.completionKey;
-    if (key === 'quests') {
-      return !!(profile?.completed_quests && profile.completed_quests.length > 0);
-    } else if (key.startsWith('quests_')) {
-      const qId = key.replace('quests_', '');
-      return localStorage.getItem(`quests_${qId}`) === 'true' || !!(profile?.completed_quests && profile.completed_quests.includes(qId));
-    } else if (key === 'inventions') {
-      return rawInventions.length > 0;
-    } else if (key === 'ideas') {
-      return savedIdeas.length > 0;
-    } else {
-      return localStorage.getItem(key) === 'true';
-    }
-  };
-
-  const activePlayIndex = filtered.findIndex(mod => !isModDone(mod.path));
-
-  if (activePlayIndex === -1) {
-    return <>{children}</>;
-  }
-
-  const activeMod = filtered[activePlayIndex];
-  const currentPath = location.pathname + location.search;
-
-  if (location.pathname === '/play') {
-    return <Navigate to={activeMod.path} replace />;
-  }
-
-  const matchedIndex = filtered.findIndex(mod => {
-    return currentPath === mod.path || currentPath.split('?')[0] === mod.path.split('?')[0];
-  });
-
-  if (matchedIndex !== -1 && matchedIndex > activePlayIndex) {
-    return <Navigate to={activeMod.path} replace />;
-  }
-
+  // Bypass all lock and redirection logic
   return <>{children}</>;
 }
 
