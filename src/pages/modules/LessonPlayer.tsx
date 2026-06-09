@@ -28,6 +28,79 @@ export default function LessonPlayer() {
   const filtered = CURRICULUM.filter(l => l.zone === userZone || l.zone === 'both');
   const activeIndex = filtered.findIndex(l => !completedIds.includes(l.id));
 
+  const completed = lesson ? (profile?.completed_lessons?.includes(lesson.id) ?? false) : false;
+  const [videoFinished, setVideoFinished] = useState(completed);
+  const iframeRef = React.useRef<HTMLIFrameElement>(null);
+
+  React.useEffect(() => {
+    setVideoFinished(completed);
+  }, [completed, lesson?.id]);
+
+  React.useEffect(() => {
+    if (completed || !lesson) return;
+
+    // Load YouTube API
+    if (!(window as any).YT) {
+      const tag = document.createElement('script');
+      tag.src = 'https://www.youtube.com/iframe_api';
+      const firstScriptTag = document.getElementsByTagName('script')[0];
+      if (firstScriptTag && firstScriptTag.parentNode) {
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+      } else {
+        document.head.appendChild(tag);
+      }
+    }
+
+    let player: any = null;
+    let checkInterval: ReturnType<typeof setInterval> | null = null;
+
+    const initPlayer = () => {
+      if (iframeRef.current && (window as any).YT && (window as any).YT.Player) {
+        try {
+          player = new (window as any).YT.Player(iframeRef.current, {
+            events: {
+              onStateChange: (event: any) => {
+                if (event.data === (window as any).YT.PlayerState.ENDED) {
+                  setVideoFinished(true);
+                }
+              },
+            },
+          });
+          if (checkInterval) clearInterval(checkInterval);
+        } catch (e) {
+          console.warn('Failed to initialize YouTube Player:', e);
+        }
+      }
+    };
+
+    if ((window as any).YT && (window as any).YT.Player) {
+      initPlayer();
+    } else {
+      const previousCallback = (window as any).onYouTubeIframeAPIReady;
+      (window as any).onYouTubeIframeAPIReady = () => {
+        if (previousCallback) previousCallback();
+        initPlayer();
+      };
+      checkInterval = setInterval(() => {
+        if ((window as any).YT && (window as any).YT.Player) {
+          initPlayer();
+          if (checkInterval) clearInterval(checkInterval);
+        }
+      }, 500);
+    }
+
+    return () => {
+      if (checkInterval) clearInterval(checkInterval);
+      if (player && typeof player.destroy === 'function') {
+        try {
+          player.destroy();
+        } catch (e) {
+          // Ignore
+        }
+      }
+    };
+  }, [lesson?.id, completed]);
+
   React.useEffect(() => {
     if (lesson) {
       const isDone = profile?.completed_lessons?.includes(lesson.id) ?? false;
@@ -56,8 +129,6 @@ export default function LessonPlayer() {
   }, [lesson, activeIndex, filtered, navigate]);
 
   if (!lesson) return <div className="p-6 text-white font-body">Lesson not found.</div>;
-
-  const completed = profile?.completed_lessons?.includes(lesson.id) ?? false;
 
   const handleComplete = async () => {
     if (!completed) {
@@ -198,7 +269,8 @@ export default function LessonPlayer() {
           </div>
           <div className="relative" style={{ paddingBottom: '56.25%' }}>
             <iframe
-              src={`https://www.youtube.com/embed/${lesson.youtubeId}?rel=0&modestbranding=1&color=white&iv_load_policy=3`}
+              ref={iframeRef}
+              src={`https://www.youtube.com/embed/${lesson.youtubeId}?enablejsapi=1&rel=0&modestbranding=1&color=white&iv_load_policy=3`}
               className="absolute inset-0 w-full h-full"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
@@ -276,8 +348,18 @@ export default function LessonPlayer() {
             <span className="font-heading font-bold text-sm text-white">Lesson Complete! +{lesson.xpReward} XP earned!</span>
           </div>
         ) : (
-          <Button variant="success" size="lg" fullWidth onClick={handleComplete}>
-            ✅ Mark as Complete (+{lesson.xpReward} XP)
+          <Button 
+            variant={videoFinished ? "success" : "primary"} 
+            size="lg" 
+            fullWidth 
+            onClick={handleComplete}
+            disabled={!videoFinished}
+            className={!videoFinished ? "opacity-50 cursor-not-allowed" : ""}
+          >
+            {videoFinished 
+              ? `✅ Mark as Complete (+${lesson.xpReward} XP)`
+              : `🔒 Watch the video lesson to unlock completion (+${lesson.xpReward} XP)`
+            }
           </Button>
         )}
         <button
