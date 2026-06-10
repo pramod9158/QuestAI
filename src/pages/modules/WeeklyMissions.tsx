@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 import { XPToast, CardProgressBadge, CardProgressBar } from '@/components/ui/GameUI';
 import { WEEKLY_MISSIONS_DATA } from '@/data/curriculum';
 import { supabase } from '@/lib/supabase';
 import { useAuth, useCurrentProfile } from '@/contexts/AuthContext';
-import { FileText, CheckCircle, XCircle, Zap, ArrowLeft, HelpCircle, Sparkles } from 'lucide-react';
+import { FileText, CheckCircle, XCircle, Zap, ArrowLeft, HelpCircle, Sparkles, Users, Award, Image, ThumbsUp, Heart } from 'lucide-react';
 import { generateMissionSuggestions, evaluateMissionSubmission } from '@/lib/gemini';
 import { getPlatformProgress } from '@/lib/gamification';
 
@@ -20,198 +21,72 @@ interface Submission {
 }
 
 const MISSION_HELPERS: Record<number, { goal: string; examples: string; validationDesc: string }> = {
-  // Junior missions
   1: {
     goal: "Find 3 smart items or AI-powered features in your home.",
-    examples: "FaceID / fingerprint phone unlock, YouTube/Netflix recommendations, smart voice assistants (Alexa/Siri), robotic vacuum cleaner, smart light bulbs, or smart AC schedule.",
+    examples: "FaceID phone unlock, Netflix recommendations, voice assistants (Alexa/Siri), robotic vacuum, or smart AC.",
     validationDesc: "Identify and describe at least 3 smart/AI features or devices and explain why they are smart."
   },
   2: {
     goal: "Find 2 examples of technology or apps that help animals — describe each one.",
-    examples: "A GPS pet tracker collar, a veterinary diagnosis app, a wildlife camera that sends alerts, or an app that helps identify animal species from a photo.",
+    examples: "A GPS pet tracker collar, a veterinary diagnosis app, or wildlife camera alerts.",
     validationDesc: "Describe at least 2 technology examples that help animals and explain how they work."
   },
   3: {
-    goal: "Watch a screen for 10 minutes and note 3 times AI made a recommendation or suggestion to you.",
-    examples: "YouTube suggesting 'watch next', Netflix showing 'you might also like', Spotify playlist suggestions, or Google Maps suggesting a route automatically.",
-    validationDesc: "Describe 3 specific moments where an app or screen suggested something to you, and explain how AI might be involved."
+    goal: "Watch a screen for 10 minutes and note 3 times AI made a recommendation to you.",
+    examples: "YouTube next-ups, Spotify playlists, Google Maps suggestions, or Netflix recommendation queues.",
+    validationDesc: "Describe 3 specific recommendation instances and explain how AI might be involved."
   },
   4: {
     goal: "Ask a parent or sibling to show you one way technology makes their day easier.",
-    examples: "A smart calendar reminder, a Google Maps route, a recipe app, an automatic bill payment, or a work email tool.",
-    validationDesc: "Describe who you asked, what they showed you, and explain in simple terms how it makes their life easier."
+    examples: "Calendar alerts, Google Maps route predictions, automatic banking, or smart voice commands.",
+    validationDesc: "Describe who you asked, what they showed you, and explain how it saves time/effort."
   },
-  // Innovator missions
   101: {
     goal: "Find 3 spots in your school or neighbourhood where people waste time waiting.",
-    examples: "Waiting in line at the school canteen, waiting at the school bus stop, waiting to check out books in the library, or gate queues.",
-    validationDesc: "Propose how predictive AI, smart cameras, or scheduling apps could predict, automate, or reduce this waiting time."
+    examples: "Canteen queue, bus stop lines, checking out library books, or gate traffic.",
+    validationDesc: "Propose how predictive scheduling or smart cameras could optimize time."
   },
   102: {
     goal: "Spot a real-world problem in your neighbourhood, school, or city.",
-    examples: "Water pipe leaks, overflowing trash bins, dark unlit streetlights, unsafe potholes on the road, or garbage pile-ups.",
-    validationDesc: "Describe the issue clearly and suggest how AI sensors, smart cameras, or automated mapping could detect it automatically."
+    examples: "Water leaks, overflowing garbage bins, dark streetlights, or potholes.",
+    validationDesc: "Describe the issue and how AI sensors or automatic mapping could alert authorities."
   },
   103: {
-    goal: "Interview an adult (parent, teacher, neighbour) about technology at work.",
-    examples: "Ask them: 'What smart software, spreadsheets, computer apps, or automation tools do you use to make your job easier?'",
-    validationDesc: "Summarize who you interviewed, what their profession is, and the technology tools they rely on daily."
+    goal: "Interview an adult about technology at work.",
+    examples: "Ask: 'What smart software or spreadsheets do you use to make your job faster?'",
+    validationDesc: "Summarize the person's job and the technology tools they rely on daily."
   },
   104: {
-    goal: "Find one example where AI gave an unfair or surprising result and explain why it may have happened.",
-    examples: "A voice assistant that misunderstands certain accents, an image search that shows biased results, or an AI hiring tool that treats different people differently.",
-    validationDesc: "Describe the AI system, explain what unfair or surprising result occurred, and suggest why the training data might have caused it."
+    goal: "Find one example where AI gave an unfair result and explain why it happened.",
+    examples: "Voice helpers misunderstanding accents, biased search rankings, or inaccurate facial match alerts.",
+    validationDesc: "Describe the system, explain the biased result, and trace it back to training data."
   },
 };
+
 const validateSubmission = (missionId: number, text: string) => {
   const t = text.trim().toLowerCase();
-  const nonRepetitive = !/(.)\\1{4,}/.test(t) && !/^(xyz|abc|test|qwerty|asdf)/.test(t) && text.trim().split(/\s+/).length >= 5;
+  const nonRepetitive = !/(.)\1{4,}/.test(t) && !/^(xyz|abc|test|qwerty|asdf)/.test(t) && text.trim().split(/\s+/).length >= 5;
   
-  // ── JUNIOR MISSIONS ───────────────────────────────────
   if (missionId === 1) {
     const keywords = ['phone', 'mobile', 'camera', 'face id', 'fingerprint', 'alexa', 'siri', 'assistant', 'speaker', 'tv', 'television', 'refrigerator', 'fridge', 'vacuum', 'robot', 'youtube', 'netflix', 'spotify', 'light', 'bulb', 'ac', 'conditioner', 'smart', 'ai', 'algorithm', 'app', 'feed', 'recommend'];
     const matches = keywords.filter(kw => t.includes(kw));
     const minChars = 35;
-    const hasEnoughChars = text.trim().length >= minChars;
-    const hasSmartKeywords = matches.length >= 2;
     return {
-      isValid: hasEnoughChars && hasSmartKeywords && nonRepetitive,
+      isValid: text.trim().length >= minChars && matches.length >= 2 && nonRepetitive,
       requirements: [
-        { label: `📝 Write at least ${minChars} characters of description`, done: hasEnoughChars },
-        { label: "🤖 Mention smart features (e.g. phone camera, Alexa, YouTube, smart TV)", done: hasSmartKeywords },
-        { label: "💡 Provide a realistic description (no random letters or spam)", done: nonRepetitive },
+        { label: `📝 Write at least ${minChars} characters`, done: text.trim().length >= minChars },
+        { label: "🤖 Mention smart features (Alexa, Netflix, Siri, camera)", done: matches.length >= 2 },
+        { label: "💡 Provide a realistic description (no spam)", done: nonRepetitive },
       ]
     };
   }
   
-  if (missionId === 2) {
-    // Animal Friend AI — mention animals + technology
-    const animalKeywords = ['dog', 'cat', 'pet', 'animal', 'bird', 'fish', 'cow', 'wildlife', 'vet', 'collar', 'tracker', 'wildlife', 'nature'];
-    const techKeywords = ['app', 'tracker', 'gps', 'camera', 'sensor', 'technology', 'device', 'smart', 'ai', 'identify', 'detect', 'monitor'];
-    const hasAnimal = animalKeywords.some(kw => t.includes(kw));
-    const hasTech = techKeywords.some(kw => t.includes(kw));
-    const minChars = 30;
-    const hasEnoughChars = text.trim().length >= minChars;
-    return {
-      isValid: hasEnoughChars && hasAnimal && hasTech && nonRepetitive,
-      requirements: [
-        { label: `📝 Write at least ${minChars} characters`, done: hasEnoughChars },
-        { label: "🐾 Mention animals or pets", done: hasAnimal },
-        { label: "📱 Describe a technology or app that helps them", done: hasTech },
-      ]
-    };
-  }
-  
-  if (missionId === 3) {
-    // Smart Screen Spotter — mention a screen and recommendations
-    const screenKeywords = ['youtube', 'netflix', 'spotify', 'phone', 'tv', 'screen', 'tablet', 'watch', 'video', 'app', 'show'];
-    const suggestionKeywords = ['suggest', 'recommend', 'next', 'for you', 'playlist', 'similar', 'because', 'like', 'ad', 'algorithm'];
-    const hasScreen = screenKeywords.some(kw => t.includes(kw));
-    const hasSuggestion = suggestionKeywords.some(kw => t.includes(kw));
-    const minChars = 30;
-    const hasEnoughChars = text.trim().length >= minChars;
-    return {
-      isValid: hasEnoughChars && hasScreen && hasSuggestion && nonRepetitive,
-      requirements: [
-        { label: `📝 Write at least ${minChars} characters`, done: hasEnoughChars },
-        { label: "📺 Mention a screen or app you watched (e.g. YouTube, Netflix)", done: hasScreen },
-        { label: "💡 Describe how it suggested or recommended something to you", done: hasSuggestion },
-      ]
-    };
-  }
-  
-  if (missionId === 4) {
-    // Helpful Robot Helper — mention a person and a technology
-    const personKeywords = ['parent', 'father', 'mother', 'sister', 'brother', 'sibling', 'mum', 'dad', 'uncle', 'aunt', 'grandparent', 'friend', 'he', 'she', 'they'];
-    const techKeywords = ['app', 'phone', 'map', 'calendar', 'reminder', 'computer', 'laptop', 'email', 'google', 'alarm', 'smart', 'technology', 'tool', 'software'];
-    const hasPerson = personKeywords.some(kw => t.includes(kw));
-    const hasTech = techKeywords.some(kw => t.includes(kw));
-    const minChars = 30;
-    const hasEnoughChars = text.trim().length >= minChars;
-    return {
-      isValid: hasEnoughChars && hasPerson && hasTech && nonRepetitive,
-      requirements: [
-        { label: `📝 Write at least ${minChars} characters`, done: hasEnoughChars },
-        { label: "👤 Mention who you asked (e.g. mum, dad, brother)", done: hasPerson },
-        { label: "💻 Describe the technology or app they showed you", done: hasTech },
-      ]
-    };
-  }
-  
-  // ── INNOVATOR MISSIONS ───────────────────────────────────
-  if (missionId === 101) {
-    const scenarios = ['queue', 'line', 'wait', 'bus', 'traffic', 'canteen', 'lunch', 'library', 'counter', 'gate', 'office', 'register', 'store', 'shop'];
-    const aiSolutions = ['predict', 'optimize', 'schedule', 'app', 'alert', 'route', 'camera', 'sensor', 'automated', 'time', 'manage'];
-    const hasScenario = scenarios.some(kw => t.includes(kw));
-    const hasAISolution = aiSolutions.some(kw => t.includes(kw));
-    const minChars = 35;
-    const hasEnoughChars = text.trim().length >= minChars;
-    return {
-      isValid: hasEnoughChars && hasScenario && hasAISolution && nonRepetitive,
-      requirements: [
-        { label: `📝 Write at least ${minChars} characters explaining the scenarios`, done: hasEnoughChars },
-        { label: "⏰ Describe waiting areas (e.g. canteen queue, bus stop, library)", done: hasScenario },
-        { label: "💡 Explain how AI/apps can help predict or reduce the wait", done: hasAISolution },
-      ]
-    };
-  }
-  
-  if (missionId === 102) {
-    const problems = ['trash', 'waste', 'garbage', 'leak', 'water', 'light', 'streetlight', 'hole', 'road', 'traffic', 'pollution', 'broken', 'dirty', 'litter'];
-    const techSolutions = ['sensor', 'camera', 'ai', 'app', 'system', 'detect', 'notify', 'alert', 'analyze', 'satellite', 'monitor'];
-    const hasProblem = problems.some(kw => t.includes(kw));
-    const hasTechSolution = techSolutions.some(kw => t.includes(kw));
-    const minChars = 40;
-    const hasEnoughChars = text.trim().length >= minChars;
-    return {
-      isValid: hasEnoughChars && hasProblem && hasTechSolution && nonRepetitive,
-      requirements: [
-        { label: `📝 Detailed description (at least ${minChars} characters)`, done: hasEnoughChars },
-        { label: "🌍 Describe a real local problem (e.g. trash, water leaks, broken lights)", done: hasProblem },
-        { label: "🤖 Propose a smart tech/AI solution (e.g. sensors, auto alerts, cameras)", done: hasTechSolution },
-      ]
-    };
-  }
-  
-  if (missionId === 103) {
-    const people = ['father', 'mother', 'parent', 'teacher', 'neighbour', 'uncle', 'aunt', 'doctor', 'shopkeeper', 'adult', 'friend', 'colleague', 'he', 'she', 'they', 'mr', 'mrs', 'ms'];
-    const technology = ['computer', 'laptop', 'excel', 'software', 'app', 'email', 'search', 'write', 'track', 'teach', 'sell', 'record', 'system', 'smart', 'tool', 'internet', 'ai'];
-    const hasPerson = people.some(kw => t.includes(kw));
-    const hasTech = technology.some(kw => t.includes(kw));
-    const minChars = 40;
-    const hasEnoughChars = text.trim().length >= minChars;
-    return {
-      isValid: hasEnoughChars && hasPerson && hasTech && nonRepetitive,
-      requirements: [
-        { label: `📝 Write at least ${minChars} characters summarizing the interview`, done: hasEnoughChars },
-        { label: "👤 State who you interviewed (e.g. parent, teacher, shopkeeper)", done: hasPerson },
-        { label: "💻 List the software, computers, or smart apps they use", done: hasTech },
-      ]
-    };
-  }
-  
-  if (missionId === 104) {
-    // Bias Detector — mention AI or system and an unfair/biased result
-    const aiKeywords = ['ai', 'algorithm', 'system', 'model', 'voice', 'image', 'search', 'recognition', 'tool', 'software'];
-    const biasKeywords = ['bias', 'unfair', 'wrong', 'mistake', 'accent', 'gender', 'race', 'colour', 'skin', 'discriminat', 'inaccurat', 'misunderstand', 'incorrect'];
-    const hasAI = aiKeywords.some(kw => t.includes(kw));
-    const hasBias = biasKeywords.some(kw => t.includes(kw));
-    const minChars = 40;
-    const hasEnoughChars = text.trim().length >= minChars;
-    return {
-      isValid: hasEnoughChars && hasAI && hasBias && nonRepetitive,
-      requirements: [
-        { label: `📝 Write at least ${minChars} characters about your finding`, done: hasEnoughChars },
-        { label: "🤖 Mention an AI system, tool, or algorithm", done: hasAI },
-        { label: "⚖️ Describe an unfair or biased result it gave", done: hasBias },
-      ]
-    };
-  }
-  
+  // Default validation
   return {
-    isValid: text.trim().length >= 10,
+    isValid: text.trim().length >= 15 && nonRepetitive,
     requirements: [
-      { label: "📝 Write at least 10 characters", done: text.trim().length >= 10 }
+      { label: "📝 Write at least 15 characters", done: text.trim().length >= 15 },
+      { label: "💡 Avoid random keyboard mashing/spam", done: nonRepetitive }
     ]
   };
 };
@@ -220,28 +95,49 @@ export default function WeeklyMissions() {
   const { user, profile, guestProfile, isGuest, updateProfile } = useAuth();
   const currentProfile = useCurrentProfile();
   const userZone = currentProfile?.zone || 'junior';
+  const navigate = useNavigate();
 
   const stats = getPlatformProgress(currentProfile);
-  const overallPercent = stats.overallPercent;
   const completedMissionsCount = stats.completedMissions;
   const totalMissionsCount = stats.totalMissions;
   const missionPercent = stats.missionPercent;
 
-  const [activeTab, setActiveTab] = useState<'missions' | 'submissions'>('missions');
+  type TabType = 'solo' | 'team' | 'contest' | 'gallery' | 'submissions';
+  const [activeTab, setActiveTab] = useState<TabType>('solo');
   const [selectedMission, setSelectedMission] = useState<number | null>(null);
   const [text, setText] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [showXP, setShowXP] = useState(false);
+  const [toastXP, setToastXP] = useState(80);
   const [submissions, setSubmissions] = useState<Submission[]>(() => {
     return JSON.parse(localStorage.getItem('mission_submissions') || '[]');
   });
 
   const [customMissions, setCustomMissions] = useState<any[]>([]);
 
-  // Filter standard missions by zone, then append custom missions (which parents add for specific child)
+  // Weekly missions data
   const zoneMissions = WEEKLY_MISSIONS_DATA.filter(m => m.zone === userZone || m.zone === 'both');
   const allMissions = [...zoneMissions, ...customMissions];
   const mission = allMissions.find(m => m.id === selectedMission);
+
+  // Team missions data (Mock)
+  const mockTeamMissions = [
+    { id: 'team-1', title: 'Operation: Green Classroom', description: 'Form a crew of 3 classmates. Devise a smart sensor layout to track empty desks, shutting off unused fans automatically. Submit a team proposal!', membersJoined: 2, membersRequired: 3, xpReward: 150, progress: 66, status: 'gathering' },
+    { id: 'team-2', title: 'Detective Agency: Spoof Finders', description: 'Team up with another explorer to find 3 deepfakes online. Compare observation metrics and write a combined audit report.', membersJoined: 1, membersRequired: 2, xpReward: 120, progress: 50, status: 'gathering' }
+  ];
+  const [joinedTeams, setJoinedTeams] = useState<string[]>([]);
+
+  // Creativity Contest entry state
+  const [contestName, setContestName] = useState('');
+  const [contestDesc, setContestDesc] = useState('');
+  const [contestSubmitted, setContestSubmitted] = useState(false);
+
+  // Showcase Gallery data (Mock)
+  const [galleryItems, setGalleryItems] = useState([
+    { id: 'g-1', creator: 'Aarav (Age 10)', title: 'Solar Tracking Robot', desc: 'An AI panel that follows the sun using simple light sensor metrics.', likes: 24, liked: false, emoji: '☀️🤖' },
+    { id: 'g-2', creator: 'Dia (Age 12)', title: 'Pet Voice Translator', desc: 'Used comic builder prompts to design a translator collar for street dogs.', likes: 42, liked: false, emoji: '🐕✨' },
+    { id: 'g-3', creator: 'Rohan (Age 11)', title: 'Smart Canteen Scheduler', desc: 'Predictive queue manager built using Explore Lab decision trees.', likes: 18, liked: false, emoji: '🍿⏱️' },
+  ]);
 
   useEffect(() => {
     const parentCustom = JSON.parse(localStorage.getItem('parent_custom_missions') || '[]');
@@ -279,8 +175,6 @@ export default function WeeklyMissions() {
       }
     }
   }, [text, selectedMission, mission, submissions]);
-
-
 
   // AI Suggestions states
   const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -323,8 +217,6 @@ export default function WeeklyMissions() {
     }
   };
 
-
-
   const isSubmitted = (id: number) => submissions.some(s => s.missionId === id && s.status === 'approved');
   const activeMissionIndex = allMissions.findIndex(m => !isSubmitted(m.id));
 
@@ -333,8 +225,6 @@ export default function WeeklyMissions() {
       ? { isValid: text.trim().length >= 15, requirements: [{ label: "📝 Write at least 15 characters describing your observation", done: text.trim().length >= 15 }] }
       : validateSubmission(mission.id, text)
   ) : { isValid: false, requirements: [] };
-
-  const [toastXP, setToastXP] = useState(80);
 
   const handleSubmit = async () => {
     if (!mission || !validation.isValid) return;
@@ -390,513 +280,514 @@ export default function WeeklyMissions() {
       });
       setShowGradeCard(true);
     } catch (error) {
-      console.warn('Gemini evaluation failed, falling back to local verification:', error);
-      try {
-        const evalResult = await evaluateMissionSubmission(mission.title, goalText, text);
-        const earnedXp = evalResult.passed ? Math.max(20, Math.round((evalResult.score / 100) * mission.xp_reward)) : 0;
-        
-        if (evalResult.passed) {
-          const submission: Submission = {
-            missionId: mission.id,
-            text,
-            status: 'approved',
-            xp: earnedXp,
-            submittedAt: new Date().toISOString(),
-            score: evalResult.score,
-            feedback: evalResult.feedback
-          };
-
-          if (user) {
-            await supabase.from('mission_submissions').insert({
-              user_id: user.id,
-              mission_id: mission.id,
-              text_observation: text,
-              status: 'approved',
-              earned_xp: earnedXp,
-            });
-            
-            await updateProfile({
-              xp: (profile?.xp ?? 0) + earnedXp
-            });
-          } else if (isGuest) {
-            await updateProfile({
-              xp: (guestProfile?.xp ?? 0) + earnedXp
-            });
-          }
-
-          const newSubs = [...submissions, submission];
-          setSubmissions(newSubs);
-          localStorage.setItem('mission_submissions', JSON.stringify(newSubs));
-          localStorage.setItem(`mission_progress_${mission.id}`, '100');
-          localStorage.removeItem(`mission_draft_${mission.id}`);
-          setToastXP(earnedXp);
-        }
-
-        setEvaluationResult({
-          score: evalResult.score,
-          feedback: evalResult.feedback,
-          earnedXp
-        });
-        setShowGradeCard(true);
-      } catch (fallbackError) {
-        console.error('Local verification fallback failed:', fallbackError);
-      }
+      console.error(error);
     } finally {
       setSubmitting(false);
     }
   };
 
+  // Joined Team handler
+  const handleJoinTeam = (teamId: string) => {
+    if (!joinedTeams.includes(teamId)) {
+      setJoinedTeams(prev => [...prev, teamId]);
+      setToastXP(50);
+      setShowXP(true);
+    }
+  };
+
+  // Submit contest handler
+  const handleContestSubmit = () => {
+    if (!contestName.trim() || !contestDesc.trim()) return;
+    setContestSubmitted(true);
+    setToastXP(100);
+    setShowXP(true);
+  };
+
+  // Like gallery item
+  const handleLikeItem = (id: string) => {
+    setGalleryItems(prev => prev.map(item => {
+      if (item.id === id) {
+        return {
+          ...item,
+          likes: item.liked ? item.likes - 1 : item.likes + 1,
+          liked: !item.liked
+        };
+      }
+      return item;
+    }));
+  };
 
   return (
-    <div className="min-h-full pb-6">
-      {showXP && <XPToast amount={toastXP} reason="Mission submitted!" onDone={() => setShowXP(false)} />}
+    <div className="min-h-full pb-20 bg-stars bg-[#0F0A2E] text-white">
+      {showXP && <XPToast amount={toastXP} reason="Mission reward claimed!" onDone={() => setShowXP(false)} />}
 
-      {/* Header */}
-      <div className="p-5" style={{ background: '#16103A' }}>
-        <h1 className="font-pixel text-[10px] text-white flex items-center gap-2 tracking-wide">🎯 WEEKLY MISSIONS</h1>
-        <p className="text-white/55 font-body text-sm mt-1">Real-world field challenges — earn massive XP!</p>
+      {/* Header Banner */}
+      <div 
+        className="p-5 flex flex-col justify-between relative overflow-hidden border-b-3 border-black"
+        style={{
+          background: 'linear-gradient(135deg, #1E1B4B 0%, #110B30 100%)'
+        }}
+      >
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="font-game text-lg text-white tracking-wide flex items-center gap-2">
+              🎯 WEEKLY MISSION CONTROL
+            </h1>
+            <p className="text-white/55 font-body text-xs mt-0.5">Explore real-world challenges with AI telemetry!</p>
+          </div>
+          <button onClick={() => navigate('/learn')} className="p-2 border-2 border-black bg-black/30 text-white/50 hover:text-white transition-colors cursor-pointer">
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+        </div>
 
-        {/* Tabs */}
-        <div className="flex mt-4 p-1" style={{ background: '#16103A', border: '2px solid #000000' }}>
-          {(['missions', 'submissions'] as const).map(tab => (
-            <button key={tab} onClick={() => setActiveTab(tab)}
-              className="flex-1 py-2 font-pixel text-[6px] transition-all duration-150 tracking-wide"
-              style={activeTab === tab ? {
-                background: '#7C3AED',
-                color: 'white',
-                border: '1.5px solid #000000',
-                boxShadow: '2px 2px 0px #000000',
-              } : { color: 'rgba(255,255,255,0.4)' }}>
-              {tab === 'missions' ? '🎯 MISSIONS' : '📋 SUBMISSIONS'}
-            </button>
-          ))}
+        {/* Tab Navigation selectors */}
+        <div className="flex mt-4 p-1 bg-black/40 border-2 border-black overflow-x-auto no-scrollbar gap-1">
+          {[
+            { id: 'solo', label: '🎯 Solo Missions', icon: Zap },
+            { id: 'team', label: '👥 Team Adventures', icon: Users },
+            { id: 'contest', label: '🏆 Creative Contest', icon: Award },
+            { id: 'gallery', label: '🖼️ Showcase Gallery', icon: Image },
+            { id: 'submissions', label: '📋 Submissions', icon: FileText }
+          ].map(tab => {
+            const Icon = tab.icon;
+            const active = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as TabType)}
+                className={`py-2 px-3 font-game text-[10px] whitespace-nowrap cursor-pointer transition-all flex items-center gap-1.5 ${
+                  active 
+                    ? 'bg-[#7C3AED] text-white border-2 border-black shadow-[2px_2px_0px_#000]'
+                    : 'text-white/45 hover:text-white/70'
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      <div className="px-4 pt-2">
-        {activeTab === 'missions' && (
+      <div className="px-4 pt-4">
+        
+        {/* SOLO MISSIONS TAB */}
+        {activeTab === 'solo' && (
           <div className="space-y-4">
-            {/* Missions Tab Progress Panel */}
+            {/* Solo Progress panel */}
             <div
-              className="p-4 space-y-3 mb-2"
+              className="p-4 space-y-3"
               style={{
                 background: '#1E1B4B',
                 border: '3px solid #7C3AED',
-                boxShadow: '4px 4px 0px 0px #000000',
+                boxShadow: '4px 4px 0px #000',
               }}
             >
-              <div className="flex items-center gap-1.5 border-b border-white/10 pb-2">
-                <span className="text-sm">🏆</span>
-                <span className="font-game text-[10px] text-white uppercase tracking-wider">Mission Control</span>
+              <div className="flex justify-between items-baseline text-[7px] font-pixel text-[#A78BFA]">
+                <span>SOLO MISSIONS COMPLETED</span>
+                <span>{completedMissionsCount}/{totalMissionsCount} ({missionPercent}%)</span>
               </div>
-
-              <div className="grid grid-cols-1 gap-3">
-                {/* Missions Progress */}
-                <div className="space-y-1">
-                  <div className="flex justify-between items-baseline text-[7px] font-pixel text-[#A78BFA]">
-                    <span>MISSIONS COMPLETED</span>
-                    <span>{completedMissionsCount}/{totalMissionsCount} ({missionPercent}%)</span>
-                  </div>
-                  <div className="w-full h-3 bg-[#0F0A2E] border border-black p-[1px] flex items-center">
-                    <div className="h-full bg-[#7C3AED]" style={{ width: `${missionPercent}%`, transition: 'width 0.8s ease' }} />
-                  </div>
-                </div>
-              </div>
-
-              {/* Checklist of missions */}
-              <div className="pt-2 border-t border-white/5 space-y-1.5 max-h-36 overflow-y-auto pr-1">
-                <span className="text-white/45 font-game text-[8px] block uppercase">Missions Checklist:</span>
-                {allMissions.map((m) => {
-                  const done = isSubmitted(m.id);
-                  const pVal = done ? 100 : parseInt(localStorage.getItem(`mission_progress_${m.id}`) || '0', 10);
-                  return (
-                    <div key={m.id} className="flex items-center justify-between text-[10px] font-body text-white/80">
-                      <div className="flex items-center gap-1.5 truncate">
-                        <span>{done ? '✅' : pVal > 0 ? '⏳' : '⏳'}</span>
-                        <span className={done ? 'line-through text-white/40 truncate' : 'truncate'}>
-                          {m.emoji} {m.title} {pVal > 0 && pVal < 100 && `(${pVal}%)`}
-                        </span>
-                      </div>
-                      <button
-                        onClick={() => {
-                          const el = document.getElementById(`mission-card-${m.id}`);
-                          if (el) {
-                            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                          }
-                        }}
-                        className="font-pixel text-[6px] px-1.5 py-0.5 border border-black bg-warning text-black hover:bg-amber-300 shadow-[1px_1px_0px_#000] uppercase cursor-pointer"
-                      >
-                        Locate
-                      </button>
-                    </div>
-                  );
-                })}
+              <div className="w-full h-3 bg-[#0F0A2E] border-2 border-black p-[2px] flex items-center">
+                <div 
+                  className="h-full bg-[#7C3AED] transition-all duration-800" 
+                  style={{ width: `${missionPercent}%` }} 
+                />
               </div>
             </div>
 
-            {allMissions.map((m, i) => {
+            {/* Solo Missions list */}
+            {allMissions.map((m, idx) => {
               const done = isSubmitted(m.id);
-              const isLocked = activeMissionIndex !== -1 && i > activeMissionIndex;
+              const isLocked = activeMissionIndex !== -1 && idx > activeMissionIndex;
               const pVal = done ? 100 : parseInt(localStorage.getItem(`mission_progress_${m.id}`) || '0', 10);
               return (
-                <motion.div
+                <div
                   key={m.id}
-                  id={`mission-card-${m.id}`}
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.08 }}
-                  className={`p-5 relative overflow-hidden transition-all ${done ? 'opacity-40 grayscale saturate-50' : isLocked ? 'opacity-35 grayscale saturate-50 pointer-events-none' : ''}`}
+                  className={`p-4 border-2 border-black relative overflow-hidden transition-all flex flex-col justify-between ${
+                    done ? 'bg-[#1E1B4B]/60 opacity-60' : isLocked ? 'bg-black/20 opacity-40' : 'bg-[#151036]'
+                  }`}
                   style={{
-                    background: '#1E1B4B',
-                    border: '3px solid #000000',
-                    boxShadow: done ? '2px 2px 0px #000000' : isLocked ? '1.5px 1.5px 0px #000000' : '4px 4px 0px #000000',
+                    boxShadow: done ? '2px 2px 0px #000' : '4px 4px 0px #000',
                   }}
                 >
                   {done && (
                     <div className="completed-ribbon-container">
-                      <div className="completed-ribbon">DONE</div>
+                      <div className="completed-ribbon font-pixel text-[5px]">DONE</div>
                     </div>
                   )}
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1">
-                      <div className="flex items-start gap-2 mb-1">
-                        <span className="text-2xl mt-0.5">{m.emoji}</span>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-1.5">
-                            <div className="text-white font-game text-sm truncate">{m.title}</div>
-                            <CardProgressBadge percent={pVal} />
-                          </div>
-                          <span className={`text-xs font-body border border-black px-2 py-0.5 inline-block mt-1 ${
-                            m.difficulty === 'Easy' ? 'bg-success/30 text-green-300' :
-                            m.difficulty === 'Medium' ? 'bg-warning/30 text-yellow-300' :
-                            'bg-pixel-red/30 text-red-300'
-                          }`}>
-                            {m.difficulty}
-                          </span>
-                        </div>
-                      </div>
-                      <p className="text-white/70 font-body text-sm leading-relaxed mt-2">{m.description}</p>
-                      <div className="flex items-center gap-1 mt-2">
-                        <Zap className="w-4 h-4 text-warning" />
-                        <span className="text-warning font-game text-xs">+{m.xp_reward} XP Reward</span>
-                      </div>
-                      <div className="mt-3.5">
-                        <CardProgressBar percent={pVal} />
-                      </div>
+
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">{m.emoji}</span>
+                      <h3 className="font-game text-xs text-white uppercase tracking-wide truncate max-w-[200px]">
+                        {m.title}
+                      </h3>
                     </div>
-                    {done ? (
-                      <CheckCircle className="w-8 h-8 text-success flex-shrink-0" />
-                    ) : null}
+                    {!done && !isLocked && <CardProgressBadge percent={pVal} />}
                   </div>
-                  {!done && !isLocked && (
-                    <Button variant="primary" size="sm" fullWidth className="mt-4" onClick={() => setSelectedMission(m.id)}>
-                      Start Mission →
-                    </Button>
-                  )}
-                  {isLocked && (
-                    <div className="mt-4 p-2 text-center bg-red-950/20 border border-red-900/35">
-                      <span className="font-pixel text-[6px] text-red-400">🔒 COMPLETE PREVIOUS MISSIONS TO UNLOCK</span>
-                    </div>
-                  )}
-                  {done && (
-                    <div className="mt-3 pt-2 text-center" style={{ borderTop: '2px solid rgba(16,185,129,0.3)' }}>
-                      <span className="font-pixel text-[6px] tracking-wide" style={{ color: '#10B981' }}>✅ MISSION COMPLETED!</span>
-                    </div>
-                  )}
-                </motion.div>
+
+                  <p className="font-body text-[11px] text-white/75 leading-relaxed mb-3">
+                    {m.description}
+                  </p>
+
+                  <div className="flex items-center justify-between mt-1 pt-2.5 border-t border-white/5">
+                    <span className="font-pixel text-[5px] text-warning flex items-center gap-1">
+                      ⚡ +{m.xp_reward} XP Reward
+                    </span>
+                    {done ? (
+                      <span className="font-pixel text-[5px] text-[#10B981] flex items-center gap-1">✓ Complete</span>
+                    ) : isLocked ? (
+                      <span className="font-pixel text-[5px] text-white/30 flex items-center gap-1">🔒 Locked</span>
+                    ) : (
+                      <button
+                        onClick={() => setSelectedMission(m.id)}
+                        className="px-4 py-1.5 font-game text-[9px] text-black bg-[#FFD60A] border border-black shadow-[2px_2px_0px_#000] cursor-pointer"
+                      >
+                        Accept Mission ➔
+                      </button>
+                    )}
+                  </div>
+                </div>
               );
             })}
           </div>
         )}
 
-        {activeTab === 'submissions' && (
-          <div className="space-y-4 pt-2">
-            {submissions.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
-                <div className="text-6xl opacity-40">📋</div>
-                <p className="text-white/40 font-body text-sm">No submissions yet. Complete a mission to see it here!</p>
-              </div>
-            ) : submissions.map((s, i) => {
-              const m = WEEKLY_MISSIONS_DATA.find(m => m.id === s.missionId);
-              return (
-                <div key={i} className="p-4" style={{ background: '#1E1B4B', border: '3px solid #000000', boxShadow: '3px 3px 0px #000000' }}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xl">{m?.emoji}</span>
-                    <div className="flex-1">
-                      <div className="text-white font-game text-sm">{m?.title}</div>
-                      <div className="text-white/50 font-body text-xs">{new Date(s.submittedAt).toLocaleDateString()}</div>
-                    </div>
-                    <div className="flex flex-col items-end gap-1">
-                       <span className="font-pixel text-[7px] px-2 py-1 text-white" style={{ background: '#10B981', border: '2px solid #000000', boxShadow: '2px 2px 0px #000000' }}>+{s.xp} XP</span>
-                      {s.score !== undefined && (
-                        <span className="bg-primary/20 border border-primary/40 text-primary-light font-pixel text-[8px] px-1">
-                          Score: {s.score}%
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="bg-black/20 border-l-4 border-success p-3">
-                    <p className="text-white/80 font-body text-sm italic">"{s.text}"</p>
-                  </div>
-                  {s.feedback && (
-                    <div className="mt-2 text-[10px] font-body bg-black/30 border-l-4 border-primary p-2 text-white/70">
-                      <strong className="text-primary font-game text-[8px] block mb-0.5">🤖 AI Feedback:</strong>
-                      {s.feedback}
-                    </div>
-                  )}
-                </div>
+        {/* TEAM ADVENTURES TAB */}
+        {activeTab === 'team' && (
+          <div className="space-y-4">
+            <div className="bg-[#1E1B4B] border-3 border-[#3B82F6] p-4 shadow-[4px_4px_0px_#000] space-y-2">
+              <h3 className="font-game text-xs text-white uppercase tracking-wider flex items-center gap-2">
+                <Users className="w-4 h-4 text-blue-400" /> Collaborative Crew Missions
+              </h3>
+              <p className="font-body text-xs text-white/60 leading-relaxed">
+                Connect with school colleagues, split research tasks, and upload collective submissions. Complete missions to earn massive XP!
+              </p>
+            </div>
 
+            {mockTeamMissions.map(team => {
+              const joined = joinedTeams.includes(team.id);
+              return (
+                <div
+                  key={team.id}
+                  className={`p-4 border-2 border-black flex flex-col justify-between ${
+                    joined ? 'bg-[#151F3C]' : 'bg-[#1E1B4B]'
+                  }`}
+                  style={{ boxShadow: '4px 4px 0px #000' }}
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <h4 className="font-game text-xs text-white uppercase tracking-wide">{team.title}</h4>
+                    <span className="font-pixel text-[5px] text-yellow-400 bg-yellow-950/20 border border-yellow-800/40 px-1 py-0.5">
+                      {joined ? team.membersJoined + 1 : team.membersJoined}/{team.membersRequired} TEAM JOINED
+                    </span>
+                  </div>
+
+                  <p className="font-body text-[11px] text-white/70 leading-relaxed mb-3">
+                    {team.description}
+                  </p>
+
+                  <div className="flex items-center justify-between border-t border-white/5 pt-2.5 mt-1">
+                    <span className="font-pixel text-[5px] text-warning">⚡ +{team.xpReward} XP PER MEMBER</span>
+                    {joined ? (
+                      <span className="font-pixel text-[5px] text-emerald-400 bg-emerald-950/15 border border-emerald-800/30 px-2 py-1 flex items-center gap-1">
+                        ✓ Registered in Crew
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => handleJoinTeam(team.id)}
+                        className="px-4 py-1.5 font-game text-[9px] text-white bg-blue-600 border border-black shadow-[2px_2px_0px_#000] cursor-pointer hover:bg-blue-700 transition-colors"
+                      >
+                        Join Team Room 👥
+                      </button>
+                    )}
+                  </div>
+                </div>
               );
             })}
+          </div>
+        )}
+
+        {/* CREATIVE CONTEST TAB */}
+        {activeTab === 'contest' && (
+          <div className="space-y-4 max-w-md mx-auto">
+            <div className="bg-[#1E1B4B] border-3 border-[#F59E0B] p-4 shadow-[4px_4px_0px_#000] space-y-2">
+              <h3 className="font-game text-xs text-white uppercase tracking-wider flex items-center gap-2">
+                <Award className="w-4 h-4 text-yellow-400" /> Monthly Creator Contest
+              </h3>
+              <p className="font-body text-xs text-white/60 leading-relaxed">
+                Theme: **"The Smart Robot Teacher Assistant"**. Sketch, describe, or design an AI helper bot that grades homework, explains concepts, or rings recess bells!
+              </p>
+            </div>
+
+            {contestSubmitted ? (
+              <motion.div
+                initial={{ scale: 0.95 }}
+                animate={{ scale: 1 }}
+                className="p-5 border-2 border-[#10B981] bg-[#10B981]/10 text-center space-y-2 shadow-[4px_4px_0px_#000]"
+              >
+                <div className="text-3xl">🎉</div>
+                <h4 className="font-game text-xs text-white uppercase">Contest Submission Logged!</h4>
+                <p className="font-body text-[10px] text-white/60">
+                  Your entry is queued for evaluation. Stand by to win up to 250 Gems!
+                </p>
+                <button
+                  onClick={() => setContestSubmitted(false)}
+                  className="mt-2.5 px-4 py-1.5 font-game text-[9px] text-black bg-[#FFD60A] border border-black cursor-pointer"
+                >
+                  Edit Submission
+                </button>
+              </motion.div>
+            ) : (
+              <div
+                className="p-4 space-y-3"
+                style={{ background: '#1E1B4B', border: '2.5px solid #000', boxShadow: '4px 4px 0px #000' }}
+              >
+                <div>
+                  <span className="text-white/40 font-pixel text-[5px] block mb-1">INVENTION PROMPT NAME:</span>
+                  <input
+                    type="text"
+                    value={contestName}
+                    onChange={e => setContestName(e.target.value)}
+                    placeholder="e.g. Recess Bot 3000"
+                    className="w-full pixel-input text-xs"
+                    maxLength={30}
+                  />
+                </div>
+
+                <div>
+                  <span className="text-white/40 font-pixel text-[5px] block mb-1">DESCRIBE CONTEST INVENTION DESIGN:</span>
+                  <textarea
+                    value={contestDesc}
+                    onChange={e => setContestDesc(e.target.value)}
+                    placeholder="Describe how your AI teacher assistant works..."
+                    className="w-full pixel-input text-xs h-28 resize-none"
+                    maxLength={300}
+                  />
+                </div>
+
+                <button
+                  onClick={handleContestSubmit}
+                  disabled={!contestName.trim() || !contestDesc.trim()}
+                  className="w-full py-3 bg-[#F59E0B] text-black font-game text-xs border-3 border-black shadow-[3px_3px_0px_#000] flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  <Award className="w-3.5 h-3.5" />
+                  Submit Contest Entry 🚀
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* SHOWCASE GALLERY TAB */}
+        {activeTab === 'gallery' && (
+          <div className="space-y-4">
+            <div className="bg-[#1E1B4B] border-3 border-pink-500 p-4 shadow-[4px_4px_0px_#000] space-y-2">
+              <h3 className="font-game text-xs text-white uppercase tracking-wider flex items-center gap-2">
+                <Image className="w-4 h-4 text-pink-400" /> Student Showcase Gallery
+              </h3>
+              <p className="font-body text-xs text-white/60 leading-relaxed">
+                Check out the creations other students have built and compiled in their AI sandboxes and Prompt/Create labs!
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              {galleryItems.map(item => (
+                <div
+                  key={item.id}
+                  className="p-4 bg-[#1E1B4B] border-2 border-black relative overflow-hidden flex flex-col justify-between"
+                  style={{ boxShadow: '3px 3px 0px #000' }}
+                >
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="font-pixel text-[5px] text-[#A78BFA]">{item.creator}</span>
+                      <span className="text-xl">{item.emoji}</span>
+                    </div>
+                    <h4 className="font-game text-xs text-white uppercase tracking-wide mb-1">{item.title}</h4>
+                    <p className="font-body text-[10px] text-white/60 leading-relaxed">{item.desc}</p>
+                  </div>
+
+                  <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-white/5">
+                    <button
+                      onClick={() => handleLikeItem(item.id)}
+                      className={`flex items-center gap-1 font-pixel text-[6px] tracking-wide px-2 py-1 border border-black cursor-pointer transition-colors ${
+                        item.liked ? 'bg-pink-600 text-white' : 'bg-black/20 text-white/50 hover:text-white'
+                      }`}
+                    >
+                      <Heart className={`w-2.5 h-2.5 ${item.liked ? 'fill-white' : ''}`} />
+                      {item.likes} LIKES
+                    </button>
+                    <span className="font-pixel text-[4px] text-white/20 uppercase">QUEST COMPILER</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* SUBMISSIONS LIST TAB */}
+        {activeTab === 'submissions' && (
+          <div className="space-y-4">
+            {submissions.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
+                <div className="text-5xl opacity-30">📋</div>
+                <p className="text-white/40 font-body text-sm">No submissions documented. Solve a solo mission to view stats!</p>
+              </div>
+            ) : (
+              submissions.map((s, idx) => {
+                const m = WEEKLY_MISSIONS_DATA.find(m => m.id === s.missionId);
+                return (
+                  <div 
+                    key={idx} 
+                    className="p-4 border-2 border-black" 
+                    style={{ background: '#1E1B4B', boxShadow: '3px 3px 0px #000' }}
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-2xl">{m?.emoji || '🎯'}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-white font-game text-xs truncate">{m?.title || 'Custom Mission'}</div>
+                        <div className="text-white/45 font-pixel text-[4.5px]">{new Date(s.submittedAt).toLocaleDateString()}</div>
+                      </div>
+                      <div className="flex flex-col items-end gap-1">
+                        <span className="font-pixel text-[5px] px-2 py-0.5 text-black bg-[#10B981] border border-black">+{s.xp} XP</span>
+                        {s.score !== undefined && (
+                          <span className="font-pixel text-[5px] text-[#FFD60A]">Score: {s.score}%</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="bg-black/25 border-l-4 border-[#10B981] p-3 text-left">
+                      <p className="text-white/80 font-body text-xs italic">"{s.text}"</p>
+                    </div>
+                    {s.feedback && (
+                      <div className="mt-2 font-body text-[10px] bg-black/40 border-l-4 border-[#7C3AED] p-2 text-white/70">
+                        <strong className="text-purple-400 font-game text-[8px] block mb-0.5">🤖 SPARKY ASSESSMENT:</strong>
+                        {s.feedback}
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            )}
           </div>
         )}
       </div>
 
-      {/* Mission Submission Modal */}
+      {/* Mission Observation Input Overlay */}
       <AnimatePresence>
         {selectedMission && mission && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 overflow-y-auto"
+            className="fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-4 overflow-y-auto"
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="w-full max-w-md my-auto"
-              style={{ background: '#1E1B4B', border: '4px solid #000000', boxShadow: '6px 6px 0px #000000' }}
+              className="w-full max-w-sm my-auto bg-[#1E1B4B] border-4 border-black p-4 shadow-[6px_6px_0px_#000]"
             >
               {/* Header */}
-              <div className="p-4 flex items-center gap-3" style={{ background: '#16103A', borderBottom: '3px solid #000000' }}>
+              <div className="p-3 mb-3 flex items-center gap-3 bg-[#16103A] border-b-2 border-black">
                 <span className="text-3xl">{mission.emoji}</span>
                 <div>
-                  <div className="text-white font-game text-sm">{mission.title}</div>
-                  <div className="text-warning font-body text-xs">+{mission.xp_reward} XP on completion</div>
+                  <h4 className="font-game text-xs text-white uppercase">{mission.title}</h4>
+                  <span className="font-pixel text-[5px] text-warning">+{mission.xp_reward} XP Reward</span>
                 </div>
               </div>
 
               {showGradeCard && evaluationResult ? (
-                /* Report Card View */
-                <motion.div
-                  initial={{ scale: 0.95, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  className="p-6 space-y-6 text-center"
-                >
-                  <div className="space-y-1">
-                    <span className="text-4xl">🏆</span>
-                    <h3 className="text-white font-game text-sm uppercase tracking-wide">Mission Evaluated!</h3>
-                    <p className="text-white/50 font-body text-[10px]">QuestAI Evaluator Results</p>
+                /* Evaluation Summary */
+                <div className="space-y-4 text-center">
+                  <div className="w-24 h-24 mx-auto flex flex-col items-center justify-center border-4 border-black bg-black/40 rounded-full">
+                    <span className="font-pixel text-[5px] text-white/40 uppercase">Score</span>
+                    <span className="font-game text-2xl text-emerald-400">{evaluationResult.score}%</span>
                   </div>
 
-                  {/* Circular / Large Score Badge */}
-                  <div className={`relative w-32 h-32 mx-auto flex flex-col items-center justify-center border-8 border-black bg-game rounded-full ${
-                    evaluationResult.score >= 50 
-                      ? 'shadow-[0_0_15px_rgba(34,197,94,0.3)]' 
-                      : 'shadow-[0_0_15px_rgba(239,68,68,0.3)]'
-                  }`}>
-                    <div className="text-[9px] font-game text-white/40 uppercase tracking-widest">Score</div>
-                    <div className={`text-3xl font-game animate-pulse ${
-                      evaluationResult.score >= 50 ? 'text-success' : 'text-pixel-red'
-                    }`}>
-                      {evaluationResult.score}%
-                    </div>
-                    <div className="text-[10px] font-body text-white/60 mt-1">
-                      Grade: {
-                        evaluationResult.score >= 90 ? 'A+' :
-                        evaluationResult.score >= 80 ? 'A' :
-                        evaluationResult.score >= 70 ? 'B' :
-                        evaluationResult.score >= 50 ? 'C' : 'F'
-                      }
-                    </div>
+                  <div className="border border-white/10 bg-black/25 p-3 text-left">
+                    <span className="font-pixel text-[5px] text-purple-400 block mb-1">🤖 AI FEEDBACK:</span>
+                    <p className="font-body text-xs text-white/80 leading-relaxed italic">"{evaluationResult.feedback}"</p>
                   </div>
 
-                  {/* XP Reward Banner */}
-                  <div className={`border-4 border-black p-3 flex items-center justify-center gap-3 ${
-                    evaluationResult.score >= 50 ? 'bg-warning/10' : 'bg-pixel-red/10'
-                  }`}>
-                    {evaluationResult.score >= 50 ? (
-                      <>
-                        <Zap className="w-6 h-6 text-warning animate-bounce" />
-                        <div className="text-left">
-                          <div className="text-warning font-game text-xs">+{evaluationResult.earnedXp} XP Awarded</div>
-                          <div className="text-white/50 font-body text-[9px]">Added to your profile</div>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <XCircle className="w-6 h-6 text-pixel-red animate-bounce" />
-                        <div className="text-left">
-                          <div className="text-pixel-red font-game text-xs">0 XP Earned</div>
-                          <div className="text-white/50 font-body text-[9px]">Score must be at least 50% to pass</div>
-                        </div>
-                      </>
-                    )}
-                  </div>
-
-                  {/* AI Feedback Bubble */}
-                  <div className="border-4 border-black bg-black/40 p-4 text-left relative mt-2">
-                    <div className="absolute -top-3 left-4 bg-primary text-black font-game text-[8px] px-2 py-0.5 border-2 border-black">
-                      🤖 AI Feedback
-                    </div>
-                    <p className="text-white/90 font-body text-xs leading-relaxed mt-1">
-                      {evaluationResult.feedback}
+                  <Button
+                    variant="success"
+                    fullWidth
+                    onClick={() => {
+                      setSelectedMission(null);
+                      setText('');
+                      setShowXP(true);
+                      resetAIStates();
+                    }}
+                  >
+                    Claim XP & Continue ➔
+                  </Button>
+                </div>
+              ) : (
+                /* Submission entry */
+                <div className="space-y-4">
+                  <div className="bg-black/35 p-3 border border-white/5">
+                    <span className="font-pixel text-[5px] text-purple-400 block mb-1">MISSION GOAL:</span>
+                    <p className="font-body text-xs text-white/80 leading-relaxed">
+                      {mission.isCustom ? mission.description : MISSION_HELPERS[mission.id]?.goal}
                     </p>
                   </div>
 
-                  {/* Claim or Retry Button */}
-                  {evaluationResult.score >= 50 ? (
+                  <div>
+                    <span className="font-pixel text-[5px] text-white/40 block mb-1">YOUR FIELD OBSERVATION DETAIL:</span>
+                    <textarea
+                      value={text}
+                      onChange={e => setText(e.target.value)}
+                      placeholder="Write your research observations here..."
+                      className="w-full pixel-input text-xs h-24 resize-none"
+                    />
+                    
+                    <button
+                      onClick={handleGetSuggestions}
+                      disabled={loadingSuggestions}
+                      className="mt-2 text-[#7C3AED] hover:text-purple-400 font-game text-[8px] bg-purple-950/20 px-2 py-1 border border-purple-900/30 flex items-center gap-1 cursor-pointer"
+                    >
+                      <Sparkles className="w-2.5 h-2.5 animate-pulse" />
+                      {loadingSuggestions ? 'Asking Sparky...' : '💡 Get Suggestions from Sparky'}
+                    </button>
+                  </div>
+
+                  {/* Suggestions mapping */}
+                  {suggestions.length > 0 && (
+                    <div className="bg-black/40 border border-[#7C3AED]/30 p-2 space-y-1">
+                      {suggestions.map((sug, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => handleApplySuggestion(sug)}
+                          className="w-full text-left p-1 bg-purple-950/10 hover:bg-purple-950/30 border border-transparent hover:border-purple-800/40 text-[9px] font-body text-white/70"
+                        >
+                          • {sug}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Validation feedback checks */}
+                  <div className="p-2 border border-white/10 bg-black/25 space-y-1">
+                    {validation.requirements.map((req, idx) => (
+                      <div key={idx} className="flex items-center gap-1 text-[9px] font-body text-white/60">
+                        <span>{req.done ? '✅' : '❌'}</span>
+                        <span>{req.label}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button variant="ghost" size="sm" onClick={() => setSelectedMission(null)}>Cancel</Button>
                     <Button
                       variant="success"
                       fullWidth
-                      onClick={() => {
-                        const currentIdx = allMissions.findIndex(m => m.id === mission.id);
-                        const nextIncomplete = allMissions.find((m, idx) => idx > currentIdx && !isSubmitted(m.id));
-
-                        setSelectedMission(null);
-                        setText('');
-                        setShowXP(true);
-                        resetAIStates();
-
-                        if (nextIncomplete) {
-                          setTimeout(() => {
-                            setSelectedMission(nextIncomplete.id);
-                          }, 2500);
-                        }
-                      }}
+                      disabled={!validation.isValid}
+                      onClick={handleSubmit}
                     >
-                      Claim Rewards & Return! 🎒
+                      Submit Observations 🚀
                     </Button>
-                  ) : (
-                    <Button
-                      variant="primary"
-                      fullWidth
-                      onClick={() => {
-                        setShowGradeCard(false);
-                        setEvaluationResult(null);
-                      }}
-                    >
-                      Try Again to Improve! 🔄
-                    </Button>
-                  )}
-                </motion.div>
-              ) : (
-                /* Edit / Input View */
-                <>
-                  {/* Instructions */}
-                  <div className="p-4 border-b-4 border-black bg-primary/10">
-                    <div className="text-white font-game text-[10px] uppercase text-primary tracking-wider mb-1 flex items-center gap-1">
-                      <HelpCircle className="w-3 h-3" /> Step-by-Step Instructions
-                    </div>
-                    <p className="text-white font-body text-xs font-semibold leading-relaxed">
-                      {mission.isCustom ? mission.description : MISSION_HELPERS[mission.id]?.goal}
-                    </p>
-                    {mission.isCustom && mission.tasks && (
-                      <div className="mt-2 space-y-1">
-                        <strong className="text-warning text-[10px] block">📋 Tasks Checklist:</strong>
-                        {mission.tasks.map((task: string, idx: number) => (
-                          <div key={idx} className="flex items-center gap-1.5 text-white/80 font-body text-[10px]">
-                            <span>⬜</span>
-                            <span>{task}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    {!mission.isCustom && (
-                      <>
-                        <div className="mt-2 text-white/70 font-body text-[11px] leading-relaxed">
-                          <strong className="text-warning">💡 Examples:</strong> {MISSION_HELPERS[mission.id]?.examples}
-                        </div>
-                        <div className="mt-2 text-white/50 font-body text-[10px] leading-relaxed border-t border-white/5 pt-1">
-                          <strong className="text-white/70">⚙️ How it is validated:</strong> {MISSION_HELPERS[mission.id]?.validationDesc}
-                        </div>
-                      </>
-                    )}
                   </div>
-
-                  {/* Input & Live Checklist */}
-                  <div className="p-5 space-y-4">
-                    <div>
-                      <label className="text-white/70 font-body text-xs mb-2 block flex items-center gap-2">
-                        <FileText className="w-4 h-4 text-primary" /> Your Observation:
-                      </label>
-                      <textarea value={text} onChange={e => setText(e.target.value)}
-                        placeholder="Provide your detailed observation here..."
-                        className="pixel-input h-28 resize-none text-xs" maxLength={500} />
-                      <div className="flex justify-between items-center mt-1">
-                        <button
-                          type="button"
-                          onClick={handleGetSuggestions}
-                          disabled={loadingSuggestions}
-                          className="flex items-center gap-1 text-primary hover:text-primary-light text-[9px] font-game bg-primary/10 hover:bg-primary/20 px-2 py-1 border border-primary/20 rounded transition-all"
-                        >
-                          <Sparkles className="w-3 h-3 animate-pulse" />
-                          {loadingSuggestions ? 'Asking Gemini...' : '💡 Ask Gemini for suggestions'}
-                        </button>
-                        <div className="text-white/30 font-body text-xs">{text.length}/500</div>
-                      </div>
-                    </div>
-
-                    {/* Suggestions list */}
-                    {suggestions.length > 0 && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="border-2 border-primary bg-primary/5 p-3 space-y-2 relative"
-                      >
-                        <div className="absolute -top-2.5 right-3 bg-primary text-black font-game text-[8px] px-1.5 py-0.5 border border-black rounded">
-                          Gemini Suggestions
-                        </div>
-                        <div className="text-[9px] font-body text-white/50 mb-1">
-                          Click any hint below to add it to your observation:
-                        </div>
-                        <div className="space-y-1">
-                          {suggestions.map((sug, idx) => (
-                            <button
-                              key={idx}
-                              type="button"
-                              onClick={() => handleApplySuggestion(sug)}
-                              className="w-full text-left bg-black/30 hover:bg-black/50 border border-white/10 hover:border-primary/45 p-2 text-[10px] font-body text-white/80 hover:text-white transition-all flex items-start gap-1"
-                            >
-                              <span className="text-primary font-bold">•</span>
-                              <span>{sug}</span>
-                            </button>
-                          ))}
-                        </div>
-                      </motion.div>
-                    )}
-
-                    {/* Validation Checklist */}
-                    <div className="border-2 border-black bg-game p-3">
-                      <div className="text-white/50 font-game text-[9px] uppercase tracking-wider mb-2">AI Verification Checklist</div>
-                      <div className="space-y-1.5">
-                        {validation.requirements.map((req, index) => (
-                          <div key={index} className="flex items-start gap-2">
-                            {req.done ? (
-                              <CheckCircle className="w-3.5 h-3.5 text-success flex-shrink-0 mt-0.5" />
-                            ) : (
-                              <XCircle className="w-3.5 h-3.5 text-pixel-red flex-shrink-0 mt-0.5 opacity-60" />
-                            )}
-                            <span className={`text-[10px] font-body transition-colors leading-tight ${req.done ? 'text-white' : 'text-white/40'}`}>
-                              {req.label}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Submit / Cancel Buttons */}
-                    <div className="flex gap-3 pt-2">
-                      <Button variant="ghost" onClick={() => { setSelectedMission(null); setText(''); resetAIStates(); }}>Cancel</Button>
-                      <Button variant="success" fullWidth loading={submitting} disabled={!validation.isValid} onClick={handleSubmit}>
-                        Submit Mission! 🚀
-                      </Button>
-                    </div>
-                  </div>
-                </>
+                </div>
               )}
-
             </motion.div>
           </motion.div>
         )}

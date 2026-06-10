@@ -13,6 +13,13 @@ import { MissionBriefing, AICompanion } from '@/components/ui/AICompanion';
 import { VideoCheckpointOverlay, CheckpointTimeline } from '@/components/ui/VideoCheckpoint';
 import { MissionComplete } from '@/components/ui/MissionComplete';
 
+// New Labs
+import PromptLab from '@/components/labs/PromptLab';
+import TrainLab from '@/components/labs/TrainLab';
+import CreateLab from '@/components/labs/CreateLab';
+import ExploreLab from '@/components/labs/ExploreLab';
+
+
 export default function LessonPlayer() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -347,6 +354,26 @@ export default function LessonPlayer() {
 
   // Render specific interactive lab layouts
   const renderAILab = () => {
+    const labType = lesson.aiLab?.type;
+
+    const handleLabComplete = () => {
+      setLabCompleted(true);
+      localStorage.setItem(`lesson_${lesson.id}_lab`, 'true');
+    };
+
+    if (labType === 'prompt-lab') {
+      return <PromptLab onComplete={handleLabComplete} />;
+    }
+    if (labType === 'train-lab') {
+      return <TrainLab onComplete={handleLabComplete} />;
+    }
+    if (labType === 'create-lab') {
+      return <CreateLab onComplete={handleLabComplete} />;
+    }
+    if (labType === 'explore-lab' || labType === 'detective-lab') {
+      return <ExploreLab onComplete={handleLabComplete} />;
+    }
+
     switch (lesson.sandboxType) {
       case 'teachable':
         return (
