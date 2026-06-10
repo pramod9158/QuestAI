@@ -27,7 +27,11 @@ const MILESTONES = [
   { samples: 60, xp: 50, msg: '60 samples — AI expert!' },
 ];
 
-export default function TeachableMachineTrainer() {
+interface TeachableMachineTrainerProps {
+  onComplete?: () => void;
+}
+
+export default function TeachableMachineTrainer({ onComplete }: TeachableMachineTrainerProps = {}) {
   const [phase, setPhase] = useState<Phase>('mission');
   const [mission, setMission] = useState<Mission | null>(null);
   const [loadingModel, setLoadingModel] = useState(false);
@@ -214,7 +218,8 @@ export default function TeachableMachineTrainer() {
     setXpMsg('Mission Complete! 🏆');
     setEarnedXP(prev => prev + 100);
     setShowXP(true);
-  }, []);
+    onComplete?.();
+  }, [onComplete]);
 
   const resetAll = useCallback(() => {
     stopCapture();

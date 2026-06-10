@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/Button';
 import { XPToast } from '@/components/ui/GameUI';
-import { generateBrainstormIdea } from '@/lib/gemini';
+import { generateBrainstormIdea } from '@/lib/ai';
 import { Trophy, Star, Lightbulb, Plus, ArrowLeft } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 

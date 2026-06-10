@@ -15,6 +15,7 @@ import Profile from '@/pages/Profile';
 import Dashboard from '@/pages/Dashboard';
 import Leaderboard from '@/pages/Leaderboard';
 import ComicCreator from '@/pages/ComicCreator';
+import PromptEngineering from '@/pages/PromptEngineering';
 
 // Lesson Player
 import LessonPlayer from '@/pages/modules/LessonPlayer';
@@ -127,6 +128,7 @@ function AppRoutes() {
         <Route path="/play/quiz" element={<PlayZoneGuard><QuizArena /></PlayZoneGuard>} />
         <Route path="/play/inventor-hall" element={<PlayZoneGuard><InventorHall /></PlayZoneGuard>} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/prompts" element={<PromptEngineering />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/comic" element={<PlayZoneGuard><ComicCreator /></PlayZoneGuard>} />
         <Route path="/worlds" element={<WorldMap />} />

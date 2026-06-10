@@ -7,7 +7,7 @@ import { WEEKLY_MISSIONS_DATA } from '@/data/curriculum';
 import { supabase } from '@/lib/supabase';
 import { useAuth, useCurrentProfile } from '@/contexts/AuthContext';
 import { FileText, CheckCircle, XCircle, Zap, ArrowLeft, HelpCircle, Sparkles, Users, Award, Image, ThumbsUp, Heart } from 'lucide-react';
-import { generateMissionSuggestions, evaluateMissionSubmission } from '@/lib/gemini';
+import { generateMissionSuggestions, evaluateMissionSubmission } from '@/lib/ai';
 import { getPlatformProgress } from '@/lib/gamification';
 
 interface Submission { 
@@ -63,33 +63,6 @@ const MISSION_HELPERS: Record<number, { goal: string; examples: string; validati
   },
 };
 
-const validateSubmission = (missionId: number, text: string) => {
-  const t = text.trim().toLowerCase();
-  const nonRepetitive = !/(.)\1{4,}/.test(t) && !/^(xyz|abc|test|qwerty|asdf)/.test(t) && text.trim().split(/\s+/).length >= 5;
-  
-  if (missionId === 1) {
-    const keywords = ['phone', 'mobile', 'camera', 'face id', 'fingerprint', 'alexa', 'siri', 'assistant', 'speaker', 'tv', 'television', 'refrigerator', 'fridge', 'vacuum', 'robot', 'youtube', 'netflix', 'spotify', 'light', 'bulb', 'ac', 'conditioner', 'smart', 'ai', 'algorithm', 'app', 'feed', 'recommend'];
-    const matches = keywords.filter(kw => t.includes(kw));
-    const minChars = 35;
-    return {
-      isValid: text.trim().length >= minChars && matches.length >= 2 && nonRepetitive,
-      requirements: [
-        { label: `📝 Write at least ${minChars} characters`, done: text.trim().length >= minChars },
-        { label: "🤖 Mention smart features (Alexa, Netflix, Siri, camera)", done: matches.length >= 2 },
-        { label: "💡 Provide a realistic description (no spam)", done: nonRepetitive },
-      ]
-    };
-  }
-  
-  // Default validation
-  return {
-    isValid: text.trim().length >= 15 && nonRepetitive,
-    requirements: [
-      { label: "📝 Write at least 15 characters", done: text.trim().length >= 15 },
-      { label: "💡 Avoid random keyboard mashing/spam", done: nonRepetitive }
-    ]
-  };
-};
 
 export default function WeeklyMissions() {
   const { user, profile, guestProfile, isGuest, updateProfile } = useAuth();
@@ -220,14 +193,10 @@ export default function WeeklyMissions() {
   const isSubmitted = (id: number) => submissions.some(s => s.missionId === id && s.status === 'approved');
   const activeMissionIndex = allMissions.findIndex(m => !isSubmitted(m.id));
 
-  const validation = mission ? (
-    mission.isCustom
-      ? { isValid: text.trim().length >= 15, requirements: [{ label: "📝 Write at least 15 characters describing your observation", done: text.trim().length >= 15 }] }
-      : validateSubmission(mission.id, text)
-  ) : { isValid: false, requirements: [] };
+  const isValid = text.trim().length > 0;
 
   const handleSubmit = async () => {
-    if (!mission || !validation.isValid) return;
+    if (!mission || !isValid) return;
     setSubmitting(true);
     
     const goalText = MISSION_HELPERS[mission.id]?.goal || mission.description;
@@ -765,22 +734,13 @@ export default function WeeklyMissions() {
                     </div>
                   )}
 
-                  {/* Validation feedback checks */}
-                  <div className="p-2 border border-white/10 bg-black/25 space-y-1">
-                    {validation.requirements.map((req, idx) => (
-                      <div key={idx} className="flex items-center gap-1 text-[9px] font-body text-white/60">
-                        <span>{req.done ? '✅' : '❌'}</span>
-                        <span>{req.label}</span>
-                      </div>
-                    ))}
-                  </div>
 
                   <div className="flex gap-2">
                     <Button variant="ghost" size="sm" onClick={() => setSelectedMission(null)}>Cancel</Button>
                     <Button
                       variant="success"
                       fullWidth
-                      disabled={!validation.isValid}
+                      disabled={!isValid}
                       onClick={handleSubmit}
                     >
                       Submit Observations 🚀

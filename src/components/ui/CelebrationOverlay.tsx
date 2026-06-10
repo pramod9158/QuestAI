@@ -80,7 +80,10 @@ export function CelebrationOverlay({
   subtitle = 'You completed this!',
   xpGained = 0,
   coinsGained = 0,
+  gemsGained = 0,
+  streakBonus = 0,
   badge,
+  nextMission,
   onDone,
   autoDismissMs = 4000,
 }: CelebrationOverlayProps) {

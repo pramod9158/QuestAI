@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { XPToast } from '@/components/ui/GameUI';
-import { generateBrainstormIdea } from '@/lib/gemini';
+import { generateBrainstormIdea } from '@/lib/ai';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Lightbulb, ChevronRight, Save, Loader2, ArrowLeft } from 'lucide-react';

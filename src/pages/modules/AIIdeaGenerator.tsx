@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { XPToast } from '@/components/ui/GameUI';
-import { generateAIIdeas } from '@/lib/gemini';
+import { generateAIIdeas } from '@/lib/ai';
 import { useCurrentProfile } from '@/contexts/AuthContext';
 import { Zap, Lightbulb, ChevronRight, ArrowLeft } from 'lucide-react';
 

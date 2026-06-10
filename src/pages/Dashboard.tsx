@@ -14,7 +14,7 @@ import {
   generateParentAssistantResponse, 
   generateParentCustomMission, 
   generateParentSkillAnalysis 
-} from '@/lib/gemini';
+} from '@/lib/ai';
 
 export default function Dashboard() {
   const navigate = useNavigate();

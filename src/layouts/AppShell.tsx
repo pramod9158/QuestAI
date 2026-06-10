@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink, useLocation, Outlet, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, BookOpen, Gamepad2, Target, User, ChevronRight } from 'lucide-react';
+import { Home, BookOpen, Gamepad2, Target, User, ChevronRight, Sparkles } from 'lucide-react';
 import { useCurrentProfile } from '@/contexts/AuthContext';
 import { CoinCounter, StreakFlame, XPBar } from '@/components/ui/GameUI';
 import { getLevel, getXPForNextLevel, getPlatformProgress } from '@/lib/gamification';
@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { path: '/', label: 'Home', icon: Home },
   { path: '/learn', label: 'Learn', icon: BookOpen },
   { path: '/play', label: 'Play', icon: Gamepad2 },
+  { path: '/prompts', label: 'Prompts', icon: Sparkles },
   { path: '/missions', label: 'Missions', icon: Target },
   { path: '/profile', label: 'Profile', icon: User },
 ];
@@ -29,7 +30,7 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
   const overallPercent = stats.overallPercent;
 
   const hideNav = ['/auth', '/onboarding'].some(p => location.pathname.startsWith(p));
-  const isMainTab = ['/', '/learn', '/play', '/missions', '/profile'].includes(location.pathname);
+  const isMainTab = ['/', '/learn', '/play', '/missions', '/profile', '/prompts'].includes(location.pathname);
 
   // Compute next action
   const getNextAction = () => {

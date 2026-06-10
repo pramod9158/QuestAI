@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { testPromptPlayground, evaluatePromptLab } from '@/lib/gemini';
+import { testPromptPlayground, evaluatePromptLab } from '@/lib/ai';
 import { HelpCircle, Star, Sparkles, RefreshCw, Send, CheckCircle2, BookOpen } from 'lucide-react';
 import { AICompanion } from '../ui/AICompanion';
 
@@ -97,7 +97,7 @@ export default function PromptLab({ onComplete }: PromptLabProps) {
         response,
         score: finalScore,
         feedback,
-        tip: evaluation.improvementTip,
+        tip: evaluation.tip,
       };
 
       setAttempts(prev => [newAttempt, ...prev].slice(0, 3)); // Keep last 3 for comparison

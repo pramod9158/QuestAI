@@ -7,7 +7,7 @@ import { XPToast } from '@/components/ui/GameUI';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/contexts/AuthContext';
 import { CheckCircle, ArrowLeft, ExternalLink, Play, HelpCircle, Send, Award, FileText, ChevronRight } from 'lucide-react';
-import { askLessonTutor, testPromptPlayground, evaluatePromptLab, evaluateMicroProjectSubmission } from '@/lib/gemini';
+import { askLessonTutor, testPromptPlayground, evaluatePromptLab, evaluateMicroProjectSubmission } from '@/lib/ai';
 import TeachableMachineTrainer from '@/components/teachable/TeachableMachineTrainer';
 import { MissionBriefing, AICompanion } from '@/components/ui/AICompanion';
 import { VideoCheckpointOverlay, CheckpointTimeline } from '@/components/ui/VideoCheckpoint';
@@ -1145,7 +1145,7 @@ function PlaygroundSandbox({ onComplete }: { onComplete: () => void }) {
       // 2. Evaluate prompt using our new gemini evaluator helper
       const evalRes = await evaluatePromptLab(selectedSystem, promptInput);
       setPromptScore(evalRes.score);
-      setFeedback(`${evalRes.feedback} Suggestion: ${evalRes.improvementTip}`);
+      setFeedback(`${evalRes.feedback} Suggestion: ${evalRes.tip}`);
 
       if (evalRes.score >= 60) {
         onComplete();

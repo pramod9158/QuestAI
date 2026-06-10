@@ -7,7 +7,7 @@ import { CURRICULUM, STORY_QUESTS, WEEKLY_MISSIONS_DATA, PLAY_MODULES_DATA } fro
 import { getLevel, getXPForNextLevel, getEarnedBadges, getPlatformProgress } from '@/lib/gamification';
 import { ProgressRing, XPToast, CoinToast } from '@/components/ui/GameUI';
 import { Zap, BookOpen, Swords, Target, Trophy, Users, ChevronRight, Flame, Sparkles } from 'lucide-react';
-import { askHomeQuestBot } from '@/lib/gemini';
+import { askHomeQuestBot } from '@/lib/ai';
 import { TreasureChestModal } from '@/components/ui/TreasureChestModal';
 import { getUnopenedChests, getUnopenedCount, type Chest } from '@/lib/treasureChest';
 import { Map } from 'lucide-react';

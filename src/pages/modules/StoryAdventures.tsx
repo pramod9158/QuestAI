@@ -7,7 +7,7 @@ import { XPToast } from '@/components/ui/GameUI';
 import { useAuth, useCurrentProfile } from '@/contexts/AuthContext';
 import { Lock, Star, ChevronRight, ArrowLeft, Zap } from 'lucide-react';
 import { SpeakButton } from '@/components/ui/GameUI';
-import { evaluateStoryReflection } from '@/lib/gemini';
+import { evaluateStoryReflection } from '@/lib/ai';
 
 const QUEST_STEPS = {
   canteen: [
