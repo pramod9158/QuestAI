@@ -85,7 +85,24 @@ export const BADGES = [
   { id: 'card_collector',   name: 'Card Collector',   emoji: '🃏', description: 'Collected 3 AI Hero Cards',          condition: (xp: number) => xp >= 130 },
   { id: 'prompt_master',    name: 'Prompt Master',    emoji: '✨', description: 'Mastered AI prompt engineering',      condition: (xp: number) => xp >= 220 },
   { id: 'ai_legend',        name: 'AI Legend',        emoji: '👑', description: 'Reached the pinnacle of AI mastery', condition: (xp: number) => xp >= 2000 },
+  
+  // NEW: Lab Badges
+  { id: 'prompt_apprentice', name: 'Prompt Apprentice', emoji: '✏️', description: 'Complete your first Prompt Lab',   condition: (xp: number) => xp >= 120 },
+  { id: 'data_trainer',      name: 'Data Trainer',      emoji: '🏋️', description: 'Train your first AI model',       condition: (xp: number) => xp >= 260 },
+  { id: 'creative_genius',   name: 'Creative Genius',   emoji: '🎨', description: 'Complete 5 Create Labs',          condition: (xp: number) => xp >= 550 },
+  { id: 'detective_pro',     name: 'Detective Pro',     emoji: '🕵️', description: 'Solve 10 detective cases',         condition: (xp: number) => xp >= 650 },
+  { id: 'lab_scientist',     name: 'Lab Scientist',     emoji: '🔬', description: 'Complete all AI Labs',            condition: (xp: number) => xp >= 1000 },
 ];
+
+// Streak bonus multiplier
+export function getStreakMultiplier(streak: number): number {
+  if (streak >= 30) return 2.0;
+  if (streak >= 14) return 1.5;
+  if (streak >= 7) return 1.3;
+  if (streak >= 3) return 1.1;
+  return 1.0;
+}
+
 
 export function getEarnedBadges(xp: number, streak = 0): typeof BADGES {
   return BADGES.filter(b => b.condition(xp, streak));

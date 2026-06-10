@@ -1,46 +1,102 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { CURRICULUM } from '@/data/curriculum';
+import { motion, AnimatePresence } from 'framer-motion';
+import { CURRICULUM, type Lesson } from '@/data/curriculum';
 import { SpeakButton } from '@/components/ui/GameUI';
 import { XPToast } from '@/components/ui/GameUI';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/contexts/AuthContext';
-import { CheckCircle, ArrowLeft, ExternalLink } from 'lucide-react';
-import { askLessonTutor, testPromptPlayground } from '@/lib/gemini';
+import { CheckCircle, ArrowLeft, ExternalLink, Play, HelpCircle, Send, Award, FileText, ChevronRight } from 'lucide-react';
+import { askLessonTutor, testPromptPlayground, evaluatePromptLab, evaluateMicroProjectSubmission } from '@/lib/gemini';
 import TeachableMachineTrainer from '@/components/teachable/TeachableMachineTrainer';
+import { MissionBriefing, AICompanion } from '@/components/ui/AICompanion';
+import { VideoCheckpointOverlay, CheckpointTimeline } from '@/components/ui/VideoCheckpoint';
+import { MissionComplete } from '@/components/ui/MissionComplete';
 
 export default function LessonPlayer() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { profile, guestProfile, isGuest, updateProfile } = useAuth();
+  
   const lesson = CURRICULUM.find(l => l.id === id);
-  const [showXP, setShowXP] = useState(false);
-  const [replayQuiz, setReplayQuiz] = useState(false);
+  
+  const userZone = profile?.zone || 'junior';
+  const completedIds = profile?.completed_lessons || [];
+  const filtered = CURRICULUM.filter(l => l.zone === userZone || l.zone === 'both');
+  const activeIndex = filtered.findIndex(l => !completedIds.includes(l.id));
+
+  // Step state: 1: Briefing/Hook, 2: Watch/Checkpoints, 3: Lab, 4: Project
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
+  const [showXPToast, setShowXPToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  
+  // Step 2: Video Player & Checkpoints State
+  const completed = lesson ? completedIds.includes(lesson.id) : false;
+  const [videoFinished, setVideoFinished] = useState(completed);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [videoDuration, setVideoDuration] = useState(0);
+  const [completedCheckpoints, setCompletedCheckpoints] = useState<number[]>([]);
+  const [activeCheckpoint, setActiveCheckpoint] = useState<{ cp: any; idx: number } | null>(null);
+  const [checkpointXp, setCheckpointXp] = useState(0);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const playerRef = useRef<any>(null);
+
+  // Step 3: AI Lab State
+  const [labCompleted, setLabCompleted] = useState(false);
+
+  // Step 4: Micro Project State
+  const [projectText, setProjectText] = useState('');
+  const [submittingProject, setSubmittingProject] = useState(false);
+  const [projectFeedback, setProjectFeedback] = useState<{ score: number; feedback: string; passed: boolean } | null>(null);
+  const [showCompleteOverlay, setShowCompleteOverlay] = useState(false);
 
   // AI Tutor Chat states
   const [tutorInput, setTutorInput] = useState('');
   const [tutorAnswer, setTutorAnswer] = useState<string | null>(null);
   const [askingTutor, setAskingTutor] = useState(false);
 
-  const userZone = profile?.zone || 'junior';
-  const completedIds = profile?.completed_lessons || [];
-  const filtered = CURRICULUM.filter(l => l.zone === userZone || l.zone === 'both');
-  const activeIndex = filtered.findIndex(l => !completedIds.includes(l.id));
+  // Set step state on load based on saved progress
+  useEffect(() => {
+    if (lesson) {
+      if (completed) {
+        setCurrentStep(2); // Go straight to play/content
+        setVideoFinished(true);
+        setLabCompleted(true);
+      } else {
+        const watchDone = localStorage.getItem(`lesson_${lesson.id}_watch`) === 'true';
+        const labDone = localStorage.getItem(`lesson_${lesson.id}_lab`) === 'true';
+        if (labDone) {
+          setCurrentStep(4);
+          setVideoFinished(true);
+          setLabCompleted(true);
+        } else if (watchDone) {
+          setCurrentStep(3);
+          setVideoFinished(true);
+        } else {
+          setCurrentStep(1);
+        }
+      }
+    }
+  }, [lesson, completed]);
 
-  const completed = lesson ? (profile?.completed_lessons?.includes(lesson.id) ?? false) : false;
-  const [videoFinished, setVideoFinished] = useState(completed);
-  const iframeRef = React.useRef<HTMLIFrameElement>(null);
-  const handleCompleteRef = React.useRef<() => void>(() => {});
+  // Gating check
+  useEffect(() => {
+    if (lesson) {
+      const lessonIndex = filtered.findIndex(l => l.id === lesson.id);
+      if (lessonIndex === -1) {
+        navigate('/learn', { replace: true });
+        return;
+      }
+      if (activeIndex !== -1 && lessonIndex > activeIndex) {
+        navigate(`/learn/${filtered[activeIndex].id}`, { replace: true });
+      }
+    }
+  }, [lesson, activeIndex, filtered, navigate]);
 
-  React.useEffect(() => {
-    setVideoFinished(completed);
-  }, [completed, lesson?.id]);
+  // YouTube API Player Initialization for Step 2
+  useEffect(() => {
+    if (currentStep !== 2 || !lesson) return;
 
-  React.useEffect(() => {
-    if (completed || !lesson) return;
-
-    // Load YouTube API
     if (!(window as any).YT) {
       const tag = document.createElement('script');
       tag.src = 'https://www.youtube.com/iframe_api';
@@ -52,7 +108,6 @@ export default function LessonPlayer() {
       }
     }
 
-    let player: any = null;
     let checkInterval: ReturnType<typeof setInterval> | null = null;
     let timeTrackingInterval: ReturnType<typeof setInterval> | null = null;
     let maxTimeWatched = 0;
@@ -60,28 +115,48 @@ export default function LessonPlayer() {
     const initPlayer = () => {
       if (iframeRef.current && (window as any).YT && (window as any).YT.Player) {
         try {
-          player = new (window as any).YT.Player(iframeRef.current, {
+          playerRef.current = new (window as any).YT.Player(iframeRef.current, {
             events: {
+              onReady: (event: any) => {
+                if (event.target && typeof event.target.getDuration === 'function') {
+                  setVideoDuration(event.target.getDuration());
+                }
+              },
               onStateChange: (event: any) => {
                 if (event.data === (window as any).YT.PlayerState.ENDED) {
                   setVideoFinished(true);
-                  if (handleCompleteRef.current) {
-                    handleCompleteRef.current();
-                  }
+                  localStorage.setItem(`lesson_${lesson.id}_watch`, 'true');
                 }
 
-                // Prevent skipping forward
+                // Periodic check for checkpoints and skip prevention
                 if (event.data === (window as any).YT.PlayerState.PLAYING) {
                   if (!timeTrackingInterval) {
                     timeTrackingInterval = setInterval(() => {
-                      if (player && typeof player.getCurrentTime === 'function') {
-                        const currentTime = player.getCurrentTime();
-                        if (currentTime > maxTimeWatched + 2) {
-                          player.seekTo(maxTimeWatched, true);
-                        } else {
-                          if (currentTime > maxTimeWatched) {
-                            maxTimeWatched = currentTime;
+                      if (playerRef.current && typeof playerRef.current.getCurrentTime === 'function') {
+                        const currentTime = playerRef.current.getCurrentTime();
+                        setCurrentTime(currentTime);
+
+                        if (typeof playerRef.current.getDuration === 'function' && videoDuration === 0) {
+                          setVideoDuration(playerRef.current.getDuration());
+                        }
+
+                        // Check checkpoints
+                        lesson.videoCheckpoints?.forEach((cp, idx) => {
+                          if (
+                            Math.abs(currentTime - cp.timestampSeconds) < 1.5 &&
+                            !completedCheckpoints.includes(idx) &&
+                            !activeCheckpoint
+                          ) {
+                            playerRef.current.pauseVideo();
+                            setActiveCheckpoint({ cp, idx });
                           }
+                        });
+
+                        // Prevent skipping forward
+                        if (currentTime > maxTimeWatched + 2.5) {
+                          playerRef.current.seekTo(maxTimeWatched, true);
+                        } else if (currentTime > maxTimeWatched) {
+                          maxTimeWatched = currentTime;
                         }
                       }
                     }, 500);
@@ -105,9 +180,9 @@ export default function LessonPlayer() {
     if ((window as any).YT && (window as any).YT.Player) {
       initPlayer();
     } else {
-      const previousCallback = (window as any).onYouTubeIframeAPIReady;
+      const prevCallback = (window as any).onYouTubeIframeAPIReady;
       (window as any).onYouTubeIframeAPIReady = () => {
-        if (previousCallback) previousCallback();
+        if (prevCallback) prevCallback();
         initPlayer();
       };
       checkInterval = setInterval(() => {
@@ -121,76 +196,119 @@ export default function LessonPlayer() {
     return () => {
       if (checkInterval) clearInterval(checkInterval);
       if (timeTrackingInterval) clearInterval(timeTrackingInterval);
-      if (player && typeof player.destroy === 'function') {
+      if (playerRef.current && typeof playerRef.current.destroy === 'function') {
         try {
-          player.destroy();
+          playerRef.current.destroy();
         } catch (e) {
           // Ignore
         }
       }
     };
-  }, [lesson?.id, completed]);
-
-  React.useEffect(() => {
-    if (lesson) {
-      const isDone = profile?.completed_lessons?.includes(lesson.id) ?? false;
-      if (!isDone) {
-        const existing = localStorage.getItem(`lesson_progress_${lesson.id}`);
-        if (!existing || existing === '0') {
-          localStorage.setItem(`lesson_progress_${lesson.id}`, '50');
-        }
-      } else {
-        localStorage.setItem(`lesson_progress_${lesson.id}`, '100');
-      }
-    }
-  }, [lesson, profile]);
-
-  React.useEffect(() => {
-    if (lesson) {
-      const lessonIndex = filtered.findIndex(l => l.id === lesson.id);
-      if (lessonIndex === -1) {
-        navigate('/learn', { replace: true });
-        return;
-      }
-      if (activeIndex !== -1 && lessonIndex > activeIndex) {
-        navigate(`/learn/${filtered[activeIndex].id}`, { replace: true });
-      }
-    }
-  }, [lesson, activeIndex, filtered, navigate]);
+  }, [currentStep, lesson?.id, completedCheckpoints, activeCheckpoint, videoDuration]);
 
   if (!lesson) return <div className="p-6 text-white font-body">Lesson not found.</div>;
 
-  const handleComplete = async () => {
-    if (!completed) {
-      const currentProfileXP = isGuest ? (guestProfile?.xp ?? 0) : (profile?.xp ?? 0);
-      const currentProfileCoins = isGuest ? (guestProfile?.coins ?? 0) : (profile?.coins ?? 0);
-      const currentCompletedLessons = profile?.completed_lessons || [];
-      
-      const newCompleted = [...currentCompletedLessons, lesson.id];
+  // Answer checkpoint callback
+  const handleCheckpointAnswer = (correct: boolean, xpEarned: number) => {
+    if (activeCheckpoint === null) return;
+    
+    if (correct && xpEarned > 0) {
+      setCheckpointXp(prev => prev + xpEarned);
+      setToastMessage(`Correct! +${xpEarned} XP`);
+      setShowXPToast(true);
+    }
+    
+    setCompletedCheckpoints(prev => [...prev, activeCheckpoint.idx]);
+    
+    // Play video again
+    setTimeout(() => {
+      setActiveCheckpoint(null);
+      if (playerRef.current && typeof playerRef.current.playVideo === 'function') {
+        playerRef.current.playVideo();
+      }
+    }, 2000);
+  };
 
-      await updateProfile({
-        xp: currentProfileXP + lesson.xpReward,
-        coins: currentProfileCoins + (lesson.coinsReward || 0),
-        completed_lessons: newCompleted,
-      });
-      localStorage.setItem(`lesson_progress_${lesson.id}`, '100');
-      localStorage.setItem(`lesson_completed_at_${lesson.id}`, new Date().toLocaleDateString());
-      setShowXP(true);
+  // Skip video for development/testing convenience
+  const handleSkipVideo = () => {
+    setVideoFinished(true);
+    localStorage.setItem(`lesson_${lesson.id}_watch`, 'true');
+    // Mark checkpoints as completed
+    const allCps = lesson.videoCheckpoints?.map((_, idx) => idx) || [];
+    setCompletedCheckpoints(allCps);
+  };
 
-      setTimeout(() => {
-        const nextIncomplete = filtered.find(l => !newCompleted.includes(l.id));
-        if (nextIncomplete) {
-          navigate(`/learn/${nextIncomplete.id}`, { replace: true });
-        } else {
-          navigate('/learn', { replace: true });
-        }
-      }, 2000);
+  // Progress to step 3 (Lab)
+  const proceedToLab = () => {
+    setCurrentStep(3);
+  };
+
+  // Progress to step 4 (Project)
+  const proceedToProject = () => {
+    setCurrentStep(4);
+  };
+
+  // Submit Micro Project
+  const handleSubmitProject = async () => {
+    if (!projectText.trim() || submittingProject) return;
+    setSubmittingProject(true);
+    setProjectFeedback(null);
+
+    try {
+      const evaluation = await evaluateMicroProjectSubmission(
+        lesson.microProject.title,
+        lesson.microProject.description,
+        projectText
+      );
+
+      setProjectFeedback(evaluation);
+
+      if (evaluation.passed) {
+        localStorage.setItem(`lesson_${lesson.id}_project`, 'true');
+        // Commit full mission complete
+        const currentXP = isGuest ? (guestProfile?.xp ?? 0) : (profile?.xp ?? 0);
+        const currentCoins = isGuest ? (guestProfile?.coins ?? 0) : (profile?.coins ?? 0);
+        const currentCompleted = profile?.completed_lessons || [];
+        
+        const newCompleted = [...currentCompleted, lesson.id];
+
+        // XP Breakdown values
+        const videoXpAward = lesson.xpReward + checkpointXp;
+        const labXpAward = lesson.aiLab?.challenges?.reduce((sum, c) => sum + c.xpReward, 0) || 20;
+        const projectXpAward = lesson.microProject?.xpReward || 15;
+        const streakBonus = Math.round((videoXpAward + labXpAward + projectXpAward) * (profile?.current_streak && profile.current_streak >= 3 ? 0.2 : 0));
+        const totalXpGained = videoXpAward + labXpAward + projectXpAward + streakBonus;
+        const coinsGained = lesson.coinsReward || 10;
+
+        await updateProfile({
+          xp: currentXP + totalXpGained,
+          coins: currentCoins + coinsGained,
+          completed_lessons: newCompleted,
+        });
+
+        localStorage.setItem(`lesson_progress_${lesson.id}`, '100');
+        localStorage.setItem(`lesson_completed_at_${lesson.id}`, new Date().toLocaleDateString());
+
+        // Open completion modal
+        setShowCompleteOverlay(true);
+      }
+    } catch (err) {
+      console.error('Failed to evaluate project:', err);
+    } finally {
+      setSubmittingProject(false);
     }
   };
 
-  React.useEffect(() => {
-    handleCompleteRef.current = handleComplete;
-  }, [handleComplete]);
+  // Continue back to Learn page / next lesson
+  const handleFinalContinue = () => {
+    setShowCompleteOverlay(false);
+    const nextIncomplete = filtered.find(l => !completedIds.includes(l.id) && l.id !== lesson.id);
+    if (nextIncomplete) {
+      navigate(`/learn/${nextIncomplete.id}`, { replace: true });
+    } else {
+      navigate('/learn', { replace: true });
+    }
+  };
 
   const handleAskTutor = async () => {
     if (!tutorInput.trim() || askingTutor) return;
@@ -206,209 +324,491 @@ export default function LessonPlayer() {
     }
   };
 
-  const sandboxContent = () => {
+  // Render current step progress indicator bar
+  const renderStepTracker = () => {
+    return (
+      <div className="bg-[#1E1B4B] border-b-3 border-black py-2.5 px-4 flex justify-between items-center font-pixel text-[8px]">
+        <div className="flex items-center gap-1.5">
+          <span className="text-[#FFD60A] text-xs">🤖</span>
+          <span className="text-white uppercase tracking-wider font-game">Sparky's Mission Flow:</span>
+        </div>
+        <div className="flex gap-2">
+          <span className={`${currentStep >= 1 ? 'text-[#FFD60A]' : 'text-white/30'}`}>Briefing</span>
+          <span className="text-white/20">➔</span>
+          <span className={`${currentStep >= 2 ? 'text-[#FFD60A]' : 'text-white/30'}`}>🎥 Watch</span>
+          <span className="text-white/20">➔</span>
+          <span className={`${currentStep >= 3 ? 'text-[#FFD60A]' : 'text-white/30'}`}>🧪 AI Lab</span>
+          <span className="text-white/20">➔</span>
+          <span className={`${currentStep >= 4 ? 'text-[#FFD60A]' : 'text-white/30'}`}>🛠️ Create</span>
+        </div>
+      </div>
+    );
+  };
+
+  // Render specific interactive lab layouts
+  const renderAILab = () => {
     switch (lesson.sandboxType) {
       case 'teachable':
-        return <TeachableMachineTrainer />;
+        return (
+          <div className="space-y-4">
+            <div className="bg-[#1E1B4B] border-3 border-black p-3 flex gap-3 shadow-[3px_3px_0px_#000]">
+              <AICompanion
+                state="teaching"
+                message="Train your own machine learning model to recognize faces or items using your camera!"
+                size="sm"
+              />
+            </div>
+            <TeachableMachineTrainer onComplete={() => {
+              setLabCompleted(true);
+              localStorage.setItem(`lesson_${lesson.id}_lab`, 'true');
+            }} />
+          </div>
+        );
       case 'quickdraw':
         return (
-          <div className="flex flex-col h-full">
-            <p className="text-white/70 font-body text-xs p-3 bg-success/20 border-b-2 border-black">
-              🎨 Draw something and let AI guess what it is!
-            </p>
-            <iframe src="https://quickdraw.withgoogle.com" className="flex-1 w-full" title="Quick Draw" />
+          <div className="space-y-4">
+            <div className="bg-[#1E1B4B] border-3 border-black p-3 flex gap-3 shadow-[3px_3px_0px_#000]">
+              <AICompanion
+                state="teaching"
+                message="Draw items as fast as you can. Watch the neural network try to classify your doodles!"
+                size="sm"
+              />
+            </div>
+            <div className="flex flex-col border-4 border-black aspect-square max-h-[400px] bg-white overflow-hidden relative shadow-[4px_4px_0px_#000]">
+              <iframe src="https://quickdraw.withgoogle.com" className="w-full h-full" title="Quick Draw" />
+              <button 
+                onClick={() => {
+                  setLabCompleted(true);
+                  localStorage.setItem(`lesson_${lesson.id}_lab`, 'true');
+                }}
+                className="absolute bottom-2 right-2 px-4 py-2 font-game text-[10px] bg-success border-2 border-black shadow-[2px_2px_0px_#000] text-white"
+              >
+                Lab Complete ✓
+              </button>
+            </div>
           </div>
         );
       case 'dragdrop':
-        return <DragDropSandbox />;
-      case 'comic':
-        return <ComicSandbox />;
-      case 'playground':
-        return <PlaygroundSandbox />;
-      case 'detective':
-        return <DetectiveSandbox />;
-      case 'quiz':
-        if (completed && !replayQuiz) {
-          return (
-            <div className="flex flex-col items-center justify-center h-full gap-4 p-6 text-center">
-              <div 
-                className="w-16 h-16 bg-[#10B981]/25 border-4 border-[#10B981] flex items-center justify-center text-3xl animate-bounce"
-                style={{ boxShadow: '4px 4px 0px #000' }}
-              >
-                🏆
-              </div>
-              <h4 className="font-game text-sm text-white">Quiz Completed!</h4>
-              <p className="text-white/50 font-body text-xs max-w-[220px] leading-relaxed">
-                You've already finished this lesson quiz!
-              </p>
-              <button
-                onClick={() => setReplayQuiz(true)}
-                className="btn-success font-game text-xs px-5 py-2.5 shadow-pixel active:translate-y-1"
-              >
-                Replay Quiz 🔄
-              </button>
+        return (
+          <div className="space-y-4">
+            <div className="bg-[#1E1B4B] border-3 border-black p-3 flex gap-3 shadow-[3px_3px_0px_#000]">
+              <AICompanion
+                state="teaching"
+                message="Sort the devices below. Decrypt which ones contain smart AI sensors vs dumb rule-based programming!"
+                size="sm"
+              />
             </div>
-          );
-        }
-        return <QuizSandbox lessonId={lesson.id} />;
+            <DragDropSandbox onComplete={() => {
+              setLabCompleted(true);
+              localStorage.setItem(`lesson_${lesson.id}_lab`, 'true');
+            }} />
+          </div>
+        );
+      case 'comic':
+        return (
+          <div className="space-y-4">
+            <div className="bg-[#1E1B4B] border-3 border-black p-3 flex gap-3 shadow-[3px_3px_0px_#000]">
+              <AICompanion
+                state="teaching"
+                message="Use prompts to construct a smart story adventure strip starring Sparky!"
+                size="sm"
+              />
+            </div>
+            <ComicSandbox onComplete={() => {
+              setLabCompleted(true);
+              localStorage.setItem(`lesson_${lesson.id}_lab`, 'true');
+            }} />
+          </div>
+        );
+      case 'playground':
+        return (
+          <div className="space-y-4">
+            <div className="bg-[#1E1B4B] border-3 border-black p-3 flex gap-3 shadow-[3px_3px_0px_#000]">
+              <AICompanion
+                state="teaching"
+                message="Write customized prompts to shape the AI's personality. Compare prompt modifications side-by-side!"
+                size="sm"
+              />
+            </div>
+            <PlaygroundSandbox onComplete={() => {
+              setLabCompleted(true);
+              localStorage.setItem(`lesson_${lesson.id}_lab`, 'true');
+            }} />
+          </div>
+        );
+      case 'detective':
+        return (
+          <div className="space-y-4">
+            <div className="bg-[#1E1B4B] border-3 border-black p-3 flex gap-3 shadow-[3px_3px_0px_#000]">
+              <AICompanion
+                state="teaching"
+                message="Analyze the social feed clues carefully. Spot the AI-generated deepfakes from the genuine news reports!"
+                size="sm"
+              />
+            </div>
+            <DetectiveSandbox onComplete={() => {
+              setLabCompleted(true);
+              localStorage.setItem(`lesson_${lesson.id}_lab`, 'true');
+            }} />
+          </div>
+        );
+      case 'quiz':
+        return (
+          <div className="space-y-4">
+            <div className="bg-[#1E1B4B] border-3 border-black p-3 flex gap-3 shadow-[3px_3px_0px_#000]">
+              <AICompanion
+                state="teaching"
+                message="Take the Quick-Quiz to test your intelligence metrics and lock in your score!"
+                size="sm"
+              />
+            </div>
+            <QuizSandbox 
+              lessonId={lesson.id} 
+              onComplete={() => {
+                setLabCompleted(true);
+                localStorage.setItem(`lesson_${lesson.id}_lab`, 'true');
+              }} 
+            />
+          </div>
+        );
       default:
         return (
-          <div className="flex flex-col items-center justify-center h-full gap-4 p-6">
+          <div className="flex flex-col items-center justify-center py-12 gap-4 text-center">
             <div className="text-6xl animate-float">{lesson.emoji}</div>
-            <p className="text-white/70 font-body text-sm text-center">
-              Interactive sandbox coming soon! Complete the video lesson to earn your XP.
+            <p className="text-white/70 font-body text-sm max-w-xs">
+              Sparky is cooking up a special sandbox! Click continue to unlock your final micro project.
             </p>
+            <button
+              onClick={() => {
+                setLabCompleted(true);
+                localStorage.setItem(`lesson_${lesson.id}_lab`, 'true');
+              }}
+              className="py-2.5 px-6 font-game text-xs text-black bg-[#FFD60A] border-3 border-black shadow-[3px_3px_0px_#000]"
+            >
+              Unlock Next Step ➔
+            </button>
           </div>
         );
     }
   };
 
   return (
-    <div className="min-h-full flex flex-col">
-      {showXP && <XPToast amount={lesson.xpReward} reason={`${lesson.title} complete!`} onDone={() => setShowXP(false)} />}
+    <div className="min-h-full flex flex-col bg-[#0F0A2E] text-white">
+      {showXPToast && (
+        <XPToast 
+          amount={checkpointXp} 
+          reason={toastMessage} 
+          onDone={() => setShowXPToast(false)} 
+        />
+      )}
 
-      {/* Header */}
+      {/* Header Bar */}
       <div
-        className="px-4 py-3 flex items-center gap-3"
-        style={{ background: '#1E1B4B', borderBottom: '3px solid #000000', boxShadow: '0 4px 0px 0px #000000' }}
+        className="px-4 py-3 flex items-center gap-3 relative z-10"
+        style={{ background: '#1E1B4B', borderBottom: '3px solid #000', boxShadow: '0 3px 0px #000' }}
       >
-        <button onClick={() => navigate('/learn')} className="touch-target text-white/50 hover:text-white transition-colors">
+        <button onClick={() => navigate('/learn')} className="touch-target text-white/50 hover:text-white transition-colors cursor-pointer">
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div className="flex-1 min-w-0">
-          <div className="font-heading font-bold text-sm text-white truncate">{lesson.title}</div>
-          <div className="text-white/40 font-body text-xs">{lesson.subtitle}</div>
+          <div className="font-game text-xs text-white uppercase tracking-wide truncate">{lesson.missionTitle || lesson.title}</div>
+          <div className="text-white/45 font-pixel text-[6px] uppercase tracking-wider">{lesson.subtitle}</div>
         </div>
         <SpeakButton text={lesson.ttsIntro} />
       </div>
 
-      {/* Split Layout: Video + Sandbox */}
-      <div className="flex flex-col md:flex-row flex-1" style={{ minHeight: '60vh' }}>
-        {/* Video Panel */}
-        <div className="w-full md:w-1/2 flex flex-col" style={{ borderBottom: '1px solid rgba(127,90,240,0.2)' }}>
-          <div
-            className="p-2 flex items-center justify-between"
-            style={{ background: 'rgba(0,0,0,0.4)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}
-          >
-            <span className="text-white/50 font-body text-xs">📺 Video Lesson</span>
-            <a
-              href={`https://www.youtube.com/watch?v=${lesson.youtubeId}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1 font-body text-xs transition-opacity hover:opacity-80"
-              style={{ color: '#00C2FF' }}
-            >
-              Open <ExternalLink className="w-3 h-3" />
-            </a>
-          </div>
-          <div className="relative" style={{ paddingBottom: '56.25%' }}>
-            <iframe
-              ref={iframeRef}
-              src={`https://www.youtube.com/embed/${lesson.youtubeId}?enablejsapi=1&rel=0&modestbranding=1&color=white&iv_load_policy=3`}
-              className="absolute inset-0 w-full h-full"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              title={lesson.title}
-            />
-          </div>
-          {/* TTS Intro */}
-          <div className="p-3" style={{ background: '#16103A', borderTop: '2px solid #000000' }}>
-            <p className="text-white/60 font-body text-xs italic">"{lesson.ttsIntro}"</p>
-          </div>
-        </div>
+      {/* STEP 1: CURIOSITY HOOK BRIEFING */}
+      {currentStep === 1 && (
+        <MissionBriefing
+          missionTitle={lesson.missionTitle || lesson.title}
+          missionEmoji={lesson.missionEmoji || lesson.emoji}
+          curiosityHook={lesson.curiosityHook || lesson.description}
+          storyContext={lesson.storyContext || lesson.ttsIntro}
+          onAccept={() => setCurrentStep(2)}
+        />
+      )}
 
-        {/* Sandbox Panel */}
-        <div className="w-full md:w-1/2 flex flex-col" style={{ minHeight: '300px' }}>
-          <div
-            className="p-2"
-            style={{ background: 'rgba(0,0,0,0.4)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}
-          >
-            <span className="text-white/50 font-body text-xs">🎮 Try It Yourself</span>
-          </div>
-          <div className="flex-1 overflow-auto">
-            {sandboxContent()}
-          </div>
-        </div>
-      </div>
+      {/* STEP FLOW CONTAINER */}
+      {currentStep > 1 && (
+        <div className="flex-1 flex flex-col">
+          {renderStepTracker()}
 
-      {/* AI Lesson Tutor Chat */}
-      <div className="p-4 bg-surface-2 border-t-4 border-black">
-        <div className="border-4 border-black bg-surface p-4 shadow-pixel">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-lg">🤖</span>
-            <h3 className="font-game text-sm text-white">Ask AI Tutor</h3>
-          </div>
-          
-          {tutorAnswer && (
-            <div className="mb-4 bg-black/20 border-l-4 border-[#7C3AED] p-3">
-              <span className="font-pixel text-[6px] text-primary block mb-1">🤖 QUESTBOT AI</span>
-              <p className="text-white font-body text-xs leading-relaxed">{tutorAnswer}</p>
+          {/* MAIN PLAYER/SANDBOX PANELS */}
+          <div className="flex-1 flex flex-col md:flex-row p-4 gap-4">
+            
+            {/* STEP 2: VIDEO PANEL */}
+            {currentStep === 2 && (
+              <div className="flex-1 flex flex-col max-w-xl mx-auto w-full gap-4">
+                <div
+                  className="p-3 relative overflow-hidden"
+                  style={{
+                    background: '#1E1B4B',
+                    border: '3px solid #000',
+                    boxShadow: '4px 4px 0px #000',
+                  }}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-game text-[9px] text-[#A78BFA] uppercase">🎥 Mission Briefing Broadcast</span>
+                    <a
+                      href={`https://www.youtube.com/watch?v=${lesson.youtubeId}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 font-pixel text-[6px] uppercase text-[#00C2FF]"
+                    >
+                      YT Mirror <ExternalLink className="w-2.5 h-2.5" />
+                    </a>
+                  </div>
+
+                  {/* YouTube Iframe wrapper */}
+                  <div className="relative aspect-video border-2 border-black bg-black overflow-hidden">
+                    <iframe
+                      ref={iframeRef}
+                      src={`https://www.youtube.com/embed/${lesson.youtubeId}?enablejsapi=1&rel=0&modestbranding=1&color=white&iv_load_policy=3&autoplay=1`}
+                      className="absolute inset-0 w-full h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      title={lesson.title}
+                    />
+
+                    {/* Checkpoint Overlays */}
+                    <AnimatePresence>
+                      {activeCheckpoint && (
+                        <VideoCheckpointOverlay
+                          checkpoint={activeCheckpoint.cp}
+                          onAnswer={handleCheckpointAnswer}
+                          onDismiss={() => setActiveCheckpoint(null)}
+                        />
+                      )}
+                    </AnimatePresence>
+                  </div>
+
+                  {/* Checkpoint Timeline Dots */}
+                  <CheckpointTimeline
+                    checkpoints={lesson.videoCheckpoints || []}
+                    completedIndices={completedCheckpoints}
+                    videoDuration={videoDuration}
+                    currentTime={currentTime}
+                  />
+                </div>
+
+                {/* Video text & skip helper */}
+                <div className="flex flex-col gap-2">
+                  <p className="text-white/60 font-body text-xs italic bg-black/25 p-3 border-l-4 border-yellow-500">
+                    "{lesson.ttsIntro}"
+                  </p>
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleSkipVideo}
+                      className="text-white/30 hover:text-white/60 font-pixel text-[6px] tracking-wider uppercase border border-white/10 px-2.5 py-1 cursor-pointer transition-colors"
+                    >
+                      ⚡ Dev Skip Video
+                    </button>
+                  </div>
+                </div>
+
+                {/* Continue button to Step 3 */}
+                <div className="mt-auto pt-4 border-t border-white/5">
+                  <Button
+                    variant={videoFinished ? 'success' : 'primary'}
+                    size="lg"
+                    fullWidth
+                    disabled={!videoFinished}
+                    onClick={proceedToLab}
+                    className="font-game text-xs uppercase"
+                  >
+                    {videoFinished ? '🧪 Proceed to AI Lab ➔' : '🔒 Finish Watching Video to Unlock Lab'}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 3: AI LAB PANEL */}
+            {currentStep === 3 && (
+              <div className="flex-1 flex flex-col max-w-xl mx-auto w-full gap-4">
+                <div className="flex-1">
+                  {renderAILab()}
+                </div>
+
+                <div className="pt-4 border-t border-white/5">
+                  <Button
+                    variant={labCompleted ? 'success' : 'primary'}
+                    size="lg"
+                    fullWidth
+                    disabled={!labCompleted}
+                    onClick={proceedToProject}
+                    className="font-game text-xs uppercase"
+                  >
+                    {labCompleted ? '🛠️ Design Micro Project ➔' : '🔒 Solve AI Lab to Unlock Project'}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 4: MICRO PROJECT PANEL */}
+            {currentStep === 4 && (
+              <div className="flex-1 flex flex-col max-w-xl mx-auto w-full gap-4">
+                <div 
+                  className="p-4"
+                  style={{
+                    background: '#1E1B4B',
+                    border: '3px solid #000',
+                    boxShadow: '4px 4px 0px #000',
+                  }}
+                >
+                  <div className="flex items-center gap-2 mb-3">
+                    <Award className="w-5 h-5 text-[#FFD60A]" />
+                    <h2 className="font-game text-sm text-[#FFD60A] uppercase tracking-wide">
+                      Micro Project: {lesson.microProject?.title}
+                    </h2>
+                  </div>
+
+                  <p className="font-body text-xs text-white/80 leading-relaxed mb-4">
+                    {lesson.microProject?.description}
+                  </p>
+
+                  <div className="bg-black/35 p-3 mb-4 border border-white/10 flex items-start gap-2">
+                    <FileText className="w-4 h-4 text-purple-400 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <span className="font-pixel text-[6px] text-purple-400 uppercase tracking-wider block">Submit deliverable:</span>
+                      <span className="font-body text-xs text-white/50">{lesson.microProject?.deliverable}</span>
+                    </div>
+                  </div>
+
+                  {/* Submission field */}
+                  <textarea
+                    value={projectText}
+                    onChange={e => setProjectText(e.target.value)}
+                    placeholder="Describe your design or project details here..."
+                    className="w-full pixel-input text-xs h-28 resize-none mb-3"
+                    disabled={submittingProject || (projectFeedback?.passed ?? false)}
+                  />
+
+                  {/* Submit Button */}
+                  {!(projectFeedback?.passed) && (
+                    <Button
+                      onClick={handleSubmitProject}
+                      loading={submittingProject}
+                      disabled={!projectText.trim() || submittingProject}
+                      variant="primary"
+                      fullWidth
+                      className="font-game text-xs uppercase"
+                    >
+                      ⚡ Submit Project to Sparky
+                    </Button>
+                  )}
+
+                  {/* Feedback Report */}
+                  <AnimatePresence>
+                    {projectFeedback && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className={`mt-4 border-2 p-3 ${
+                          projectFeedback.passed 
+                            ? 'bg-[#10B981]/10 border-[#10B981]' 
+                            : 'bg-[#EF4444]/10 border-[#EF4444]'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <span className="text-base">{projectFeedback.passed ? '✅' : '❌'}</span>
+                          <span className="font-game text-[10px] text-white">Sparky's Evaluation:</span>
+                          <span className="font-pixel text-[8px] ml-auto text-yellow-400">{projectFeedback.score}/100</span>
+                        </div>
+                        <p className="font-body text-xs text-white/90 leading-relaxed">{projectFeedback.feedback}</p>
+                        
+                        {projectFeedback.passed && (
+                          <button
+                            onClick={() => setShowCompleteOverlay(true)}
+                            className="mt-3 w-full py-2.5 font-game text-[10px] uppercase text-black bg-[#FFD60A] border-2 border-black shadow-[2px_2px_0px_#000] cursor-pointer"
+                          >
+                            🚀 Show Celebration!
+                          </button>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </div>
+            )}
+
+            {/* SIDEBAR CHAT (Ask AI Tutor) */}
+            <div className="w-full md:w-80 flex flex-col gap-3">
+              <div 
+                className="p-3 flex-1"
+                style={{
+                  background: '#1E1B4B',
+                  border: '3px solid #000',
+                  boxShadow: '3px 3px 0px #000',
+                }}
+              >
+                <div className="flex items-center gap-2 mb-3">
+                  <HelpCircle className="w-4 h-4 text-purple-400" />
+                  <h3 className="font-game text-xs text-white uppercase tracking-wider">Lesson Transmission</h3>
+                </div>
+
+                {tutorAnswer && (
+                  <div className="mb-4 bg-black/35 border-l-4 border-[#7C3AED] p-3 text-left">
+                    <span className="font-pixel text-[6px] text-primary block mb-1">🤖 SPARKY REPLIES</span>
+                    <p className="text-white font-body text-[10px] leading-relaxed">{tutorAnswer}</p>
+                  </div>
+                )}
+
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={tutorInput}
+                    onChange={(e) => setTutorInput(e.target.value)}
+                    placeholder="Ask Sparky a question..."
+                    onKeyDown={(e) => e.key === 'Enter' && handleAskTutor()}
+                    className="flex-1 pixel-input text-[10px] p-2"
+                    disabled={askingTutor}
+                  />
+                  <button
+                    onClick={handleAskTutor}
+                    disabled={!tutorInput.trim() || askingTutor}
+                    className="px-3 bg-purple-600 border border-black hover:bg-purple-700 transition-colors flex items-center justify-center cursor-pointer disabled:opacity-50"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Quick curriculum index indicator */}
+              <button
+                onClick={() => navigate('/learn')}
+                className="w-full text-center py-2.5 font-pixel text-[6px] uppercase text-white/30 hover:text-white/60 border border-white/5 cursor-pointer bg-black/10 transition-colors"
+              >
+                ← Return to adventure map
+              </button>
             </div>
-          )}
-          
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={tutorInput}
-              onChange={(e) => setTutorInput(e.target.value)}
-              placeholder="e.g., How does machine learning find patterns?"
-              onKeyDown={(e) => e.key === 'Enter' && handleAskTutor()}
-              className="flex-1 pixel-input text-xs"
-              disabled={askingTutor}
-            />
-            <Button
-              onClick={handleAskTutor}
-              loading={askingTutor}
-              disabled={!tutorInput.trim()}
-              size="sm"
-            >
-              Ask
-            </Button>
+
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Complete Button */}
-      <div
-        className="p-4"
-        style={{ background: '#16103A', borderTop: '3px solid #000000', boxShadow: '0 -4px 0px 0px #000000' }}
-      >
-        {completed ? (
-          <div
-            className="flex items-center justify-center gap-2 py-4 rounded-2xl"
-            style={{ background: '#10B981', border: '3px solid #000000', boxShadow: '3px 3px 0px 0px #000000' }}
-          >
-            <CheckCircle className="w-6 h-6 text-white" />
-            <span className="font-heading font-bold text-sm text-white">Lesson Complete! +{lesson.xpReward} XP earned!</span>
-          </div>
-        ) : (
-          <Button 
-            variant={videoFinished ? "success" : "primary"} 
-            size="lg" 
-            fullWidth 
-            onClick={handleComplete}
-            disabled={!videoFinished}
-            className={!videoFinished ? "opacity-50 cursor-not-allowed" : ""}
-          >
-            {videoFinished 
-              ? `✅ Mark as Complete (+${lesson.xpReward} XP)`
-              : `🔒 Watch the video lesson to unlock completion (+${lesson.xpReward} XP)`
-            }
-          </Button>
-        )}
-        <button
-          onClick={() => navigate('/learn')}
-          className="w-full text-center text-white/35 font-body text-xs mt-2 hover:text-white/60 transition-colors"
-        >
-          ← Back to curriculum
-        </button>
-      </div>
+      {/* FINAL MISSION COMPLETE OVERLAY */}
+      <MissionComplete
+        show={showCompleteOverlay}
+        lesson={lesson}
+        nextLesson={filtered.find(l => !completedIds.includes(l.id) && l.id !== lesson.id)}
+        rewards={{
+          videoXp: lesson.xpReward + checkpointXp,
+          labXp: lesson.aiLab?.challenges?.reduce((sum, c) => sum + c.xpReward, 0) || 20,
+          projectXp: lesson.microProject?.xpReward || 15,
+          streakBonus: Math.round((lesson.xpReward + checkpointXp + (lesson.aiLab?.challenges?.reduce((sum, c) => sum + c.xpReward, 0) || 20) + (lesson.microProject?.xpReward || 15)) * (profile?.current_streak && profile.current_streak >= 3 ? 0.2 : 0)),
+          totalXp: (lesson.xpReward + checkpointXp + (lesson.aiLab?.challenges?.reduce((sum, c) => sum + c.xpReward, 0) || 20) + (lesson.microProject?.xpReward || 15)) + Math.round((lesson.xpReward + checkpointXp + (lesson.aiLab?.challenges?.reduce((sum, c) => sum + c.xpReward, 0) || 20) + (lesson.microProject?.xpReward || 15)) * (profile?.current_streak && profile.current_streak >= 3 ? 0.2 : 0)),
+          coins: lesson.coinsReward || 10,
+          badgeUnlocked: lesson.aiLab?.badgeId ? { name: lesson.aiLab.title, emoji: '🔬' } : undefined,
+        }}
+        onContinue={handleFinalContinue}
+      />
     </div>
   );
 }
 
-// Embedded drag-drop "Smart vs Dumb" sorter
-function DragDropSandbox() {
+// Inline Helper drag-drop "Smart vs Dumb" sorter
+function DragDropSandbox({ onComplete }: { onComplete: () => void }) {
   const items = ['Smart Speaker', 'Pencil', 'Netflix', 'Toaster', 'Google Maps', 'Chair', 'Phone Camera', 'Notebook'];
   const answers: Record<string, boolean> = {
     'Smart Speaker': true, 'Pencil': false, 'Netflix': true, 'Toaster': false,
@@ -427,92 +827,82 @@ function DragDropSandbox() {
       if ((answers[item] && cat === 'smart') || (!answers[item] && cat === 'dumb')) correct++;
     });
     setScore(correct);
+    if (correct >= 6) {
+      onComplete();
+    }
   };
 
   return (
-    <div className="p-4 space-y-4">
-      <div className="text-white font-game text-sm text-center">Sort: Smart AI vs Not Smart?</div>
-      <div className="grid grid-cols-2 gap-3">
+    <div className="p-3 border-3 border-black bg-[#16103A] shadow-[3px_3px_0px_#000]">
+      <div className="text-white font-game text-[10px] text-center mb-3">Is it powered by smart AI?</div>
+      <div className="grid grid-cols-2 gap-2 max-h-[260px] overflow-y-auto pr-1">
         {items.map(item => {
           const isSelectedSmart = sorted[item] === 'smart';
           const isSelectedDumb = sorted[item] === 'dumb';
           const hasSelected = isSelectedSmart || isSelectedDumb;
+          const isRight = hasSelected && ((answers[item] && isSelectedSmart) || (!answers[item] && isSelectedDumb));
           
-          const isRight = hasSelected && (
-            (answers[item] && isSelectedSmart) || 
-            (!answers[item] && isSelectedDumb)
-          );
-          
-          // Card styles
-          let cardStyle = 'bg-surface border-black';
+          let cardStyle = 'bg-black/30 border-white/5';
           if (score !== null) {
-            cardStyle = isRight ? 'bg-success/20 border-success' : 'bg-pixel-red/25 border-pixel-red animate-shake';
-          } else {
-            if (isSelectedSmart) cardStyle = 'bg-success/25 border-success';
-            else if (isSelectedDumb) cardStyle = 'bg-warning/25 border-warning';
-          }
-          
-          // Smart button styles
-          let smartBtnStyle = 'bg-white/5 text-white/50 hover:bg-white/10 hover:text-white';
-          if (isSelectedSmart) {
-            if (score !== null) {
-              smartBtnStyle = isRight ? 'bg-success text-white shadow-pixel-sm' : 'bg-pixel-red text-white shadow-pixel-sm';
-            } else {
-              smartBtnStyle = 'bg-success text-white shadow-pixel-sm';
-            }
-          }
-          
-          // Dumb button styles
-          let dumbBtnStyle = 'bg-white/5 text-white/50 hover:bg-white/10 hover:text-white';
-          if (isSelectedDumb) {
-            if (score !== null) {
-              dumbBtnStyle = isRight ? 'bg-success text-white shadow-pixel-sm' : 'bg-pixel-red text-white shadow-pixel-sm';
-            } else {
-              dumbBtnStyle = 'bg-warning text-black shadow-pixel-sm';
-            }
+            cardStyle = isRight ? 'bg-[#10B981]/15 border-[#10B981]' : 'bg-[#EF4444]/15 border-[#EF4444] animate-shake';
+          } else if (isSelectedSmart) {
+            cardStyle = 'bg-[#10B981]/10 border-[#10B981]/40';
+          } else if (isSelectedDumb) {
+            cardStyle = 'bg-[#F59E0B]/10 border-[#F59E0B]/40';
           }
 
           return (
-            <div key={item} className={`border-4 p-3 transition-all ${cardStyle}`}>
-              <div className="text-white font-game text-xs text-center mb-2.5">{item}</div>
-              <div className="flex gap-2">
+            <div key={item} className={`border-2 p-2 flex flex-col justify-between ${cardStyle}`}>
+              <div className="text-white font-game text-[9px] text-center mb-2">{item}</div>
+              <div className="flex gap-1">
                 <button 
                   disabled={score !== null} 
                   onClick={() => handleSort(item, 'smart')} 
-                  className={`flex-1 border-2 border-black py-1 text-[10px] font-game disabled:opacity-90 disabled:cursor-not-allowed ${smartBtnStyle}`}
+                  className={`flex-1 py-1 text-[8px] font-game border border-black cursor-pointer ${isSelectedSmart ? 'bg-[#10B981] text-white' : 'bg-black/20 text-white/50'}`}
                 >
-                  🤖 Smart
+                  🤖 Yes
                 </button>
                 <button 
                   disabled={score !== null} 
                   onClick={() => handleSort(item, 'dumb')} 
-                  className={`flex-1 border-2 border-black py-1 text-[10px] font-game disabled:opacity-90 disabled:cursor-not-allowed ${dumbBtnStyle}`}
+                  className={`flex-1 py-1 text-[8px] font-game border border-black cursor-pointer ${isSelectedDumb ? 'bg-[#F59E0B] text-black font-bold' : 'bg-black/20 text-white/50'}`}
                 >
-                  📦 Not
+                  📦 No
                 </button>
               </div>
             </div>
           );
         })}
       </div>
+      
       {Object.keys(sorted).length === items.length && score === null && (
-        <button onClick={checkAnswers} className="w-full border-4 border-black bg-primary py-3 text-white font-game text-sm">
-          CHECK MY ANSWERS!
+        <button onClick={checkAnswers} className="mt-3 w-full py-2.5 bg-purple-600 text-white font-game text-[10px] uppercase border-2 border-black cursor-pointer">
+          Verify Sorting Decryption
         </button>
       )}
+
       {score !== null && (
-        <div className="border-4 border-success bg-success/20 p-4 text-center">
-          <div className="text-3xl mb-2">{score >= 6 ? '🏆' : score >= 4 ? '⭐' : '💪'}</div>
-          <div className="text-white font-game text-sm">{score}/{items.length} Correct!</div>
-          <div className="text-white/70 font-body text-xs mt-1">{score >= 6 ? 'Amazing! You\'re an AI expert!' : 'Good try! Keep learning!'}</div>
+        <div className={`mt-3 p-3 text-center border-2 ${score >= 6 ? 'border-[#10B981] bg-[#10B981]/10' : 'border-[#EF4444] bg-[#EF4444]/10'}`}>
+          <div className="text-white font-game text-[10px]">{score}/{items.length} Correct!</div>
+          <p className="font-body text-[10px] text-white/60 mt-0.5">
+            {score >= 6 ? 'Nice observation metrics! Sandbox cracked.' : 'Some items mismatched! Try restarting to reach 6+ correct.'}
+          </p>
+          {score < 6 && (
+            <button 
+              onClick={() => { setSorted({}); setScore(null); }}
+              className="mt-2 px-3 py-1 font-game text-[8px] bg-red-600 text-white border border-black cursor-pointer"
+            >
+              Restart Decryption
+            </button>
+          )}
         </div>
       )}
     </div>
   );
 }
 
-// Quick inline quiz
-function QuizSandbox({ lessonId }: { lessonId: string }) {
+// Quiz sandbox inline helper
+function QuizSandbox({ lessonId, onComplete }: { lessonId: string; onComplete: () => void }) {
   const questions = [
     { q: 'What helps YouTube recommend videos?', opts: ['Random choice', 'AI learns your preferences', 'Your location', 'Your age'], a: 1 },
     { q: 'How does face recognition work?', opts: ['Magic', 'By comparing pixel patterns', 'By reading your ID', 'By asking you'], a: 1 },
@@ -526,34 +916,40 @@ function QuizSandbox({ lessonId }: { lessonId: string }) {
     if (selected !== null) return;
     setSelected(i);
     if (i === questions[current].a) setCorrect(c => c + 1);
+    
     setTimeout(() => {
-      if (current + 1 >= questions.length) setDone(true);
-      else { setCurrent(c => c + 1); setSelected(null); }
+      if (current + 1 >= questions.length) {
+        setDone(true);
+        onComplete();
+      } else {
+        setCurrent(c => c + 1);
+        setSelected(null);
+      }
     }, 1200);
   };
 
   if (done) return (
-    <div className="flex flex-col items-center justify-center h-full p-6 gap-4">
-      <div className="text-5xl">{correct === questions.length ? '🏆' : '⭐'}</div>
-      <div className="text-white font-game text-sm">{correct}/{questions.length} Correct!</div>
+    <div className="p-4 text-center border-2 border-[#10B981] bg-[#10B981]/10">
+      <div className="text-2xl mb-1">🏆</div>
+      <div className="text-white font-game text-xs">{correct}/{questions.length} Correct!</div>
     </div>
   );
 
   const q = questions[current];
   return (
-    <div className="p-4 space-y-4">
-      <div className="text-white/60 font-body text-xs">Question {current + 1}/{questions.length}</div>
-      <div className="text-white font-game text-sm leading-relaxed">{q.q}</div>
+    <div className="p-4 bg-[#1E1B4B] border-3 border-black shadow-[3px_3px_0px_#000] space-y-3">
+      <div className="text-white/50 font-pixel text-[6px]">QUESTION {current + 1}/{questions.length}</div>
+      <div className="text-white font-game text-xs leading-relaxed">{q.q}</div>
       <div className="space-y-2">
         {q.opts.map((opt, i) => (
           <button
             key={i}
             onClick={() => handleAnswer(i)}
-            className={`w-full border-4 border-black p-3 text-left font-body text-sm transition-all ${
-              selected === null ? 'bg-surface text-white hover:bg-white/10' :
-              i === q.a ? 'bg-success text-white' :
-              i === selected ? 'bg-pixel-red text-white' :
-              'bg-surface text-white/40'
+            className={`w-full border-2 border-black p-2.5 text-left font-body text-xs cursor-pointer ${
+              selected === null ? 'bg-black/30 text-white/80 hover:bg-black/50' :
+              i === q.a ? 'bg-[#10B981] text-white font-bold' :
+              i === selected ? 'bg-[#EF4444] text-white font-bold' :
+              'bg-black/20 text-white/30'
             }`}
           >
             {opt}
@@ -564,14 +960,12 @@ function QuizSandbox({ lessonId }: { lessonId: string }) {
   );
 }
 
-// ── NEW SANDBOXES ───────────────────────────────────────────
-
-// Comic Builder Sandbox
-function ComicSandbox() {
+// Comic Builder sandbox inline helper
+function ComicSandbox({ onComplete }: { onComplete: () => void }) {
   const [panels, setPanels] = useState<Array<{ hero: string; setting: string; speech: string }>>([
     { hero: '👽', setting: '🪐', speech: 'Hello Earthlings!' },
     { hero: '🤖', setting: '🌆', speech: 'AI makes logic fun!' },
-    { hero: '🦸', setting: '🏫', speech: 'Let\'s save the day!' },
+    { hero: '🦸', setting: '🏫', speech: "Let's save the day!" },
   ]);
   const [activePanel, setActivePanel] = useState(0);
   const [viewMode, setViewMode] = useState<'edit' | 'preview'>('edit');
@@ -588,139 +982,71 @@ function ComicSandbox() {
   };
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="p-3 border-3 border-black bg-[#16103A] shadow-[3px_3px_0px_#000] space-y-3">
       {viewMode === 'edit' ? (
         <>
-          <div className="text-white font-game text-xs text-center">Design Panel {activePanel + 1}/3</div>
-          
-          <div className="flex gap-2">
+          <div className="text-white font-game text-[10px] text-center">Design Panel {activePanel + 1}/3</div>
+          <div className="flex gap-1.5">
             {[0, 1, 2].map(idx => (
               <button
                 key={idx}
                 onClick={() => setActivePanel(idx)}
-                className={`flex-1 py-1.5 font-pixel text-[8px] border-2 border-black shadow-[2px_2px_0px_#000] text-center ${
-                  activePanel === idx ? 'bg-[#7C3AED] text-white' : 'bg-surface text-white/50'
-                }`}
+                className={`flex-1 py-1 font-pixel text-[6px] border border-black cursor-pointer ${activePanel === idx ? 'bg-purple-600 text-white' : 'bg-black/20 text-white/50'}`}
               >
                 Panel {idx + 1}
               </button>
             ))}
           </div>
 
-          <div className="border-4 border-black bg-surface p-4 flex flex-col items-center justify-center relative min-h-[160px] shadow-[4px_4px_0px_#000]">
-            <div className="text-[100px] leading-none opacity-20 absolute pointer-events-none select-none">
-              {panels[activePanel].setting}
-            </div>
-            
-            <motion.div 
-              animate={{ y: [0, -10, 0] }}
-              transition={{ repeat: Infinity, duration: 2 }}
-              className="text-7xl z-10"
-            >
-              {panels[activePanel].hero}
-            </motion.div>
-
-            <div className="mt-3 bg-white border-2 border-black text-black px-3 py-1.5 rounded-xl font-body text-xs relative max-w-[80%] text-center shadow-[2px_2px_0px_#000] z-10">
-              <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-t-2 border-l-2 border-black rotate-45" />
-              {panels[activePanel].speech || 'Type speech...'}
-            </div>
+          <div className="border border-black bg-black/40 p-3 flex flex-col items-center justify-center relative min-h-[120px] aspect-video">
+            <div className="text-5xl opacity-10 absolute pointer-events-none select-none">{panels[activePanel].setting}</div>
+            <div className="text-4xl z-10">{panels[activePanel].hero}</div>
+            <div className="mt-2 bg-white text-black text-[9px] px-2 py-1 rounded border border-black z-10 max-w-[85%] truncate">{panels[activePanel].speech || '...'}</div>
           </div>
 
-          <div className="space-y-3.5 pt-2">
+          <div className="space-y-2">
             <div>
-              <span className="text-white/60 font-game text-[9px] block mb-1">1. Choose Hero:</span>
-              <div className="flex justify-between gap-1">
+              <span className="text-white/40 font-pixel text-[5px] block">HERO:</span>
+              <div className="flex gap-1">
                 {heroes.map(h => (
-                  <button
-                    key={h}
-                    onClick={() => updateActivePanel('hero', h)}
-                    className={`text-2xl p-1 border-2 border-black flex-1 text-center transition-colors ${
-                      panels[activePanel].hero === h ? 'bg-[#7C3AED] border-white' : 'bg-surface hover:bg-white/5'
-                    }`}
-                  >
-                    {h}
-                  </button>
+                  <button key={h} onClick={() => updateActivePanel('hero', h)} className={`text-lg p-0.5 border flex-1 text-center cursor-pointer ${panels[activePanel].hero === h ? 'bg-purple-600' : 'bg-black/20'}`}>{h}</button>
                 ))}
               </div>
             </div>
-
             <div>
-              <span className="text-white/60 font-game text-[9px] block mb-1">2. Choose Setting:</span>
-              <div className="flex justify-between gap-1">
+              <span className="text-white/40 font-pixel text-[5px] block">SETTING:</span>
+              <div className="flex gap-1">
                 {settings.map(s => (
-                  <button
-                    key={s}
-                    onClick={() => updateActivePanel('setting', s)}
-                    className={`text-2xl p-1 border-2 border-black flex-1 text-center transition-colors ${
-                      panels[activePanel].setting === s ? 'bg-[#7C3AED] border-white' : 'bg-surface hover:bg-white/5'
-                    }`}
-                  >
-                    {s}
-                  </button>
+                  <button key={s} onClick={() => updateActivePanel('setting', s)} className={`text-lg p-0.5 border flex-1 text-center cursor-pointer ${panels[activePanel].setting === s ? 'bg-purple-600' : 'bg-black/20'}`}>{s}</button>
                 ))}
               </div>
             </div>
-
-            <div>
-              <span className="text-white/60 font-game text-[9px] block mb-1">3. Write Speech bubble:</span>
-              <input
-                type="text"
-                value={panels[activePanel].speech}
-                onChange={e => updateActivePanel('speech', e.target.value)}
-                maxLength={45}
-                placeholder="e.g. Look at that AI prediction!"
-                className="w-full pixel-input text-xs"
-              />
-            </div>
+            <input
+              type="text"
+              value={panels[activePanel].speech}
+              onChange={e => updateActivePanel('speech', e.target.value)}
+              className="w-full pixel-input text-[10px] p-1.5"
+              placeholder="Speech text..."
+              maxLength={35}
+            />
           </div>
 
-          <button
-            onClick={() => setViewMode('preview')}
-            className="w-full border-4 border-black bg-[#10B981] py-3 text-white font-game text-xs shadow-pixel active:translate-y-0.5 mt-2 cursor-pointer"
-          >
-            PREVIEW COMIC STRIP 🎨
-          </button>
+          <button onClick={() => setViewMode('preview')} className="w-full py-2 bg-[#10B981] text-white font-game text-[10px] border border-black cursor-pointer">Preview Adventure Comic</button>
         </>
       ) : (
-        <div className="space-y-4">
-          <div className="text-white font-game text-xs text-center">My AI Adventure Strip</div>
-          
-          <div className="grid grid-cols-3 gap-2">
+        <div className="space-y-3">
+          <div className="grid grid-cols-3 gap-1.5">
             {panels.map((p, idx) => (
-              <div
-                key={idx}
-                className="border-3 border-black bg-surface p-3 aspect-[3/4] flex flex-col items-center justify-between relative overflow-hidden shadow-[2px_2px_0px_#000]"
-              >
-                <div className="text-[60px] opacity-15 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none">
-                  {p.setting}
-                </div>
-                
-                <span className="font-pixel text-[5px] text-[#00C2FF] self-start">#{idx + 1}</span>
-
-                <span className="text-4xl z-10 my-auto">{p.hero}</span>
-
-                <div className="bg-white border border-black text-black px-1.5 py-0.5 rounded-md text-[8px] font-body max-w-full text-center truncate shadow-[1px_1px_0px_#000] z-10">
-                  {p.speech || '...'}
-                </div>
+              <div key={idx} className="border border-black bg-black/40 p-2 flex flex-col justify-between items-center aspect-[3/4] relative overflow-hidden">
+                <span className="absolute top-0.5 left-1 font-pixel text-[5px] text-purple-400">#{idx+1}</span>
+                <span className="text-3xl my-auto z-10">{p.hero}</span>
+                <div className="bg-white text-black text-[7px] px-1 py-0.5 rounded truncate max-w-full z-10">{p.speech || '...'}</div>
               </div>
             ))}
           </div>
-
           <div className="flex gap-2">
-            <button
-              onClick={() => setViewMode('edit')}
-              className="flex-1 border-3 border-black bg-surface py-2 text-white/70 font-game text-[10px] cursor-pointer"
-            >
-              ← Edit Panels
-            </button>
-            <button
-              onClick={() => {
-                alert('Saved! Your comic is ready.');
-              }}
-              className="flex-1 border-3 border-black bg-[#10B981] py-2 text-white font-game text-[10px] cursor-pointer"
-            >
-              Save Comic ✅
-            </button>
+            <button onClick={() => setViewMode('edit')} className="flex-1 py-1.5 bg-black/20 text-white border border-black font-game text-[9px] cursor-pointer">← Edit</button>
+            <button onClick={() => { onComplete(); alert('Comic story compiled successfully!'); }} className="flex-1 py-1.5 bg-[#10B981] text-white border border-black font-game text-[9px] cursor-pointer">Compile Comic Story</button>
           </div>
         </div>
       )}
@@ -728,135 +1054,120 @@ function ComicSandbox() {
   );
 }
 
-// Prompt Engineering Playground Sandbox
-function PlaygroundSandbox() {
+// Prompt Engineering playground helper
+function PlaygroundSandbox({ onComplete }: { onComplete: () => void }) {
   const [role, setRole] = useState('Emoji Translator');
   const [temperature, setTemperature] = useState(0.7);
   const [promptInput, setPromptInput] = useState('');
   const [aiOutput, setAiOutput] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [promptScore, setPromptScore] = useState<number | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(null);
 
   const roles = [
-    { name: 'Emoji Translator 🎭', system: 'You translate the user\'s text into emojis ONLY. No words. Be creative!' },
-    { name: 'Pirate Captain 🏴‍☠️', system: 'You speak like a salty 17th-century pirate captain in short sentences. Use Pirate slang!' },
-    { name: 'Robotic Helper 🤖', system: 'You are a robot. End every word with a BEEP or BOOP. Speak robotically.' },
+    { name: 'Emoji Translator 🎭', system: "Translate prompt into emojis ONLY. No words." },
+    { name: 'Pirate Captain 🏴‍☠️', system: "Speak like a 17th-century pirate captain in short sentences." },
+    { name: 'Robotic Helper 🤖', system: "Speak robotically. End every sentence with BEEP or BOOP." }
   ];
 
   const handleSend = async () => {
     if (!promptInput.trim() || loading) return;
     setLoading(true);
     setAiOutput(null);
+    setPromptScore(null);
     try {
       const selectedSystem = roles.find(r => r.name.includes(role))?.system || '';
+      
+      // 1. Generate text output
       const response = await testPromptPlayground(selectedSystem, promptInput, temperature);
       setAiOutput(response);
+
+      // 2. Evaluate prompt using our new gemini evaluator helper
+      const evalRes = await evaluatePromptLab(selectedSystem, promptInput);
+      setPromptScore(evalRes.score);
+      setFeedback(`${evalRes.feedback} Suggestion: ${evalRes.improvementTip}`);
+
+      if (evalRes.score >= 60) {
+        onComplete();
+      }
     } catch (err) {
-      setAiOutput('Beep boop! An error occurred.');
+      setAiOutput('Connection timed out. Using fallback helper.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="p-4 space-y-4">
-      <div className="text-white font-game text-xs text-center">Prompt Engineering Lab</div>
-
-      <div className="space-y-3">
-        <div>
-          <span className="text-white/60 font-game text-[9px] block mb-1">1. AI System Persona:</span>
-          <div className="grid grid-cols-3 gap-1.5">
-            {roles.map(r => (
-              <button
-                key={r.name}
-                onClick={() => setRole(r.name)}
-                className={`py-2 px-1 text-[8px] font-game border-2 border-black text-center shadow-[1px_1px_0px_#000] leading-tight flex flex-col justify-center items-center h-12 cursor-pointer ${
-                  role === r.name ? 'bg-[#7C3AED] text-white border-white' : 'bg-surface text-white/55 hover:text-white/80'
-                }`}
-              >
-                {r.name}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <div className="flex justify-between items-center mb-1">
-            <span className="text-white/60 font-game text-[9px]">2. Creativity (Temperature):</span>
-            <span className="font-pixel text-[7px] text-[#FFD60A]">{temperature} ({temperature < 0.4 ? 'Focused' : 'Creative'})</span>
-          </div>
-          <input
-            type="range"
-            min="0.1"
-            max="1.0"
-            step="0.1"
-            value={temperature}
-            onChange={e => setTemperature(parseFloat(e.target.value))}
-            className="w-full h-2 bg-black border border-white/20 appearance-none rounded cursor-pointer accent-[#7C3AED]"
-          />
-        </div>
-
-        <div>
-          <span className="text-white/60 font-game text-[9px] block mb-1">3. Write Your Prompt:</span>
-          <textarea
-            value={promptInput}
-            onChange={e => setPromptInput(e.target.value)}
-            placeholder="e.g. What is the sun made of?"
-            className="w-full pixel-input text-xs h-16 resize-none"
-            maxLength={100}
-          />
+    <div className="p-3 border-3 border-black bg-[#16103A] shadow-[3px_3px_0px_#000] space-y-3">
+      <div className="text-white font-game text-[10px] text-center">Prompt Design Sandbox</div>
+      
+      <div>
+        <span className="text-white/40 font-pixel text-[5px] block mb-1">SYSTEM PERSONA:</span>
+        <div className="grid grid-cols-3 gap-1">
+          {roles.map(r => (
+            <button 
+              key={r.name} 
+              onClick={() => setRole(r.name)} 
+              className={`py-1 text-[8px] font-game border border-black cursor-pointer ${role === r.name ? 'bg-purple-600' : 'bg-black/35 text-white/50'}`}
+            >
+              {r.name}
+            </button>
+          ))}
         </div>
       </div>
 
-      <button
+      <textarea
+        value={promptInput}
+        onChange={e => setPromptInput(e.target.value)}
+        className="w-full pixel-input text-xs h-12 resize-none"
+        placeholder="Type a message or instruction..."
+        maxLength={75}
+      />
+
+      <button 
         onClick={handleSend}
         disabled={!promptInput.trim() || loading}
-        className="w-full border-4 border-black bg-[#7C3AED] py-3 text-white font-game text-xs shadow-pixel active:translate-y-0.5 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+        className="w-full py-2 bg-purple-600 hover:bg-purple-700 text-white font-game text-[10px] border-2 border-black cursor-pointer"
       >
-        {loading ? (
-          <>
-            <span className="animate-spin inline-block mr-1">⚡</span>
-            GENERATING AI RESPONSE...
-          </>
-        ) : (
-          'SEND PROMPT TO AI 🚀'
-        )}
+        {loading ? 'AI compiles...' : 'Send Prompt to AI 🚀'}
       </button>
 
       {aiOutput && (
-        <div className="border-4 border-black bg-black/40 p-4 relative shadow-[4px_4px_0px_#000]">
-          <span className="absolute -top-3 left-4 bg-[#7C3AED] text-white font-game text-[7px] px-2 py-0.5 border-2 border-black">
-            🤖 AI Output
-          </span>
-          <p className="text-white font-body text-xs leading-relaxed mt-1">{aiOutput}</p>
+        <div className="border border-black bg-black/40 p-2.5 space-y-1">
+          <span className="font-pixel text-[5px] text-[#A78BFA] block">AI Output Response:</span>
+          <p className="text-white font-body text-[10px] italic">"{aiOutput}"</p>
+        </div>
+      )}
+
+      {promptScore !== null && (
+        <div className={`border p-2 ${promptScore >= 60 ? 'border-[#10B981] bg-[#10B981]/5' : 'border-[#EF4444] bg-[#EF4444]/5'}`}>
+          <div className="flex justify-between font-game text-[9px] text-white">
+            <span>Prompt score:</span>
+            <span className="text-yellow-400">{promptScore}/100</span>
+          </div>
+          <p className="font-body text-[9px] text-white/60 mt-1 leading-relaxed">{feedback}</p>
         </div>
       )}
     </div>
   );
 }
 
-// Deepfake Detective Sandbox
-function DetectiveSandbox() {
+// Deepfake Detective Sandbox inline helper
+function DetectiveSandbox({ onComplete }: { onComplete: () => void }) {
   const challenges = [
     {
       id: 1,
       scenario: 'A video of a famous actor promoting a sketchy investment app on Instagram. The voice audio matches their voice, but their lips look slightly blurred and mismatch the syllables.',
       isDeepfake: true,
-      explanation: 'CORRECT! Mismatched lip sync and fuzzy facial edges are dead giveaways for AI voice cloning and face-swapping deepfakes.',
-      incorrectMsg: 'NOT QUITE! Why would a famous actor promote a sketchy app? Look closely at the lips — they look blurred and out of sync. This is an AI deepfake!',
+      explanation: 'Mismatched lip sync and fuzzy facial edges are dead giveaways for AI voice cloning and face-swapping deepfakes.',
+      incorrectMsg: 'Why would a famous actor promote a sketchy app? Look closely at the lips — they look blurred and out of sync.',
     },
     {
       id: 2,
       scenario: 'A photo of the Pope wearing a stylish, oversized white puffer jacket that went viral on Twitter. If you zoom in, the background people have hands with 6 fingers and blurred glasses.',
       isDeepfake: true,
-      explanation: 'CORRECT! Current AI image generators struggle with rendering realistic hands, often adding extra fingers or merging details in background objects.',
-      incorrectMsg: 'NOT QUITE! Look at the hands of the people in the background — they have 6 fingers! This Pope puffer jacket photo is a famous AI deepfake.',
-    },
-    {
-      id: 3,
-      scenario: 'A video news report showing a massive flood in a city. Multiple verified news organizations on the ground are posting photos of the same flooded streets from different angles.',
-      isDeepfake: false,
-      explanation: 'CORRECT! Multi-angle corroboration from verified, independent on-the-scene journalists confirms the media represents a real-world event.',
-      incorrectMsg: 'NOT QUITE! Because multiple independent, verified journalists are reporting it from different perspectives on the ground, this is real media!',
+      explanation: 'AI image generators struggle with rendering realistic hands, often adding extra fingers or merging details in background objects.',
+      incorrectMsg: 'Look at the hands of the people in the background — they have 6 fingers! This Pope puffer jacket photo is a famous AI deepfake.',
     },
   ];
 
@@ -874,9 +1185,9 @@ function DetectiveSandbox() {
     
     if (isCorrect) {
       setScore(s => s + 1);
-      setFeedback(challenge.explanation);
+      setFeedback(`✅ CORRECT! ${challenge.explanation}`);
     } else {
-      setFeedback(challenge.incorrectMsg);
+      setFeedback(`❌ INCORRECT! ${challenge.incorrectMsg}`);
     }
   };
 
@@ -885,91 +1196,42 @@ function DetectiveSandbox() {
     setFeedback(null);
     if (current + 1 >= challenges.length) {
       setDone(true);
+      onComplete();
     } else {
       setCurrent(c => c + 1);
     }
   };
 
-  if (done) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full p-6 gap-4 text-center">
-        <div className="text-6xl animate-bounce">🕵️</div>
-        <h4 className="font-game text-sm text-white">Investigation Complete!</h4>
-        <div className="border-4 border-black bg-surface p-4 shadow-pixel w-full">
-          <div className="text-white font-game text-xs">Case Score: {score}/{challenges.length} Correct</div>
-          <p className="text-white/60 font-body text-xs mt-2 leading-relaxed">
-            {score === challenges.length 
-              ? 'Excellent eye! You can easily spot AI deepfakes like a true detective!' 
-              : 'Good job! Pay close attention to hands, ears, and lip synchronization to spot deepfakes.'}
-          </p>
-        </div>
-        <button
-          onClick={() => {
-            setCurrent(0);
-            setSelected(null);
-            setFeedback(null);
-            setScore(0);
-            setDone(false);
-          }}
-          className="w-full border-4 border-black bg-[#7C3AED] py-3 text-white font-game text-xs shadow-pixel active:translate-y-0.5 mt-2 cursor-pointer"
-        >
-          Restart Cases 🔁
-        </button>
-      </div>
-    );
-  }
+  if (done) return (
+    <div className="p-4 text-center border-2 border-[#10B981] bg-[#10B981]/10">
+      <div className="text-2xl mb-1">🕵️</div>
+      <div className="text-white font-game text-xs">Analysis Complete! Score: {score}/{challenges.length}</div>
+    </div>
+  );
 
   const c = challenges[current];
   return (
-    <div className="p-4 space-y-4">
-      <div className="flex justify-between items-center text-white/50 font-body text-xs">
-        <span>Case File {current + 1}/{challenges.length}</span>
-        <span className="font-game text-[#FF8906] text-[9px]">🕵️ AI DETECTIVE</span>
+    <div className="p-3 border-3 border-black bg-[#16103A] shadow-[3px_3px_0px_#000] space-y-3">
+      <div className="flex justify-between items-center text-white/50 font-pixel text-[6px]">
+        <span>CASE FILE {current + 1}/{challenges.length}</span>
+        <span className="font-game text-orange-400">AI DETECTIVE</span>
       </div>
 
-      <div className="border-4 border-black bg-surface p-4 shadow-[4px_4px_0px_#000]">
-        <span className="font-game text-[8px] text-[#00C2FF] uppercase block mb-1">Clue Description:</span>
-        <p className="text-white font-body text-xs leading-relaxed">{c.scenario}</p>
+      <div className="border border-black bg-black/40 p-2.5">
+        <p className="text-white font-body text-[10px] leading-relaxed">{c.scenario}</p>
       </div>
 
       {feedback ? (
-        <div className="space-y-3">
-          <div className={`border-4 border-black p-4 ${
-            (selected === 'deepfake' && c.isDeepfake) || (selected === 'real' && !c.isDeepfake)
-              ? 'bg-success/20 border-success text-green-300'
-              : 'bg-pixel-red/25 border-pixel-red text-red-300'
-          }`}>
-            <strong className="font-game text-[9px] block mb-1">
-              {(selected === 'deepfake' && c.isDeepfake) || (selected === 'real' && !c.isDeepfake)
-                ? '✅ CORRECT DETECTION!'
-                : '❌ FALSE ALARM / MISSED DEEPFAKE'}
-            </strong>
-            <p className="font-body text-xs text-white/90 leading-relaxed">{feedback}</p>
-          </div>
-          <button
-            onClick={handleNext}
-            className="w-full border-4 border-black bg-primary py-3 text-white font-game text-xs shadow-pixel active:translate-y-0.5 cursor-pointer"
-          >
-            {current + 1 < challenges.length ? 'NEXT CASE →' : 'FINISH CASE REPORT 📋'}
-          </button>
+        <div className="space-y-2">
+          <p className="font-body text-[9px] text-white leading-relaxed">{feedback}</p>
+          <button onClick={handleNext} className="w-full py-1.5 bg-purple-600 text-white font-game text-[9px] border border-black cursor-pointer">Next Case Clue →</button>
         </div>
       ) : (
-        <div className="flex gap-3">
-          <button
-            onClick={() => handleChoice('deepfake')}
-            className="flex-1 border-4 border-black bg-pixel-red text-white py-3 font-game text-xs shadow-pixel hover:brightness-110 active:translate-y-0.5 cursor-pointer"
-          >
-            🎭 DEEPFAKE
-          </button>
-          <button
-            onClick={() => handleChoice('real')}
-            className="flex-1 border-4 border-black bg-success text-white py-3 font-game text-xs shadow-pixel hover:brightness-110 active:translate-y-0.5 cursor-pointer"
-          >
-            📸 REAL MEDIA
-          </button>
+        <div className="flex gap-2">
+          <button onClick={() => handleChoice('deepfake')} className="flex-1 py-2 bg-red-600 text-white font-game text-[9px] border border-black cursor-pointer">Deepfake 🎭</button>
+          <button onClick={() => handleChoice('real')} className="flex-1 py-2 bg-emerald-600 text-white font-game text-[9px] border border-black cursor-pointer">Real Photo 📸</button>
         </div>
       )}
     </div>
   );
 }
-

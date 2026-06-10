@@ -794,3 +794,145 @@ export async function testPromptPlayground(
   return apiFailed ? `⚠️ [API Quota Exceeded - Fallback Simulator]: ${fallbackAns}` : fallbackAns;
 }
 
+// Evaluate a child's prompt inside the Prompt Lab
+export async function evaluatePromptLab(
+  challengeInstruction: string,
+  studentPrompt: string
+): Promise<{ score: number; feedback: string; improvementTip: string }> {
+  let apiFailed = false;
+  try {
+    return await callWithKeyRotation(async (model) => {
+      const prompt = `You are a friendly, encouraging AI companion evaluating a student's prompt engineering challenge.
+Challenge description/instruction: "${challengeInstruction}"
+Student's prompt input: "${studentPrompt}"
+
+Evaluate how well the student followed the instructions and designed their prompt.
+1. Assign a score between 40 and 100.
+2. Write a short, kid-friendly feedback (1-2 sentences) praising their attempt.
+3. Provide 1 simple tip on how they could write their prompt even better (e.g. adding constraints, detail, or examples).
+
+Respond ONLY with a JSON object. Format:
+{
+  "score": <number>,
+  "feedback": "<friendly feedback>",
+  "improvementTip": "<kid-friendly tip to make prompt better>"
+}
+Do not include any formatting, markdown, or other text outside the JSON object.`;
+
+      const result = await model.generateContent(prompt);
+      const text = result.response.text().trim();
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        if (typeof parsed.score === 'number' && parsed.feedback && parsed.improvementTip) {
+          return parsed;
+        }
+      }
+      throw new Error('Invalid JSON format returned from Gemini');
+    });
+  } catch (err) {
+    console.warn('Gemini API evaluatePromptLab failed, using fallback:', err);
+    apiFailed = true;
+  }
+
+  // Fallback rating logic based on length and some keywords
+  const length = studentPrompt.trim().length;
+  let score = 50;
+  let feedback = 'Nice try! Sparky thinks you are starting to write a great prompt.';
+  let improvementTip = 'Try to describe the role, style, or output constraints you want the AI to follow!';
+
+  if (isGibberish(studentPrompt)) {
+    score = 40;
+    feedback = 'It looks like you typed some random characters. Try typing a real instruction for the AI companion!';
+    improvementTip = 'Think of the prompt as talking to a helpful friend and tell it exactly what to do.';
+  } else if (length > 30) {
+    score = 90;
+    feedback = 'Excellent job! Your prompt is descriptive, clear, and gives the AI a solid instruction.';
+    improvementTip = 'To make it even better, try asking the AI to explain its reasoning step-by-step!';
+  } else if (length > 10) {
+    score = 75;
+    feedback = 'Great job writing a prompt! The AI will understand this instruction.';
+    improvementTip = 'Try adding details like "short response" or "explain in 2 sentences" to control how the AI answers.';
+  }
+
+  if (apiFailed) {
+    feedback = `⚠️ [API Quota Exceeded]: ${feedback}`;
+  }
+
+  return { score, feedback, improvementTip };
+}
+
+// Evaluate a child's micro project submission
+export async function evaluateMicroProjectSubmission(
+  projectTitle: string,
+  projectDescription: string,
+  deliverableText: string
+): Promise<{ score: number; feedback: string; passed: boolean }> {
+  let apiFailed = false;
+  try {
+    return await callWithKeyRotation(async (model) => {
+      const prompt = `You are a supportive, high-energy robot tutor companion for kids learning AI.
+The student has submitted their creative micro project.
+- Project Title: "${projectTitle}"
+- Project Goal: "${projectDescription}"
+- Student's Deliverable: "${deliverableText}"
+
+Evaluate their micro-project submission. Be understanding, generous, and positive!
+CRITICAL: If the student's submission consists of random character typing or gibberish (e.g. "asdfasdf", "test test"), you MUST assign a score of 30, passed: false, and feedback explaining that they need to write a realistic response.
+
+Respond ONLY with a JSON object. Format:
+{
+  "score": <number between 30 and 100>,
+  "feedback": "<warm, kid-friendly praise + gentle improvement tip (max 2 sentences)>",
+  "passed": <true/false depending on if score is >= 50>
+}
+Do not include any formatting, markdown, or other text outside the JSON object.`;
+
+      const result = await model.generateContent(prompt);
+      const text = result.response.text().trim();
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        if (typeof parsed.score === 'number' && parsed.feedback && typeof parsed.passed === 'boolean') {
+          return parsed;
+        }
+      }
+      throw new Error('Invalid JSON format returned from Gemini');
+    });
+  } catch (err) {
+    console.warn('Gemini API evaluateMicroProjectSubmission failed, using fallback:', err);
+    apiFailed = true;
+  }
+
+  // Fallback evaluation logic
+  const cleanText = deliverableText.trim();
+  if (isGibberish(cleanText)) {
+    return {
+      score: 30,
+      feedback: 'It looks like you typed random letters. Please describe your project using real words to complete the mission!',
+      passed: false
+    };
+  }
+
+  const wordCount = cleanText.split(/\s+/).filter(Boolean).length;
+  let score = 80;
+  let feedback = 'Awesome micro project! You applied what you learned and designed a brilliant AI solution.';
+  let passed = true;
+
+  if (wordCount < 4) {
+    score = 45;
+    feedback = 'Nice start! Try writing a bit more about your project idea so Sparky can evaluate it better.';
+    passed = false;
+  } else if (wordCount > 15) {
+    score = 95;
+    feedback = 'Outstanding detail! You clearly thought about how AI fits into your solution. Keep inventing!';
+  }
+
+  if (apiFailed) {
+    feedback = `⚠️ [API Quota Exceeded - Fallback]: ${feedback}`;
+  }
+
+  return { score, feedback, passed };
+}
+
+

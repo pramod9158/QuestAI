@@ -15,7 +15,10 @@ interface CelebrationOverlayProps {
   subtitle?: string;
   xpGained?: number;
   coinsGained?: number;
+  gemsGained?: number;
+  streakBonus?: number;
   badge?: { emoji: string; name: string };
+  nextMission?: string;
   onDone?: () => void;
   autoDismissMs?: number;
 }
@@ -193,20 +196,20 @@ export function CelebrationOverlay({
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
-                className="flex items-center justify-center gap-4"
+                className="flex flex-wrap items-center justify-center gap-3"
               >
                 {xpGained > 0 && (
                   <motion.div
-                    animate={{ y: [0, -4, 0] }}
+                    animate={{ y: [0, -3, 0] }}
                     transition={{ repeat: Infinity, duration: 1.8, delay: 0.1 }}
                     className="flex flex-col items-center gap-1"
                   >
                     <div
-                      className="px-3 py-1.5 flex items-center gap-1.5 font-game text-sm"
+                      className="px-2.5 py-1.5 flex items-center gap-1 font-game text-[11px]"
                       style={{
                         background: 'linear-gradient(135deg, #F59E0B, #FCD34D)',
-                        border: '3px solid #000',
-                        boxShadow: '3px 3px 0px #000',
+                        border: '2.5px solid #000',
+                        boxShadow: '2.5px 2.5px 0px #000',
                         color: '#000',
                       }}
                     >
@@ -216,16 +219,16 @@ export function CelebrationOverlay({
                 )}
                 {coinsGained > 0 && (
                   <motion.div
-                    animate={{ y: [0, -4, 0] }}
+                    animate={{ y: [0, -3, 0] }}
                     transition={{ repeat: Infinity, duration: 1.8, delay: 0.3 }}
                     className="flex flex-col items-center gap-1"
                   >
                     <div
-                      className="px-3 py-1.5 flex items-center gap-1.5 font-game text-sm"
+                      className="px-2.5 py-1.5 flex items-center gap-1 font-game text-[11px]"
                       style={{
                         background: 'linear-gradient(135deg, #F59E0B, #FCD34D)',
-                        border: '3px solid #000',
-                        boxShadow: '3px 3px 0px #000',
+                        border: '2.5px solid #000',
+                        boxShadow: '2.5px 2.5px 0px #000',
                         color: '#000',
                       }}
                     >
@@ -233,7 +236,56 @@ export function CelebrationOverlay({
                     </div>
                   </motion.div>
                 )}
+                {gemsGained && gemsGained > 0 && (
+                  <motion.div
+                    animate={{ y: [0, -3, 0] }}
+                    transition={{ repeat: Infinity, duration: 1.8, delay: 0.4 }}
+                    className="flex flex-col items-center gap-1"
+                  >
+                    <div
+                      className="px-2.5 py-1.5 flex items-center gap-1 font-game text-[11px]"
+                      style={{
+                        background: 'linear-gradient(135deg, #3B82F6, #60A5FA)',
+                        border: '2.5px solid #000',
+                        boxShadow: '2.5px 2.5px 0px #000',
+                        color: '#fff',
+                      }}
+                    >
+                      💎 +{gemsGained} Gems
+                    </div>
+                  </motion.div>
+                )}
               </motion.div>
+
+              {/* Streak Bonus Alert */}
+              {streakBonus && streakBonus > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="font-pixel text-[6px] tracking-wider text-orange-400 bg-orange-950/20 border border-orange-800/40 py-1"
+                >
+                  🔥 ACTIVE STREAK MULTIPLIER BONUS: +{streakBonus} XP!
+                </motion.div>
+              )}
+
+              {/* Next Mission Preview */}
+              {nextMission && (
+                <div
+                  className="p-2 flex items-center gap-2 text-left"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    border: '1.5px solid rgba(255, 255, 255, 0.08)',
+                  }}
+                >
+                  <span className="text-sm">🚀</span>
+                  <div>
+                    <span className="font-pixel text-[5px] text-white/40 tracking-wider block">UPCOMING MISSION:</span>
+                    <h4 className="font-game text-[8px] text-white/90 truncate max-w-[200px]">
+                      {nextMission}
+                    </h4>
+                  </div>
+                </div>
+              )}
 
               {/* Badge unlock */}
               {badge && (
