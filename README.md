@@ -77,4 +77,3 @@ To set up the Supabase database schema, RLS policies, leaderboard views, and cur
 3. Click **Deploy**. Vercel will automatically configure the SPA client router using the provided `vercel.json` file.
 
 
-Pramod:9158998226
