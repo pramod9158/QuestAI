@@ -103,8 +103,9 @@ export default function CreateLab({ onComplete }: CreateLabProps) {
       
       // Clean up response from markdown tags if the model returned them
       let cleaned = rawResponse.replace(/```xml/gi, '').replace(/```svg/gi, '').replace(/```/g, '').trim();
-      const startIdx = cleaned.indexOf('<svg');
-      const endIdx = cleaned.lastIndexOf('</svg>');
+      const lowerCleaned = cleaned.toLowerCase();
+      const startIdx = lowerCleaned.indexOf('<svg');
+      const endIdx = lowerCleaned.lastIndexOf('</svg>');
       if (startIdx !== -1 && endIdx !== -1) {
         cleaned = cleaned.substring(startIdx, endIdx + 6);
       }

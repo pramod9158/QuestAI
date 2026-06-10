@@ -784,14 +784,50 @@ export async function testPromptPlayground(
   }
   const cleanUser = userPrompt.toLowerCase();
   let fallbackAns = `I am acting according to your system rule: "${systemPrompt}". You asked me: "${userPrompt}". Since the API is offline, here is a helpful simulation!`;
-  if (systemPrompt.toLowerCase().includes("emoji")) {
+  
+  const isSvgRequest = systemPrompt.toLowerCase().includes("svg") || systemPrompt.toLowerCase().includes("vector") || systemPrompt.toLowerCase().includes("artist");
+
+  if (isSvgRequest) {
+    let shapeColor = "#EC4899"; // default pink
+    let faceEmoji = "🐱"; // default cat
+    if (cleanUser.includes("frog") || cleanUser.includes("toad") || cleanUser.includes("green")) {
+      shapeColor = "#10B981"; // green
+      faceEmoji = "🐸";
+    } else if (cleanUser.includes("robot") || cleanUser.includes("machine") || cleanUser.includes("bot")) {
+      shapeColor = "#8B5CF6"; // purple
+      faceEmoji = "🤖";
+    } else if (cleanUser.includes("fish") || cleanUser.includes("water") || cleanUser.includes("sea") || cleanUser.includes("blue")) {
+      shapeColor = "#3B82F6"; // blue
+      faceEmoji = "🐟";
+    } else if (cleanUser.includes("star") || cleanUser.includes("sky") || cleanUser.includes("space") || cleanUser.includes("yellow")) {
+      shapeColor = "#FFD60A";
+      faceEmoji = "⭐";
+    } else if (cleanUser.includes("flower") || cleanUser.includes("garden") || cleanUser.includes("red")) {
+      shapeColor = "#EF4444";
+      faceEmoji = "🌸";
+    }
+
+    fallbackAns = `<svg viewBox="0 0 100 100" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <rect x="15" y="15" width="70" height="70" rx="12" fill="${shapeColor}" stroke="black" stroke-width="2"/>
+      <circle cx="50" cy="50" r="24" fill="white" stroke="black" stroke-width="1.5"/>
+      <text x="50" y="57" font-size="20" text-anchor="middle">${faceEmoji}</text>
+      <text x="50" y="93" font-size="5" font-family="monospace" fill="white" text-anchor="middle">OFFLINE CANVAS ENGINE</text>
+    </svg>`;
+  } else if (systemPrompt.toLowerCase().includes("emoji")) {
     fallbackAns = "🪐🤖✨🚀🎨";
   } else if (systemPrompt.toLowerCase().includes("pirate")) {
     fallbackAns = `Ahoy matey! Ye ask about "${userPrompt}". By the powers, code be our gold! Arrr!`;
   } else if (systemPrompt.toLowerCase().includes("robot")) {
     fallbackAns = `BEEP BOOP. Processing: "${userPrompt}". Completed. BEEP.`;
   }
-  return apiFailed ? `⚠️ [API Quota Exceeded - Fallback Simulator]: ${fallbackAns}` : fallbackAns;
+
+  if (apiFailed) {
+    if (isSvgRequest) {
+      return fallbackAns; // Return raw SVG markup directly so it parses as XML
+    }
+    return `⚠️ [API Quota Exceeded - Fallback Simulator]: ${fallbackAns}`;
+  }
+  return fallbackAns;
 }
 
 // Evaluate a child's prompt inside the Prompt Lab
