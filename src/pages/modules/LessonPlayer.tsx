@@ -100,6 +100,36 @@ export default function LessonPlayer() {
     }
   }, [lesson, activeIndex, filtered, navigate]);
 
+  // Refs to hold latest values for player callbacks without re-triggering useEffect
+  const completedCheckpointsRef = useRef<number[]>([]);
+  const activeCheckpointRef = useRef<any>(null);
+  const videoDurationRef = useRef<number>(0);
+  const maxTimeWatchedRef = useRef<number>(0);
+
+  // Sync refs with state
+  useEffect(() => {
+    completedCheckpointsRef.current = completedCheckpoints;
+  }, [completedCheckpoints]);
+
+  useEffect(() => {
+    activeCheckpointRef.current = activeCheckpoint;
+  }, [activeCheckpoint]);
+
+  // Reset tracking refs when lesson changes
+  useEffect(() => {
+    if (lesson) {
+      completedCheckpointsRef.current = [];
+      activeCheckpointRef.current = null;
+      videoDurationRef.current = 0;
+      maxTimeWatchedRef.current = 0;
+      setCompletedCheckpoints([]);
+      setActiveCheckpoint(null);
+      setVideoDuration(0);
+      setCurrentTime(0);
+      setVideoFinished(completedIds.includes(lesson.id));
+    }
+  }, [lesson?.id]);
+
   // YouTube API Player Initialization for Step 2
   useEffect(() => {
     if (currentStep !== 2 || !lesson) return;
@@ -117,7 +147,6 @@ export default function LessonPlayer() {
 
     let checkInterval: ReturnType<typeof setInterval> | null = null;
     let timeTrackingInterval: ReturnType<typeof setInterval> | null = null;
-    let maxTimeWatched = 0;
 
     const initPlayer = () => {
       if (iframeRef.current && (window as any).YT && (window as any).YT.Player) {
@@ -126,7 +155,9 @@ export default function LessonPlayer() {
             events: {
               onReady: (event: any) => {
                 if (event.target && typeof event.target.getDuration === 'function') {
-                  setVideoDuration(event.target.getDuration());
+                  const duration = event.target.getDuration();
+                  videoDurationRef.current = duration;
+                  setVideoDuration(duration);
                 }
               },
               onStateChange: (event: any) => {
@@ -140,19 +171,21 @@ export default function LessonPlayer() {
                   if (!timeTrackingInterval) {
                     timeTrackingInterval = setInterval(() => {
                       if (playerRef.current && typeof playerRef.current.getCurrentTime === 'function') {
-                        const currentTime = playerRef.current.getCurrentTime();
-                        setCurrentTime(currentTime);
+                        const curTime = playerRef.current.getCurrentTime();
+                        setCurrentTime(curTime);
 
-                        if (typeof playerRef.current.getDuration === 'function' && videoDuration === 0) {
-                          setVideoDuration(playerRef.current.getDuration());
+                        if (typeof playerRef.current.getDuration === 'function' && videoDurationRef.current === 0) {
+                          const duration = playerRef.current.getDuration();
+                          videoDurationRef.current = duration;
+                          setVideoDuration(duration);
                         }
 
                         // Check checkpoints
                         lesson.videoCheckpoints?.forEach((cp, idx) => {
                           if (
-                            Math.abs(currentTime - cp.timestampSeconds) < 1.5 &&
-                            !completedCheckpoints.includes(idx) &&
-                            !activeCheckpoint
+                            Math.abs(curTime - cp.timestampSeconds) < 1.5 &&
+                            !completedCheckpointsRef.current.includes(idx) &&
+                            !activeCheckpointRef.current
                           ) {
                             playerRef.current.pauseVideo();
                             setActiveCheckpoint({ cp, idx });
@@ -160,10 +193,10 @@ export default function LessonPlayer() {
                         });
 
                         // Prevent skipping forward
-                        if (currentTime > maxTimeWatched + 2.5) {
-                          playerRef.current.seekTo(maxTimeWatched, true);
-                        } else if (currentTime > maxTimeWatched) {
-                          maxTimeWatched = currentTime;
+                        if (curTime > maxTimeWatchedRef.current + 2.5) {
+                          playerRef.current.seekTo(maxTimeWatchedRef.current, true);
+                        } else if (curTime > maxTimeWatchedRef.current) {
+                          maxTimeWatchedRef.current = curTime;
                         }
                       }
                     }, 500);
@@ -211,7 +244,7 @@ export default function LessonPlayer() {
         }
       }
     };
-  }, [currentStep, lesson?.id, completedCheckpoints, activeCheckpoint, videoDuration]);
+  }, [currentStep, lesson?.id]);
 
   if (!lesson) return <div className="p-6 text-white font-body">Lesson not found.</div>;
 
