@@ -134,7 +134,7 @@ export const CURRICULUM: Lesson[] = [
     ], badgeId: 'ai_spotter' },
     microProject: { title: 'My AI Map', description: 'Draw a map of your home and mark every AI-powered device you can find', type: 'create', xpReward: 15, deliverable: 'A list of AI devices in your home' },
   },
-  { id: 'lesson-1-in', phase: 1, title: 'Understanding AI & Algorithms', subtitle: 'Phase 1: Awareness', emoji: '🧠', youtubeId: 'BsprNmvtS0A', xpReward: 40, coinsReward: 15, zone: 'innovator', sandboxType: 'quiz', description: 'Dive deep into how computer programs make decisions and what makes an algorithm "intelligent".', ttsIntro: 'What exactly is an algorithm? Let\'s break down how machines solve complex problems!',
+  { id: 'lesson-1-in', phase: 1, title: 'Understanding AI & Algorithms', subtitle: 'Phase 1: Awareness', emoji: '🧠', youtubeId: '6hfOvs8pY1k', xpReward: 40, coinsReward: 15, zone: 'innovator', sandboxType: 'quiz', description: 'Dive deep into how computer programs make decisions and what makes an algorithm "intelligent".', ttsIntro: 'What exactly is an algorithm? Let\'s break down how machines solve complex problems!',
     missionTitle: 'Code Breaker Academy', missionEmoji: '🔐', curiosityHook: 'What makes a machine "intelligent" vs just following orders?', storyContext: 'You\'ve been accepted into the Code Breaker Academy. Your first challenge: crack the difference between a simple recipe and a true AI algorithm!', videoDuration: '6 min', labDuration: '10 min', projectDuration: '5 min',
     videoCheckpoints: [
       { timestampSeconds: 90, type: 'quick-quiz', question: 'What is the main difference between a regular program and AI?', options: ['Speed', 'AI learns from data', 'AI is bigger', 'AI uses the internet'], correctIndex: 1, xpReward: 5 },
@@ -252,7 +252,7 @@ export const CURRICULUM: Lesson[] = [
   },
 
   // Phase 6: Chatbots & Speech
-  { id: 'lesson-5', phase: 6, title: 'How Alexa Recognizes Your Voice', subtitle: 'Phase 6: Chatbots & Speech', emoji: '🎤', youtubeId: 'pVEnhWN8FE8', xpReward: 35, coinsReward: 12, zone: 'junior', sandboxType: 'quiz', description: 'Discover how smart speakers like Alexa understand what you say — even with music playing!', ttsIntro: 'Alexa, how do you understand me? Let\'s find out how AI listens and learns from your voice!',
+  { id: 'lesson-5', phase: 6, title: 'How Alexa Recognizes Your Voice', subtitle: 'Phase 6: Chatbots & Speech', emoji: '🎤', youtubeId: 'LJVgBy9MEQM', xpReward: 35, coinsReward: 12, zone: 'junior', sandboxType: 'quiz', description: 'Discover how smart speakers like Alexa understand what you say — even with music playing!', ttsIntro: 'Alexa, how do you understand me? Let\'s find out how AI listens and learns from your voice!',
     missionTitle: 'Voice Command Hero', missionEmoji: '🎤', curiosityHook: 'How does Alexa hear you whisper across the room?', storyContext: 'The Smart Home has gone haywire! All voice commands are mixed up. Fix the voice recognition system by understanding how AI processes speech!', videoDuration: '4 min', labDuration: '8 min', projectDuration: '5 min',
     videoCheckpoints: [
       { timestampSeconds: 60, type: 'guess', question: 'What does Alexa do first when you speak?', options: ['Records a video', 'Converts your voice to text', 'Takes a photo', 'Sends an email'], correctIndex: 1, xpReward: 5 },
@@ -264,7 +264,7 @@ export const CURRICULUM: Lesson[] = [
     ] },
     microProject: { title: 'Voice Command Diary', description: 'Test 5 voice commands on a device and document the accuracy', type: 'experiment', xpReward: 10, deliverable: 'Voice command test results' },
   },
-  { id: 'lesson-5-in', phase: 6, title: 'Natural Language Processing Basics', subtitle: 'Phase 6: Chatbots & Speech', emoji: '🗣️', youtubeId: 'pVEnhWN8FE8', xpReward: 45, coinsReward: 15, zone: 'innovator', sandboxType: 'playground', description: 'Understand tokenization, syntax parsing, and sentiment analysis that enable computers to process text.', ttsIntro: 'Language is full of idioms and rules. Discover how NLP algorithms convert speech into logic!',
+  { id: 'lesson-5-in', phase: 6, title: 'Natural Language Processing Basics', subtitle: 'Phase 6: Chatbots & Speech', emoji: '🗣️', youtubeId: 'fOvTtapxa9c', xpReward: 45, coinsReward: 15, zone: 'innovator', sandboxType: 'playground', description: 'Understand tokenization, syntax parsing, and sentiment analysis that enable computers to process text.', ttsIntro: 'Language is full of idioms and rules. Discover how NLP algorithms convert speech into logic!',
     missionTitle: 'NLP Code Breaker', missionEmoji: '🗣️', curiosityHook: 'Can AI understand sarcasm?', storyContext: 'An AI chatbot has gone rogue — it\'s misunderstanding everything! Debug the NLP system by testing prompts and fixing the language model!', videoDuration: '5 min', labDuration: '10 min', projectDuration: '5 min',
     videoCheckpoints: [
       { timestampSeconds: 90, type: 'quick-quiz', question: 'What is tokenization in NLP?', options: ['Splitting text into words or subwords', 'Encrypting passwords', 'Counting characters'], correctIndex: 0, xpReward: 5 },
@@ -278,7 +278,7 @@ export const CURRICULUM: Lesson[] = [
   },
 
   // Phase 7: Everyday Apps
-  { id: 'lesson-2', phase: 7, title: 'The Secret Behind YouTube Recommendations', subtitle: 'Phase 7: Everyday Apps', emoji: '📺', youtubeId: 'BsprNmvtS0A', xpReward: 30, coinsReward: 10, zone: 'junior', sandboxType: 'quiz', description: 'Why does YouTube always know exactly what video you want to watch next? AI knows your taste!', ttsIntro: 'Have you ever wondered how YouTube always shows you videos you love? Today we find out the secret!',
+  { id: 'lesson-2', phase: 7, title: 'The Secret Behind YouTube Recommendations', subtitle: 'Phase 7: Everyday Apps', emoji: '📺', youtubeId: 'sJrhXs48QgQ', xpReward: 30, coinsReward: 10, zone: 'junior', sandboxType: 'quiz', description: 'Why does YouTube always know exactly what video you want to watch next? AI knows your taste!', ttsIntro: 'Have you ever wondered how YouTube always shows you videos you love? Today we find out the secret!',
     missionTitle: 'Algorithm Decoder', missionEmoji: '📺', curiosityHook: 'Why does YouTube know your favorite videos better than your best friend?', storyContext: 'YouTube\'s recommendation engine has a secret code! Crack it by understanding how AI predicts what you want to watch next!', videoDuration: '4 min', labDuration: '8 min', projectDuration: '5 min',
     videoCheckpoints: [
       { timestampSeconds: 60, type: 'guess', question: 'How does YouTube decide what to recommend?', options: ['Random picks', 'Tracks what you watch and like', 'Asks your parents', 'Shows newest videos only'], correctIndex: 1, xpReward: 5 },
@@ -290,7 +290,7 @@ export const CURRICULUM: Lesson[] = [
     ] },
     microProject: { title: 'My Feed Tracker', description: 'Check your YouTube recommendations and explain why each was suggested', type: 'experiment', xpReward: 10, deliverable: 'An analysis of your YouTube feed' },
   },
-  { id: 'lesson-2-in', phase: 7, title: 'Recommendation Systems: How Netflix Thinks', subtitle: 'Phase 7: Everyday Apps', emoji: '🍿', youtubeId: 'BsprNmvtS0A', xpReward: 45, coinsReward: 18, zone: 'innovator', sandboxType: 'quiz', description: 'Explore collaborative filtering and content-based recommendation systems that drive feeds.', ttsIntro: 'Netflix and Instagram keep you hooked using recommender algorithms. Let\'s explore the math behind feeds!',
+  { id: 'lesson-2-in', phase: 7, title: 'Recommendation Systems: How Netflix Thinks', subtitle: 'Phase 7: Everyday Apps', emoji: '🍿', youtubeId: 'sJrhXs48QgQ', xpReward: 45, coinsReward: 18, zone: 'innovator', sandboxType: 'quiz', description: 'Explore collaborative filtering and content-based recommendation systems that drive feeds.', ttsIntro: 'Netflix and Instagram keep you hooked using recommender algorithms. Let\'s explore the math behind feeds!',
     missionTitle: 'Feed Algorithm Architect', missionEmoji: '🍿', curiosityHook: 'How does Netflix predict you\'ll love a movie you\'ve never heard of?', storyContext: 'Netflix has hired you to improve their recommendation engine! Study how collaborative filtering works and design a better algorithm!', videoDuration: '5 min', labDuration: '10 min', projectDuration: '5 min',
     videoCheckpoints: [
       { timestampSeconds: 90, type: 'quick-quiz', question: 'What is collaborative filtering?', options: ['Filtering spam emails', 'Recommending based on similar users\' preferences', 'Sorting files by date'], correctIndex: 1, xpReward: 5 },

@@ -18,6 +18,7 @@ import PromptLab from '@/components/labs/PromptLab';
 import TrainLab from '@/components/labs/TrainLab';
 import CreateLab from '@/components/labs/CreateLab';
 import ExploreLab from '@/components/labs/ExploreLab';
+import TopicLab from '@/components/labs/TopicLab';
 
 
 export default function LessonPlayer() {
@@ -404,6 +405,15 @@ export default function LessonPlayer() {
       return <CreateLab onComplete={handleLabComplete} />;
     }
     if (labType === 'explore-lab' || labType === 'detective-lab') {
+      // Route to topic-specific labs for junior explorer modules
+      const topicLabIds = [
+        'lesson-5', 'lesson-2', 'lesson-12',
+        'lesson-10-jr', 'lesson-13-jr', 'lesson-16-jr',
+        'lesson-17-jr', 'lesson-15-jr', 'lesson-19-jr'
+      ];
+      if (topicLabIds.includes(lesson.id)) {
+        return <TopicLab lessonId={lesson.id} onComplete={handleLabComplete} />;
+      }
       return <ExploreLab onComplete={handleLabComplete} />;
     }
 
