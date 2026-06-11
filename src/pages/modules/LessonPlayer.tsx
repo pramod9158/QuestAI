@@ -396,6 +396,11 @@ export default function LessonPlayer() {
     };
 
     if (labType === 'prompt-lab') {
+      // Override for lessons that need topic-specific labs instead of the generic Magic Spellbook
+      const promptTopicLabIds = ['lesson-11', 'lesson-18-jr', 'lesson-21-jr'];
+      if (promptTopicLabIds.includes(lesson.id)) {
+        return <TopicLab lessonId={lesson.id} onComplete={handleLabComplete} />;
+      }
       return <PromptLab onComplete={handleLabComplete} />;
     }
     if (labType === 'train-lab') {
@@ -409,7 +414,8 @@ export default function LessonPlayer() {
       const topicLabIds = [
         'lesson-5', 'lesson-2', 'lesson-12',
         'lesson-10-jr', 'lesson-13-jr', 'lesson-16-jr',
-        'lesson-17-jr', 'lesson-15-jr', 'lesson-19-jr'
+        'lesson-17-jr', 'lesson-15-jr', 'lesson-19-jr',
+        'lesson-20-jr', 'lesson-22-jr'
       ];
       if (topicLabIds.includes(lesson.id)) {
         return <TopicLab lessonId={lesson.id} onComplete={handleLabComplete} />;

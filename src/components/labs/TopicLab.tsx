@@ -577,102 +577,116 @@ function WildlifeAILab({ onComplete }: { onComplete: () => void }) {
   );
 }
 
-// ─── Module 5: Voice Recognition Lab (lesson-5) ──────────────────────────────
+// ─── Module 5: Alexa Voice Command Builder (lesson-5) ────────────────────────
 function VoiceRecognitionLab({ onComplete }: { onComplete: () => void }) {
-  const steps = [
-    {
-      icon: '🎙️',
-      title: 'Step 1: Wake Word Detection',
-      q: 'What does Alexa listen for BEFORE it understands your command?',
-      options: ['Everything you say', 'Only the wake word "Alexa"', 'Your location', 'Your name'],
-      correct: 1,
-      fact: 'Alexa uses a tiny on-device neural network ONLY listening for its wake word to save battery and protect privacy!',
-    },
-    {
-      icon: '🔊',
-      title: 'Step 2: Audio → Text',
-      q: 'What happens after Alexa hears its wake word?',
-      options: ['It plays music immediately', 'It converts your speech to text using Speech Recognition', 'It calls your phone', 'It takes a photo'],
-      correct: 1,
-      fact: 'Your voice is converted to text (transcription) using automatic speech recognition (ASR) — then AI understands the text!',
-    },
-    {
-      icon: '🧠',
-      title: 'Step 3: Understanding Intent',
-      q: 'If you say "Set a timer for 5 minutes", what does NLP identify?',
-      options: ['Random words', 'Intent: SET-TIMER, Entity: 5-minutes', 'Just the word "timer"', 'A music request'],
-      correct: 1,
-      fact: 'Natural Language Processing (NLP) identifies your INTENT (what you want) and ENTITIES (specific details like numbers or names)!',
-    },
+  // Simulate building a voice command pipeline
+  const pipeline = [
+    { id: 'wake', label: '1. Wake Word', icon: '🎙️', desc: 'Device detects wake word', color: 'border-blue-400', chip: 'On-Device Neural Net' },
+    { id: 'capture', label: '2. Capture Audio', icon: '🔊', desc: 'Records your command', color: 'border-purple-400', chip: '500ms audio buffer' },
+    { id: 'asr', label: '3. Speech → Text', icon: '📝', desc: 'Converts voice to words', color: 'border-yellow-400', chip: 'ASR Model' },
+    { id: 'nlp', label: '4. Understand Intent', icon: '🧠', desc: 'AI reads what you want', color: 'border-pink-400', chip: 'NLP + NER' },
+    { id: 'action', label: '5. Execute Action', icon: '⚡', desc: 'Performs your request', color: 'border-green-400', chip: 'Smart Home API' },
   ];
 
-  const [current, setCurrent] = useState(0);
-  const [selected, setSelected] = useState<number | null>(null);
-  const [score, setScore] = useState(0);
-  const [done, setDone] = useState(false);
+  const commands = [
+    { text: 'Alexa, play jazz music', steps: ['wake', 'capture', 'asr', 'nlp', 'action'], result: '🎵 Playing Jazz Radio!' },
+    { text: 'Alexa, set a 10 minute timer', steps: ['wake', 'capture', 'asr', 'nlp', 'action'], result: '⏱️ Timer set for 10 minutes!' },
+    { text: 'Alexa, what is the weather?', steps: ['wake', 'capture', 'asr', 'nlp', 'action'], result: '☀️ Today: Sunny, 32°C in your city' },
+  ];
 
-  const handleAnswer = (idx: number) => {
-    setSelected(idx);
-    if (idx === steps[current].correct) setScore(s => s + 1);
-    setTimeout(() => {
-      if (current + 1 >= steps.length) {
-        setDone(true);
-        setTimeout(onComplete, 2500);
+  const [activeCmd, setActiveCmd] = useState<number | null>(null);
+  const [activeStep, setActiveStep] = useState(-1);
+  const [running, setRunning] = useState(false);
+  const [done, setDone] = useState(false);
+  const [completedCmds, setCompletedCmds] = useState<number[]>([]);
+
+  const runPipeline = (cmdIdx: number) => {
+    if (running || completedCmds.includes(cmdIdx)) return;
+    setActiveCmd(cmdIdx);
+    setActiveStep(0);
+    setRunning(true);
+    let step = 0;
+    const interval = setInterval(() => {
+      step++;
+      if (step >= pipeline.length) {
+        clearInterval(interval);
+        setActiveStep(pipeline.length);
+        setRunning(false);
+        const newCompleted = [...completedCmds, cmdIdx];
+        setCompletedCmds(newCompleted);
+        if (newCompleted.length >= commands.length) {
+          setDone(true);
+          setTimeout(onComplete, 2500);
+        }
       } else {
-        setCurrent(c => c + 1);
-        setSelected(null);
+        setActiveStep(step);
       }
-    }, 2200);
+    }, 700);
   };
 
-  if (done) {
-    return (
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-        className="p-4 border-2 border-[#10B981] bg-[#10B981]/10 text-center space-y-2">
-        <div className="text-3xl">🎤</div>
-        <p className="font-game text-xs text-white">Voice AI Score: {score}/{steps.length}</p>
-        <p className="font-body text-[10px] text-white/60">You now understand how smart speakers process your voice!</p>
-        <button onClick={onComplete} className="mt-2 px-6 py-1.5 font-game text-[10px] text-black bg-[#FFD60A] border-2 border-black cursor-pointer shadow-[2px_2px_0px_#000]">
-          Submit Lab ➔
-        </button>
-      </motion.div>
-    );
-  }
-
-  const step = steps[current];
   return (
     <div className="space-y-4">
       <div className="p-3 bg-[#1E1B4B] border-3 border-black shadow-[3px_3px_0px_#000]">
-        <AICompanion state="teaching" message="Follow the voice AI pipeline step by step — from wake word to understanding commands!" size="sm" />
+        <AICompanion state="teaching" message="Tap each voice command and watch how Alexa processes it through the AI pipeline — step by step!" size="sm" />
       </div>
 
+      {/* Pipeline Visual */}
       <div className="p-3 bg-[#1E1B4B] border-2 border-black">
-        <div className="flex gap-2 mb-3">
-          {steps.map((_, i) => (
-            <div key={i} className={`h-1.5 flex-1 border border-black ${i <= current ? 'bg-[#3B82F6]' : 'bg-black/30'}`} />
+        <p className="font-pixel text-[6px] text-[#A78BFA] uppercase tracking-wider mb-3">🎙️ ALEXA AI PIPELINE</p>
+        <div className="flex items-center gap-0.5 overflow-x-auto pb-2">
+          {pipeline.map((step, i) => (
+            <React.Fragment key={step.id}>
+              <div className={`flex-shrink-0 p-2 border-2 text-center min-w-[60px] transition-all duration-300 ${
+                activeStep > i ? step.color + ' bg-white/5' :
+                activeStep === i && running ? 'border-yellow-400 bg-yellow-900/20 animate-pulse' :
+                'border-white/10 bg-black/20'
+              }`}>
+                <div className="text-lg">{step.icon}</div>
+                <p className="font-pixel text-[5px] text-white/60 mt-0.5">{step.label}</p>
+                {activeStep > i && <p className="font-pixel text-[4px] text-green-400 mt-0.5">{step.chip}</p>}
+              </div>
+              {i < pipeline.length - 1 && (
+                <div className={`w-3 h-0.5 flex-shrink-0 ${ activeStep > i ? 'bg-green-400' : 'bg-white/20' }`} />
+              )}
+            </React.Fragment>
           ))}
         </div>
-        <p className="font-pixel text-[6px] text-[#A78BFA] uppercase tracking-wider mb-1">{step.icon} {step.title}</p>
-        <p className="font-body text-xs text-white leading-relaxed mb-4">{step.q}</p>
+      </div>
+
+      {/* Commands to Try */}
+      <div className="p-3 bg-[#1E1B4B] border-2 border-black">
+        <p className="font-pixel text-[6px] text-[#A78BFA] uppercase tracking-wider mb-3">🗣️ TAP A VOICE COMMAND TO RUN IT ({completedCmds.length}/{commands.length})</p>
         <div className="space-y-2">
-          {step.options.map((opt, i) => {
-            let cls = 'bg-black/30 text-white/70 border-white/10 hover:bg-black/50';
-            if (selected !== null) {
-              if (i === step.correct) cls = 'bg-[#10B981]/20 border-[#10B981] text-white';
-              else if (i === selected) cls = 'bg-[#EF4444]/20 border-[#EF4444] text-white';
-            }
-            return (
-              <button key={i} onClick={() => selected === null && handleAnswer(i)}
-                className={`w-full text-left px-3 py-2 font-body text-xs border transition-all cursor-pointer ${cls}`}>
-                {opt}
+          {commands.map((cmd, i) => (
+            <div key={i}>
+              <button
+                onClick={() => runPipeline(i)}
+                disabled={running || completedCmds.includes(i)}
+                className={`w-full text-left p-3 border-2 font-game text-[10px] transition-all cursor-pointer ${
+                  completedCmds.includes(i) ? 'border-[#10B981] bg-[#10B981]/10 text-white' :
+                  activeCmd === i && running ? 'border-yellow-400 bg-yellow-900/10 animate-pulse text-white' :
+                  'border-white/10 bg-black/20 text-white/60 hover:bg-black/40 hover:text-white'
+                }`}
+              >
+                <span className="text-white/40 font-pixel text-[5px] block mb-0.5">COMMAND {i + 1}</span>
+                🎙️ "{cmd.text}" {completedCmds.includes(i) ? '✓' : ''}
               </button>
-            );
-          })}
+              {activeCmd === i && activeStep >= pipeline.length && completedCmds.includes(i) && (
+                <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
+                  className="mt-1 p-2 bg-green-900/20 border border-green-500/30 font-game text-[9px] text-green-300">
+                  Alexa: {cmd.result}
+                </motion.div>
+              )}
+            </div>
+          ))}
         </div>
-        {selected !== null && (
-          <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }}
-            className="mt-3 p-2 bg-blue-900/30 border border-blue-500/30 font-body text-[10px] text-white/80 leading-relaxed">
-            💡 {step.fact}
+
+        {done && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            className="mt-3 p-3 border-2 border-[#10B981] bg-[#10B981]/10 text-center">
+            <p className="font-game text-xs text-white">🎙️ Voice Pipeline Mastered!</p>
+            <p className="font-body text-[10px] text-white/60 mt-1">You traced 3 complete voice commands through the full AI pipeline!</p>
+            <button onClick={onComplete} className="mt-2 px-6 py-1.5 font-game text-[10px] text-black bg-[#FFD60A] border-2 border-black cursor-pointer shadow-[2px_2px_0px_#000]">Submit Lab ➔</button>
           </motion.div>
         )}
       </div>
@@ -890,6 +904,652 @@ function EcoAILab({ onComplete }: { onComplete: () => void }) {
   );
 }
 
+// ─── Module 10: AI in India — Crop Disease Doctor (lesson-11) ────────────────
+function IndiaAILab({ onComplete }: { onComplete: () => void }) {
+  const crops = [
+    {
+      name: '🌾 Wheat',
+      photo: 'Yellow spots on leaves, edges turning brown',
+      diseases: ['Rust Disease 🟠', 'Healthy ✅', 'Powdery Mildew ⚪', 'Drought Stress 🌵'],
+      correct: 0,
+      treatment: '💊 Apply fungicide spray. Rust is caused by a fungus — the AI caught it from the yellow-orange spots!',
+    },
+    {
+      name: '🍅 Tomato',
+      photo: 'Dark circular spots with yellow rings around them',
+      diseases: ['Healthy ✅', 'Early Blight 🦠', 'Overwatering 💧', 'Insect Damage 🐛'],
+      correct: 1,
+      treatment: '🌿 Remove infected leaves and apply copper spray. AI detected the classic bullseye pattern of early blight!',
+    },
+    {
+      name: '🌽 Maize',
+      photo: 'Leaves with white powdery coating, stunted growth',
+      diseases: ['Viral Mosaic 🔬', 'Nutrient Deficiency 🟡', 'Powdery Mildew ⚪', 'Healthy ✅'],
+      correct: 2,
+      treatment: '💨 Improve air circulation, apply sulfur-based treatment. AI recognized the white powder coating pattern!',
+    },
+  ];
+
+  const [current, setCurrent] = useState(0);
+  const [selected, setSelected] = useState<number | null>(null);
+  const [score, setScore] = useState(0);
+  const [done, setDone] = useState(false);
+
+  const diagnose = (idx: number) => {
+    if (selected !== null) return;
+    setSelected(idx);
+    if (idx === crops[current].correct) setScore(s => s + 1);
+    setTimeout(() => {
+      if (current + 1 >= crops.length) {
+        setDone(true);
+        setTimeout(onComplete, 2500);
+      } else {
+        setCurrent(c => c + 1);
+        setSelected(null);
+      }
+    }, 2500);
+  };
+
+  if (done) {
+    return (
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+        className="p-4 border-2 border-[#10B981] bg-[#10B981]/10 text-center space-y-2">
+        <div className="text-3xl">🌾</div>
+        <p className="font-game text-xs text-white">Crop Diagnosis Score: {score}/{crops.length}</p>
+        <p className="font-body text-[10px] text-white/60">You helped diagnose crops just like India's real KisanAI app!</p>
+        <button onClick={onComplete} className="mt-2 px-6 py-1.5 font-game text-[10px] text-black bg-[#FFD60A] border-2 border-black cursor-pointer shadow-[2px_2px_0px_#000]">Submit Lab ➔</button>
+      </motion.div>
+    );
+  }
+
+  const crop = crops[current];
+  return (
+    <div className="space-y-4">
+      <div className="p-3 bg-[#1E1B4B] border-3 border-black shadow-[3px_3px_0px_#000]">
+        <AICompanion state="teaching" message="In India, farmers use AI apps to photograph sick crops and get instant disease diagnoses. Be the AI — diagnose each crop from its symptoms!" size="sm" />
+      </div>
+
+      <div className="p-3 bg-[#1E1B4B] border-2 border-black">
+        <div className="flex gap-1 mb-3">
+          {crops.map((_, i) => (
+            <div key={i} className={`h-1.5 flex-1 border border-black ${ i < current ? 'bg-[#10B981]' : i === current ? 'bg-yellow-400 animate-pulse' : 'bg-black/30' }`} />
+          ))}
+        </div>
+        <p className="font-pixel text-[6px] text-green-400 uppercase tracking-wider mb-2">🇮🇳 KISANAI CROP DOCTOR — CASE {current + 1}/{crops.length}</p>
+
+        <div className="p-3 bg-black/30 border border-white/10 mb-4">
+          <p className="font-game text-[10px] text-white mb-1">Farmer's crop: {crop.name}</p>
+          <p className="font-pixel text-[6px] text-white/40 uppercase mb-1">📸 PHOTO ANALYSIS:</p>
+          <p className="font-body text-[10px] text-yellow-200 italic">"{crop.photo}"</p>
+        </div>
+
+        <p className="font-pixel text-[6px] text-white/50 uppercase mb-2">🤖 SELECT THE AI DIAGNOSIS:</p>
+        <div className="space-y-2">
+          {crop.diseases.map((d, i) => {
+            let cls = 'bg-black/20 text-white/60 border-white/10 hover:bg-black/40';
+            if (selected !== null) {
+              if (i === crop.correct) cls = 'bg-[#10B981]/20 border-[#10B981] text-white';
+              else if (i === selected) cls = 'bg-[#EF4444]/20 border-[#EF4444] text-white';
+            }
+            return (
+              <button key={i} onClick={() => diagnose(i)}
+                className={`w-full text-left px-3 py-2 font-game text-[10px] border transition-all cursor-pointer ${cls}`}>
+                {d}
+              </button>
+            );
+          })}
+        </div>
+        {selected !== null && (
+          <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }}
+            className="mt-3 p-2 bg-green-900/20 border border-green-500/30 font-body text-[10px] text-white/80 leading-relaxed">
+            {crop.treatment}
+          </motion.div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Module 16: Smart Farm Irrigation Designer (lesson-18-jr) ─────────────────
+function SmartFarmLab({ onComplete }: { onComplete: () => void }) {
+  const sensors = [
+    { id: 'soil', emoji: '🌱', name: 'Soil Moisture Sensor', readings: ['Dry (20%)', 'Moist (55%)', 'Wet (85%)'] },
+    { id: 'weather', emoji: '☀️', name: 'Weather Forecast', readings: ['Rain today', 'Sunny 3 days', 'Cloudy tomorrow'] },
+    { id: 'crop', emoji: '🌾', name: 'Crop Type', readings: ['Wheat (needs less)', 'Rice (needs more)', 'Tomato (medium)'] },
+  ];
+
+  const [readings, setReadings] = useState<Record<string, string>>({});
+  const [decision, setDecision] = useState<string | null>(null);
+  const [checked, setChecked] = useState(false);
+
+  const setReading = (sensorId: string, val: string) => {
+    if (checked) return;
+    setReadings(prev => ({ ...prev, [sensorId]: val }));
+  };
+
+  const analyzeAndDecide = () => {
+    const soil = readings.soil || '';
+    const weather = readings.weather || '';
+    const crop = readings.crop || '';
+
+    let liters = 0;
+    let reason = '';
+
+    if (soil.includes('Dry')) liters += 30;
+    else if (soil.includes('Moist')) liters += 15;
+    else liters += 5;
+
+    if (weather.includes('Rain')) { liters = Math.max(0, liters - 20); reason += 'Rain predicted → reduced watering. '; }
+    else if (weather.includes('Sunny')) { liters += 10; reason += 'Hot sunny days → extra water needed. '; }
+
+    if (crop.includes('Rice')) liters += 15;
+    else if (crop.includes('Wheat')) liters -= 5;
+
+    liters = Math.max(5, liters);
+    setDecision(`💧 AI recommends: Water ${liters}L today. ${reason}This saves ${Math.max(0, 60 - liters)}L compared to traditional flooding!`);
+    setChecked(true);
+    setTimeout(onComplete, 3500);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="p-3 bg-[#1E1B4B] border-3 border-black shadow-[3px_3px_0px_#000]">
+        <AICompanion state="teaching" message="Select sensor readings and let the AI irrigation system decide exactly how much water the field needs today!" size="sm" />
+      </div>
+
+      <div className="p-3 bg-[#1E1B4B] border-2 border-black">
+        <p className="font-pixel text-[6px] text-green-400 uppercase tracking-wider mb-3">🌾 SMART IRRIGATION AI — SELECT SENSOR DATA</p>
+        <div className="space-y-4">
+          {sensors.map(s => (
+            <div key={s.id}>
+              <p className="font-game text-[10px] text-white/70 mb-1.5">{s.emoji} {s.name}</p>
+              <div className="grid grid-cols-3 gap-1">
+                {s.readings.map(r => (
+                  <button
+                    key={r}
+                    onClick={() => setReading(s.id, r)}
+                    disabled={checked}
+                    className={`py-1.5 font-pixel text-[6px] border border-black cursor-pointer transition-all text-center ${
+                      readings[s.id] === r ? 'bg-green-700 text-white' : 'bg-black/20 text-white/40 hover:bg-black/40'
+                    }`}
+                  >
+                    {r}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {Object.keys(readings).length === sensors.length && !checked && (
+          <button
+            onClick={analyzeAndDecide}
+            className="w-full mt-4 py-2.5 bg-green-700 text-white font-game text-[10px] border-2 border-black cursor-pointer shadow-[2px_2px_0px_#000]"
+          >
+            🤖 Run AI Irrigation Analysis!
+          </button>
+        )}
+
+        {decision && (
+          <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }}
+            className="mt-3 p-3 border-2 border-green-500 bg-green-900/20">
+            <p className="font-pixel text-[6px] text-green-400 uppercase mb-1">AI IRRIGATION DECISION:</p>
+            <p className="font-body text-[10px] text-white leading-relaxed">{decision}</p>
+            <p className="font-body text-[8px] text-white/50 mt-2 italic">This is how real precision farming AI works — it reads sensor data and makes optimal watering decisions automatically!</p>
+            <button onClick={onComplete} className="mt-2 px-6 py-1.5 font-game text-[10px] text-black bg-[#FFD60A] border-2 border-black cursor-pointer shadow-[2px_2px_0px_#000]">Submit Lab ➔</button>
+          </motion.div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Module 18: Cyber Safety Sorter (lesson-20-jr) ───────────────────────────
+function CyberSafetyLab({ onComplete }: { onComplete: () => void }) {
+  const scenarios = [
+    {
+      id: 1,
+      text: "Sharing your favorite flavor of ice cream on a kids gaming forum.",
+      isSafe: true,
+      reason: "This is general preference data. Sharing favorite ice cream, colors, or animals is completely safe!",
+    },
+    {
+      id: 2,
+      text: "Giving your phone number to a friendly player online who wants to send you a gift.",
+      isSafe: false,
+      reason: "Dangerous! Never share personal contact info like phone numbers or home address with online strangers.",
+    },
+    {
+      id: 3,
+      text: "Creating a password like '123456' or 'yourname123' because it is easy to remember.",
+      isSafe: false,
+      reason: "Risky! Easy passwords can be easily guessed by hacking programs. Always use complex passwords.",
+    },
+    {
+      id: 4,
+      text: "Posting a photo of your school ID card online to show friends your new picture.",
+      isSafe: false,
+      reason: "Risky! School IDs contain your full name, photo, school name, and ID number — hackers can misuse this.",
+    },
+    {
+      id: 5,
+      text: "Telling a math app your favorite animal to customize your profile avatar.",
+      isSafe: true,
+      reason: "Safe! General avatar preferences don't link back to your real-world identity.",
+    },
+  ];
+
+  const [current, setCurrent] = useState(0);
+  const [selected, setSelected] = useState<boolean | null>(null);
+  const [score, setScore] = useState(0);
+  const [done, setDone] = useState(false);
+
+  const handleChoice = (choice: boolean) => {
+    if (selected !== null) return;
+    setSelected(choice);
+    if (choice === scenarios[current].isSafe) {
+      setScore(s => s + 1);
+    }
+    setTimeout(() => {
+      if (current + 1 >= scenarios.length) {
+        setDone(true);
+      } else {
+        setCurrent(c => c + 1);
+        setSelected(null);
+      }
+    }, 2800);
+  };
+
+  if (done) {
+    return (
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+        className="p-4 border-2 border-[#10B981] bg-[#10B981]/15 text-center space-y-2">
+        <div className="text-3xl">🔒</div>
+        <p className="font-game text-xs text-white">Cyber Safety Score: {score}/{scenarios.length}</p>
+        <p className="font-body text-[10px] text-white/60">You successfully classified personal vs safe data sharing! Sparky feels much safer now.</p>
+        <button onClick={onComplete} className="mt-2 px-6 py-1.5 font-game text-[10px] text-black bg-[#FFD60A] border-2 border-black cursor-pointer shadow-[2px_2px_0px_#000]">Submit Lab ➔</button>
+      </motion.div>
+    );
+  }
+
+  const sc = scenarios[current];
+  return (
+    <div className="space-y-4">
+      <div className="p-3 bg-[#1E1B4B] border-3 border-black shadow-[3px_3px_0px_#000]">
+        <AICompanion state="teaching" message="Protect your digital identity! Determine whether it's safe to share this information or if it should be kept secret." size="sm" />
+      </div>
+
+      <div className="p-3 bg-[#1E1B4B] border-2 border-black">
+        <div className="flex gap-1 mb-3">
+          {scenarios.map((_, i) => (
+            <div key={i} className={`h-1.5 flex-1 border border-black ${ i < current ? 'bg-[#10B981]' : i === current ? 'bg-yellow-400 animate-pulse' : 'bg-black/30' }`} />
+          ))}
+        </div>
+        <p className="font-pixel text-[6px] text-blue-400 uppercase tracking-wider mb-2">🔒 CYBER SAFETY SHIELD — SITUATION {current + 1}/{scenarios.length}</p>
+
+        <div className="p-4 bg-black/45 border-2 border-dashed border-white/20 mb-4 min-h-[70px] flex items-center justify-center text-center">
+          <p className="font-body text-xs text-white leading-relaxed font-semibold">
+            "{sc.text}"
+          </p>
+        </div>
+
+        <div className="flex gap-3">
+          <button
+            onClick={() => handleChoice(true)}
+            disabled={selected !== null}
+            className={`flex-1 py-3 font-game text-[10px] border-2 border-black cursor-pointer shadow-[2px_2px_0px_#000] text-center transition-all ${
+              selected === true ? 'bg-green-600 text-white' : 'bg-[#10B981]/20 text-[#10B981] hover:bg-[#10B981]/30'
+            } ${selected !== null ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            🟢 Safe to Share
+          </button>
+          <button
+            onClick={() => handleChoice(false)}
+            disabled={selected !== null}
+            className={`flex-1 py-3 font-game text-[10px] border-2 border-black cursor-pointer shadow-[2px_2px_0px_#000] text-center transition-all ${
+              selected === false ? 'bg-red-600 text-white' : 'bg-[#EF4444]/20 text-[#EF4444] hover:bg-[#EF4444]/30'
+            } ${selected !== null ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            🔴 Keep Secret!
+          </button>
+        </div>
+
+        <AnimatePresence>
+          {selected !== null && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mt-3 overflow-hidden"
+            >
+              <div className={`p-3 border-2 font-body text-[10px] text-white/90 leading-relaxed flex items-start gap-2 ${
+                selected === sc.isSafe 
+                  ? 'border-[#10B981] bg-[#10B981]/15' 
+                  : 'border-[#EF4444] bg-[#EF4444]/15'
+              }`}>
+                <span className="text-sm">{selected === sc.isSafe ? '✅' : '❌'}</span>
+                <div>
+                  <span className="font-bold block mb-0.5">{selected === sc.isSafe ? 'Excellent Decision!' : 'Not Quite Safe!'}</span>
+                  {sc.reason}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}
+
+// ─── Module 19: AI Beat Composer (lesson-21-jr) ──────────────────────────────
+function MusicComposerLab({ onComplete }: { onComplete: () => void }) {
+  const genres = ['Cyber Synthwave 🌌', '8-Bit Retro 👾', 'Lo-Fi Chill ☕'];
+  const tempos = ['Relaxed (80 BPM) 🐢', 'Groovy (115 BPM) 🦊', 'Fast (140 BPM) ⚡'];
+  const leads = ['Retro Synthesizer 🎹', 'Electric Lead Guitar 🎸', 'Square Wave Chip ⚡'];
+  const drums = ['LinnDrum Classic 🥁', 'Acoustic Punchy 🥁', 'No Beats (Ambient) 🔇'];
+
+  const [genre, setGenre] = useState('');
+  const [tempo, setTempo] = useState('');
+  const [lead, setLead] = useState('');
+  const [drum, setDrum] = useState('');
+
+  const [generating, setGenerating] = useState(false);
+  const [composedTrack, setComposedTrack] = useState<string | null>(null);
+  const [generationSteps] = useState<string[]>([
+    'Setting tempo grid...',
+    'Loading generative MIDI model...',
+    'Composing synth melodies...',
+    'Mixing drum backing pattern...',
+    'Applying final EQ & rendering...',
+  ]);
+  const [activeStep, setActiveStep] = useState(0);
+
+  const startComposition = () => {
+    if (!genre || !tempo || !lead || !drum) return;
+    setGenerating(true);
+    setComposedTrack(null);
+    setActiveStep(0);
+
+    let step = 0;
+    const interval = setInterval(() => {
+      step++;
+      if (step >= 5) {
+        clearInterval(interval);
+        setGenerating(false);
+        const titles = [
+          'Neon Spark Explorer',
+          'Cyber Forest Groove',
+          '8-Bit Quest Beats',
+          'Pixel Sunset Loop',
+          'Lofi AI Cozy Corner',
+        ];
+        const chosenTitle = titles[Math.floor(Math.random() * titles.length)];
+        setComposedTrack(`✨ Composed '${chosenTitle}' at ${tempo.split(' ')[1]} using ${genre.split(' ')[0]} mood and ${lead.split(' ')[1]} lead!`);
+      } else {
+        setActiveStep(step);
+      }
+    }, 800);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="p-3 bg-[#1E1B4B] border-3 border-black shadow-[3px_3px_0px_#000]">
+        <AICompanion state="teaching" message="Mix genre, speed, and instruments to let the AI compose a unique digital track for you!" size="sm" />
+      </div>
+
+      <div className="p-3 bg-[#1E1B4B] border-2 border-black space-y-4">
+        <p className="font-pixel text-[6px] text-pink-400 uppercase tracking-wider">🎵 AI MUSIC STUDIO</p>
+
+        {!composedTrack && !generating && (
+          <div className="space-y-3">
+            {/* Genre */}
+            <div>
+              <p className="font-game text-[9px] text-white/60 mb-1">1. Choose Genre Mood</p>
+              <div className="grid grid-cols-3 gap-1">
+                {genres.map(g => (
+                  <button key={g} onClick={() => setGenre(g)}
+                    className={`py-1.5 font-pixel text-[5px] border border-black cursor-pointer transition-all ${
+                      genre === g ? 'bg-pink-600 text-white' : 'bg-black/20 text-white/40 hover:bg-black/40'
+                    }`}>{g}</button>
+                ))}
+              </div>
+            </div>
+
+            {/* Tempo */}
+            <div>
+              <p className="font-game text-[9px] text-white/60 mb-1">2. Set Tempo Speed</p>
+              <div className="grid grid-cols-3 gap-1">
+                {tempos.map(t => (
+                  <button key={t} onClick={() => setTempo(t)}
+                    className={`py-1.5 font-pixel text-[5px] border border-black cursor-pointer transition-all ${
+                      tempo === t ? 'bg-pink-600 text-white' : 'bg-black/20 text-white/40 hover:bg-black/40'
+                    }`}>{t}</button>
+                ))}
+              </div>
+            </div>
+
+            {/* Instrument */}
+            <div>
+              <p className="font-game text-[9px] text-white/60 mb-1">3. Select Lead Instrument</p>
+              <div className="grid grid-cols-3 gap-1">
+                {leads.map(l => (
+                  <button key={l} onClick={() => setLead(l)}
+                    className={`py-1.5 font-pixel text-[5px] border border-black cursor-pointer transition-all ${
+                      lead === l ? 'bg-pink-600 text-white' : 'bg-black/20 text-white/40 hover:bg-black/40'
+                    }`}>{l}</button>
+                ))}
+              </div>
+            </div>
+
+            {/* Drums */}
+            <div>
+              <p className="font-game text-[9px] text-white/60 mb-1">4. Select Backing Beats</p>
+              <div className="grid grid-cols-3 gap-1">
+                {drums.map(d => (
+                  <button key={d} onClick={() => setDrum(d)}
+                    className={`py-1.5 font-pixel text-[5px] border border-black cursor-pointer transition-all ${
+                      drum === d ? 'bg-pink-600 text-white' : 'bg-black/20 text-white/40 hover:bg-black/40'
+                    }`}>{d}</button>
+                ))}
+              </div>
+            </div>
+
+            {genre && tempo && lead && drum && (
+              <button onClick={startComposition}
+                className="w-full mt-2 py-2.5 bg-pink-600 text-white font-game text-[10px] border-2 border-black cursor-pointer shadow-[2px_2px_0px_#000]">
+                🎹 Generate AI Music Track!
+              </button>
+            )}
+          </div>
+        )}
+
+        {generating && (
+          <div className="p-4 border-2 border-pink-500 bg-pink-950/20 text-center space-y-4">
+            <div className="flex justify-center items-end gap-1 h-12">
+              {[...Array(6)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  animate={{ height: [12, 48, 12] }}
+                  transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.1 }}
+                  className="w-1.5 bg-pink-500"
+                />
+              ))}
+            </div>
+            <div className="space-y-1">
+              <p className="font-pixel text-[6px] text-pink-400">AI COMPOSING IN PROGRESS...</p>
+              <p className="font-game text-[9px] text-white animate-pulse">🤖 {generationSteps[activeStep]}</p>
+            </div>
+          </div>
+        )}
+
+        {composedTrack && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            className="p-4 border-2 border-[#10B981] bg-[#10B981]/15 text-center space-y-3">
+            <div className="text-3xl">🎵</div>
+            <p className="font-pixel text-[6px] text-[#10B981] uppercase">AI TRACK COMPOSED SUCCESSFULLY</p>
+            <p className="font-game text-[10px] text-white leading-relaxed">{composedTrack}</p>
+            
+            {/* Visualizer Loop */}
+            <div className="flex justify-center items-center gap-1.5 py-2">
+              {[...Array(8)].map((_, i) => (
+                <div key={i} className="w-1 bg-green-400 h-4 rounded animate-bounce" style={{ animationDelay: `${i * 0.1}s`, animationDuration: '0.8s' }} />
+              ))}
+            </div>
+
+            <button onClick={onComplete}
+              className="mt-2 w-full py-2 font-game text-[10px] text-black bg-[#FFD60A] border-2 border-black cursor-pointer shadow-[2px_2px_0px_#000]">
+              Submit Composition ➔
+            </button>
+          </motion.div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Module 20: Human vs AI Task Sorter (lesson-22-jr) ───────────────────────
+function HumanAICoLab({ onComplete }: { onComplete: () => void }) {
+  const tasks = [
+    {
+      id: 1,
+      title: "Feeling empathy & comforting a friend who is crying",
+      category: "human",
+      reason: "Humans excel at genuine empathy and feelings. AI cannot truly feel sad or hug a friend.",
+    },
+    {
+      id: 2,
+      title: "Searching 10,000 photos for a yellow car in 1 second",
+      category: "ai",
+      reason: "AI can process massive datasets instantly! A human would take hours or days to count them all.",
+    },
+    {
+      id: 3,
+      title: "Writing a story with creative ideas + AI checking spelling",
+      category: "colab",
+      reason: "Perfect teamwork! You provide the heart and creativity, while the AI helps clean up mistakes.",
+    },
+    {
+      id: 4,
+      title: "Playing a song on the violin with deep emotion",
+      category: "human",
+      reason: "Artistic expression comes from personal life experiences and soul, which are uniquely human qualities.",
+    },
+    {
+      id: 5,
+      title: "Translating a web page into 50 languages instantly",
+      category: "ai",
+      reason: "A computer can look up rules and convert vocabulary in milliseconds, making translation incredibly fast.",
+    },
+  ];
+
+  const [selections, setSelections] = useState<Record<number, string>>({});
+  const [checked, setChecked] = useState(false);
+  const [score, setScore] = useState(0);
+
+  const handleSelect = (taskId: number, cat: string) => {
+    if (checked) return;
+    setSelections(prev => ({ ...prev, [taskId]: cat }));
+  };
+
+  const checkAnswers = () => {
+    let correct = 0;
+    tasks.forEach(t => {
+      if (selections[t.id] === t.category) correct++;
+    });
+    setScore(correct);
+    setChecked(true);
+    if (correct >= 4) {
+      setTimeout(onComplete, 3500);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="p-3 bg-[#1E1B4B] border-3 border-black shadow-[3px_3px_0px_#000]">
+        <AICompanion state="teaching" message="Who does it best? Match each task to either Human, AI, or a Collaborative team (Human + AI)!" size="sm" />
+      </div>
+
+      <div className="p-3 bg-[#1E1B4B] border-2 border-black">
+        <p className="font-pixel text-[6px] text-yellow-400 uppercase tracking-wider mb-3">🤝 HUMAN-AI TEAMWORK CHALLENGE</p>
+
+        <div className="space-y-3 max-h-64 overflow-y-auto pr-1 mb-2">
+          {tasks.map(t => {
+            const sel = selections[t.id];
+            let borderCol = 'border-white/10';
+            if (checked) {
+              borderCol = sel === t.category ? 'border-[#10B981] bg-[#10B981]/10' : 'border-[#EF4444] bg-[#EF4444]/10';
+            }
+            return (
+              <div key={t.id} className={`p-2 border-2 bg-black/20 ${borderCol}`}>
+                <p className="font-game text-[9px] text-white mb-2">{t.title}</p>
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => handleSelect(t.id, 'human')}
+                    disabled={checked}
+                    className={`flex-1 py-1 font-pixel text-[5px] border border-black cursor-pointer transition-all ${
+                      sel === 'human' ? 'bg-[#3B82F6] text-white' : 'bg-black/20 text-white/40'
+                    }`}
+                  >
+                    🧑 Human
+                  </button>
+                  <button
+                    onClick={() => handleSelect(t.id, 'ai')}
+                    disabled={checked}
+                    className={`flex-1 py-1 font-pixel text-[5px] border border-black cursor-pointer transition-all ${
+                      sel === 'ai' ? 'bg-[#8B5CF6] text-white' : 'bg-black/20 text-white/40'
+                    }`}
+                  >
+                    🤖 AI
+                  </button>
+                  <button
+                    onClick={() => handleSelect(t.id, 'colab')}
+                    disabled={checked}
+                    className={`flex-1 py-1 font-pixel text-[5px] border border-black cursor-pointer transition-all ${
+                      sel === 'colab' ? 'bg-[#FFD60A] text-black font-semibold' : 'bg-black/20 text-white/40'
+                    }`}
+                  >
+                    🤝 Both
+                  </button>
+                </div>
+                {checked && (
+                  <p className="font-body text-[8px] text-white/50 mt-1.5 italic leading-snug">{t.reason}</p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {Object.keys(selections).length === tasks.length && !checked && (
+          <button
+            onClick={checkAnswers}
+            className="w-full mt-3 py-2.5 bg-[#FFD60A] text-black font-game text-[10px] border-2 border-black cursor-pointer shadow-[2px_2px_0px_#000]"
+          >
+            📊 Verify AI Teamwork Sorting
+          </button>
+        )}
+
+        {checked && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            className={`mt-3 p-3 border-2 text-center ${score >= 4 ? 'border-[#10B981] bg-[#10B981]/15' : 'border-yellow-500 bg-yellow-900/10'}`}>
+            <p className="font-game text-xs text-white">Score: {score}/{tasks.length}</p>
+            {score >= 4 ? (
+              <p className="font-body text-[10px] text-white/60 mt-1">Excellent! You perfectly understand how humans and AI can combine their strengths.</p>
+            ) : (
+              <div className="space-y-2">
+                <p className="font-body text-[10px] text-white/60">Review your choices and try again to get at least 4/5 correct!</p>
+                <button onClick={() => { setSelections({}); setChecked(false); }}
+                  className="px-4 py-1.5 font-game text-[8px] bg-yellow-600 text-white border border-black cursor-pointer">
+                  Try Again
+                </button>
+              </div>
+            )}
+          </motion.div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Main TopicLab Router ─────────────────────────────────────────────────────
 export default function TopicLab({ lessonId, onComplete }: TopicLabProps) {
   switch (lessonId) {
@@ -902,6 +1562,11 @@ export default function TopicLab({ lessonId, onComplete }: TopicLabProps) {
     case 'lesson-17-jr':   return <SmartHomeLab onComplete={onComplete} />;
     case 'lesson-15-jr':   return <EcoAILab onComplete={onComplete} />;
     case 'lesson-19-jr':   return <WildlifeAILab onComplete={onComplete} />;
+    case 'lesson-11':      return <IndiaAILab onComplete={onComplete} />;
+    case 'lesson-18-jr':   return <SmartFarmLab onComplete={onComplete} />;
+    case 'lesson-20-jr':   return <CyberSafetyLab onComplete={onComplete} />;
+    case 'lesson-21-jr':   return <MusicComposerLab onComplete={onComplete} />;
+    case 'lesson-22-jr':   return <HumanAICoLab onComplete={onComplete} />;
     default:               return null;
   }
 }
