@@ -621,6 +621,178 @@ body {
 }
 
 /* ────────────────────────────────────────────
+   PIXEL INPUT
+──────────────────────────────────────────── */
+.pixel-input {
+  width: 100%;
+  background: #16103A;
+  border: 3px solid #000000;
+  border-radius: 0;
+  color: white;
+  font-family: "Nunito", sans-serif;
+  padding: 12px 16px;
+  outline: none;
+  transition: all 0.2s ease;
+  box-shadow: inset 2px 2px 0px rgba(0,0,0,0.3);
+}
+
+.pixel-input::placeholder { color: rgba(255, 255, 255, 0.3); }
+.pixel-input:focus {
+  border-color: #7C3AED;
+  box-shadow: inset 2px 2px 0px rgba(0,0,0,0.3);
+}
+
+/* ────────────────────────────────────────────
+   PIXEL BADGE
+──────────────────────────────────────────── */
+.badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 0;
+  font-family: "Press Start 2P", monospace;
+  font-size: 8px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #7C3AED, #3B82F6);
+  border: 2px solid #000000;
+  color: white;
+  box-shadow: 2px 2px 0px 0px #000000;
+  text-transform: uppercase;
+}
+
+/* ────────────────────────────────────────────
+   PIXEL GLOW UTILITIES
+──────────────────────────────────────────── */
+.glow-primary { box-shadow: 4px 4px 0px 0px #000000; }
+.glow-xp { box-shadow: 4px 4px 0px 0px #000000; }
+.glow-mission { box-shadow: 4px 4px 0px 0px #000000; }
+.glow-secondary { box-shadow: 4px 4px 0px 0px #000000; }
+.glow-accent { box-shadow: 4px 4px 0px 0px #000000; }
+
+/* ────────────────────────────────────────────
+   TYPOGRAPHY HELPERS
+──────────────────────────────────────────── */
+.text-pixel, .font-pixel { font-family: "Press Start 2P", monospace; }
+.text-game, .font-game { font-family: "Fredoka One", cursive; }
+.text-body, .font-body { font-family: "Nunito", sans-serif; }
+.font-heading { font-family: "Press Start 2P", monospace; }
+
+/* ────────────────────────────────────────────
+   MISC UTILITIES
+──────────────────────────────────────────── */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+.touch-target { min-width: 48px; min-height: 48px; display: flex; align-items: center; justify-content: center; }
+
+.pb-safe { padding-bottom: env(safe-area-inset-bottom, 16px); }
+.pt-safe { padding-top: env(safe-area-inset-top, 16px); }
+
+/* Background game alias */
+.bg-game {
+  background: #0F0A2E;
+  background-image:
+    url("data:image/svg+xml,%3Csvg width='32' height='32' viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='0' y='0' width='16' height='16' fill='%237C3AED' fill-opacity='0.04'/%3E%3Crect x='16' y='16' width='16' height='16' fill='%237C3AED' fill-opacity='0.04'/%3E%3C/svg%3E"),
+    linear-gradient(180deg, #0F0A2E 0%, #1E1B4B 100%);
+}
+
+/* Star field background */
+.bg-stars {
+  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='20' cy='20' r='1' fill='white' fill-opacity='0.3'/%3E%3Ccircle cx='80' cy='40' r='1.5' fill='white' fill-opacity='0.5'/%3E%3Ccircle cx='50' cy='80' r='1' fill='white' fill-opacity='0.2'/%3E%3Ccircle cx='10' cy='70' r='0.5' fill='white' fill-opacity='0.4'/%3E%3Ccircle cx='90' cy='10' r='1' fill='white' fill-opacity='0.3'/%3E%3C/svg%3E");
+}
+
+/* Pixel separator line */
+.pixel-divider {
+  height: 4px;
+  background: linear-gradient(90deg, transparent 0%, #7C3AED 20%, #3B82F6 50%, #10B981 80%, transparent 100%);
+  border: none;
+  image-rendering: pixelated;
+}
+
+/* Gradient border pixel style */
+.grad-border-primary {
+  position: relative;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+.grad-border-primary::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  background: linear-gradient(135deg, #7C3AED, #3B82F6);
+  z-index: -1;
+}
+
+/* ────────────────────────────────────────────
+   REDESIGNED JOURNEY STYLES
+   ──────────────────────────────────────────── */
+
+/* Completed Ribbon Overlay */
+.completed-ribbon-container {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 70px;
+  height: 70px;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.completed-ribbon {
+  font-family: "Press Start 2P", monospace;
+  font-size: 5px;
+  font-weight: bold;
+  color: #ffffff;
+  text-align: center;
+  line-height: 16px;
+  transform: rotate(45deg);
+  position: relative;
+  padding: 0;
+  left: -5px;
+  top: 15px;
+  width: 95px;
+  background: #10B981;
+  border-top: 1.5px solid #ffffff;
+  border-bottom: 1.5px solid #ffffff;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.3);
+  text-transform: uppercase;
+}
+
+/* Active Module Pulsing Glow */
+.module-card-active {
+  border-color: #7C3AED !important;
+  box-shadow: 4px 4px 0px 0px #000000, 0 0 15px rgba(124, 58, 237, 0.7) !important;
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+/* Locked Card Grayscale Styling */
+.module-card-locked {
+  filter: grayscale(0.9) brightness(0.6);
+  opacity: 0.65;
+  cursor: not-allowed !important;
+  border-color: #3730A3 !important;
+}
+
+/* Journey Connecting Lines */
+.journey-line-vertical {
+  width: 6px;
+  margin-left: auto;
+  margin-right: auto;
+  background: #4B5563; /* Default grey */
+  position: relative;
+}
+
+.journey-line-vertical.completed {
+  background: #10B981;
+}
+
+.journey-line-vertical.current {
+  background: #7C3AED;
+}
+
+/* ────────────────────────────────────────────
    NEW GAMIFICATION ANIMATION UTILITIES
    (Additive — does not change any existing styles)
 ──────────────────────────────────────────── */
@@ -760,3 +932,1105 @@ body {
 }
 
 
+/* ════════════════════════════════════════════════════════════════════════════
+   DUOLINGO THEME — ALL STYLES SCOPED TO [data-theme="duolingo"]
+   The Dark Minecraft theme above is 100% untouched.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ── CSS Custom Properties ──────────────────────────────────────────────────── */
+[data-theme="duolingo"] {
+  --duo-bg:              #F5F5F5;
+  --duo-surface:         #FFFFFF;
+  --duo-surface-2:       #FAFAFA;
+  --duo-text-primary:    #000000;
+  --duo-text-secondary:  #4a4a4a;
+  --duo-text-tertiary:   #999999;
+  --duo-green:           #5FCC5F;
+  --duo-green-dark:      #4CAF50;
+  --duo-green-accent:    #1EBC6B;
+  --duo-purple:          #B366FF;
+  --duo-border:          #E0E0E0;
+  --duo-border-light:    #EEEEEE;
+  --duo-shadow:          0 2px 8px rgba(0, 0, 0, 0.08);
+  --duo-shadow-md:       0 4px 16px rgba(0, 0, 0, 0.12);
+  --duo-shadow-subtle:   0 1px 3px rgba(0, 0, 0, 0.05);
+  --duo-radius:          14px;
+  --duo-radius-sm:       8px;
+  --duo-radius-btn:      12px;
+  --duo-radius-pill:     999px;
+  --duo-warning:         #FFB84D;
+  --duo-danger:          #FF6B6B;
+  --duo-link:            #5FCC5F;
+  --duo-xp:              #FFD700;
+  --duo-transition:      all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Overrides for Tailwind custom color variables in Duolingo theme */
+  --color-surface:       var(--duo-surface) !important;
+  --color-surface-2:     var(--duo-surface-2) !important;
+  --color-bg-deep:       var(--duo-bg) !important;
+  --color-primary:       var(--duo-green) !important;
+  --color-primary-light: var(--duo-green-accent) !important;
+}
+
+/* ── Body & global reset for Duolingo ──────────────────────────────────────── */
+[data-theme="duolingo"] body {
+  background: var(--duo-bg) !important;
+  background-image: none !important;
+  background-attachment: initial !important;
+  color: var(--duo-text-primary) !important;
+  font-family: "Nunito", sans-serif !important;
+}
+
+/* ── Global Utility Overrides for Duolingo ─────────────────────────────────── */
+[data-theme="duolingo"] .bg-surface {
+  background: var(--duo-surface) !important;
+}
+[data-theme="duolingo"] .bg-surface-2 {
+  background: var(--duo-surface-2) !important;
+}
+[data-theme="duolingo"] .border-4.border-black,
+[data-theme="duolingo"] .border-3.border-black,
+[data-theme="duolingo"] .border-2.border-black {
+  border: 1.5px solid var(--duo-border) !important;
+  border-radius: var(--duo-radius) !important;
+}
+[data-theme="duolingo"] .shadow-pixel,
+[data-theme="duolingo"] .shadow-pixel-lg,
+[data-theme="duolingo"] .shadow-pixel-sm {
+  box-shadow: var(--duo-shadow) !important;
+}
+[data-theme="duolingo"] .text-white {
+  color: var(--duo-text-primary) !important;
+}
+[data-theme="duolingo"] .text-white\/95,
+[data-theme="duolingo"] .text-white\/90,
+[data-theme="duolingo"] .text-white\/80,
+[data-theme="duolingo"] .text-white\/70,
+[data-theme="duolingo"] .text-white\/60 {
+  color: var(--duo-text-secondary) !important;
+}
+[data-theme="duolingo"] .text-white\/50,
+[data-theme="duolingo"] .text-white\/45,
+[data-theme="duolingo"] .text-white\/40,
+[data-theme="duolingo"] .text-white\/30,
+[data-theme="duolingo"] .text-white\/20 {
+  color: var(--duo-text-tertiary) !important;
+}
+
+/* Retain white text inside dark backgrounds and badges */
+[data-theme="duolingo"] .bg-gray-600 .text-white,
+[data-theme="duolingo"] .bg-red-500 .text-white,
+[data-theme="duolingo"] .bg-red-600 .text-white,
+[data-theme="duolingo"] .bg-blue-game .text-white,
+[data-theme="duolingo"] .bg-blue-600 .text-white,
+[data-theme="duolingo"] .bg-primary .text-white,
+[data-theme="duolingo"] .bg-success .text-white,
+[data-theme="duolingo"] .bg-warning .text-white,
+[data-theme="duolingo"] .bg-orange-600 .text-white,
+[data-theme="duolingo"] .bg-purple-600 .text-white,
+[data-theme="duolingo"] .bg-pink-500 .text-white,
+[data-theme="duolingo"] .bg-pink-600 .text-white,
+[data-theme="duolingo"] .bg-\[\#B366FF\] .text-white,
+[data-theme="duolingo"] .bg-\[\#7C3AED\] .text-white,
+[data-theme="duolingo"] .badge-pill .text-white {
+  color: #FFFFFF !important;
+}
+
+/* ── App container & page backgrounds ──────────────────────────────────────── */
+[data-theme="duolingo"] .bg-game,
+[data-theme="duolingo"] .bg-stars {
+  background: var(--duo-bg) !important;
+  background-image: none !important;
+}
+
+/* ── Pixel card → rounded white card ───────────────────────────────────────── */
+[data-theme="duolingo"] .pixel-card,
+[data-theme="duolingo"] .glass-card {
+  background: var(--duo-surface) !important;
+  border: 1.5px solid var(--duo-border) !important;
+  border-radius: var(--duo-radius) !important;
+  box-shadow: var(--duo-shadow) !important;
+}
+
+[data-theme="duolingo"] .pixel-card-purple,
+[data-theme="duolingo"] .pixel-card-primary,
+[data-theme="duolingo"] .glass-card-primary {
+  background: var(--duo-surface) !important;
+  border: 2px solid var(--duo-purple) !important;
+  border-radius: var(--duo-radius) !important;
+  box-shadow: 0 2px 12px rgba(179, 102, 255, 0.15) !important;
+}
+
+[data-theme="duolingo"] .pixel-card-blue,
+[data-theme="duolingo"] .glass-card-mission {
+  background: var(--duo-surface) !important;
+  border: 2px solid #60A5FA !important;
+  border-radius: var(--duo-radius) !important;
+  box-shadow: 0 2px 12px rgba(96, 165, 250, 0.15) !important;
+}
+
+[data-theme="duolingo"] .pixel-card-green {
+  background: var(--duo-surface) !important;
+  border: 2px solid var(--duo-green) !important;
+  border-radius: var(--duo-radius) !important;
+  box-shadow: 0 2px 12px rgba(95, 204, 95, 0.15) !important;
+}
+
+[data-theme="duolingo"] .pixel-card-orange,
+[data-theme="duolingo"] .glass-card-xp,
+[data-theme="duolingo"] .glass-card-secondary {
+  background: var(--duo-surface) !important;
+  border: 2px solid var(--duo-warning) !important;
+  border-radius: var(--duo-radius) !important;
+  box-shadow: 0 2px 12px rgba(255, 184, 77, 0.15) !important;
+}
+
+[data-theme="duolingo"] .pixel-card-red {
+  background: var(--duo-surface) !important;
+  border: 2px solid var(--duo-danger) !important;
+  border-radius: var(--duo-radius) !important;
+  box-shadow: 0 2px 12px rgba(255, 107, 107, 0.15) !important;
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────────────────── */
+[data-theme="duolingo"] .btn-pixel,
+[data-theme="duolingo"] .btn-primary,
+[data-theme="duolingo"] .btn-blue,
+[data-theme="duolingo"] .btn-success,
+[data-theme="duolingo"] .btn-warning,
+[data-theme="duolingo"] .btn-danger,
+[data-theme="duolingo"] .btn-ghost {
+  border-radius: var(--duo-radius-btn) !important;
+  border: none !important;
+  box-shadow: 0 4px 0px rgba(0,0,0,0.15) !important;
+  font-family: "Nunito", sans-serif !important;
+  font-weight: 800 !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  transition: var(--duo-transition) !important;
+}
+
+[data-theme="duolingo"] .btn-primary,
+[data-theme="duolingo"] .btn-pixel {
+  background: var(--duo-green) !important;
+  color: #000000 !important;
+  box-shadow: 0 4px 0px rgba(0,0,0,0.18) !important;
+}
+
+[data-theme="duolingo"] .btn-primary:hover,
+[data-theme="duolingo"] .btn-pixel:hover {
+  background: var(--duo-green-dark) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 0px rgba(0,0,0,0.18) !important;
+  filter: none !important;
+}
+
+[data-theme="duolingo"] .btn-primary:active,
+[data-theme="duolingo"] .btn-pixel:active {
+  transform: translateY(2px) !important;
+  box-shadow: 0 2px 0px rgba(0,0,0,0.18) !important;
+}
+
+[data-theme="duolingo"] .btn-blue {
+  background: #60A5FA !important;
+  color: #000000 !important;
+  box-shadow: 0 4px 0px rgba(0,0,0,0.15) !important;
+}
+
+[data-theme="duolingo"] .btn-success {
+  background: var(--duo-green-accent) !important;
+  color: #000000 !important;
+  box-shadow: 0 4px 0px rgba(0,0,0,0.15) !important;
+}
+
+[data-theme="duolingo"] .btn-warning {
+  background: var(--duo-warning) !important;
+  color: #000000 !important;
+  box-shadow: 0 4px 0px rgba(0,0,0,0.15) !important;
+}
+
+[data-theme="duolingo"] .btn-danger {
+  background: var(--duo-danger) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 4px 0px rgba(0,0,0,0.15) !important;
+}
+
+[data-theme="duolingo"] .btn-ghost {
+  background: var(--duo-surface) !important;
+  color: var(--duo-text-primary) !important;
+  border: 2px solid var(--duo-border) !important;
+  box-shadow: var(--duo-shadow-subtle) !important;
+}
+
+[data-theme="duolingo"] .btn-ghost:hover {
+  background: #F0FAF0 !important;
+  border-color: var(--duo-green) !important;
+}
+
+[data-theme="duolingo"] .btn-primary:disabled,
+[data-theme="duolingo"] .btn-blue:disabled,
+[data-theme="duolingo"] .btn-success:disabled,
+[data-theme="duolingo"] .btn-warning:disabled,
+[data-theme="duolingo"] .btn-danger:disabled,
+[data-theme="duolingo"] .btn-ghost:disabled,
+[data-theme="duolingo"] .btn-pixel:disabled {
+  opacity: 0.5 !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* ── XP Bar ──────────────────────────────────────────────────────────────────── */
+[data-theme="duolingo"] .xp-bar-track {
+  background: var(--duo-border) !important;
+  border: 1.5px solid var(--duo-border-light) !important;
+  border-radius: var(--duo-radius-pill) !important;
+}
+
+[data-theme="duolingo"] .xp-bar-fill {
+  background: linear-gradient(90deg, var(--duo-green) 0%, var(--duo-green-accent) 100%) !important;
+  border-radius: var(--duo-radius-pill) !important;
+  transition: width 0.6s ease !important;
+}
+
+[data-theme="duolingo"] .xp-bar-fill::after {
+  display: none !important;
+}
+
+/* ── Navigation ──────────────────────────────────────────────────────────────── */
+[data-theme="duolingo"] .nav-tab {
+  color: var(--duo-text-tertiary) !important;
+  border-radius: var(--duo-radius-sm) !important;
+  font-family: "Nunito", sans-serif !important;
+  font-weight: 700 !important;
+  transition: var(--duo-transition) !important;
+}
+
+[data-theme="duolingo"] .nav-tab:hover {
+  color: var(--duo-green-dark) !important;
+  background: rgba(95, 204, 95, 0.08) !important;
+}
+
+[data-theme="duolingo"] .nav-tab.active {
+  color: var(--duo-green) !important;
+}
+
+/* ── Inputs ──────────────────────────────────────────────────────────────────── */
+[data-theme="duolingo"] .pixel-input {
+  background: var(--duo-surface) !important;
+  border: 2px solid var(--duo-border) !important;
+  border-radius: var(--duo-radius-sm) !important;
+  color: var(--duo-text-primary) !important;
+  box-shadow: none !important;
+  font-family: "Nunito", sans-serif !important;
+}
+
+[data-theme="duolingo"] .pixel-input::placeholder {
+  color: var(--duo-text-tertiary) !important;
+}
+
+[data-theme="duolingo"] .pixel-input:focus {
+  border-color: var(--duo-green) !important;
+  box-shadow: 0 0 0 3px rgba(95, 204, 95, 0.18) !important;
+}
+
+/* ── Badge pill ──────────────────────────────────────────────────────────────── */
+[data-theme="duolingo"] .badge-pill {
+  background: linear-gradient(135deg, var(--duo-green), var(--duo-green-accent)) !important;
+  border: none !important;
+  border-radius: var(--duo-radius-pill) !important;
+  color: #000000 !important;
+  box-shadow: var(--duo-shadow-subtle) !important;
+  font-family: "Nunito", sans-serif !important;
+  font-size: 10px !important;
+  text-transform: none !important;
+}
+
+/* ── Gradient helpers ────────────────────────────────────────────────────────── */
+[data-theme="duolingo"] .grad-primary  { background: var(--duo-green) !important; }
+[data-theme="duolingo"] .grad-success  { background: var(--duo-green-accent) !important; }
+[data-theme="duolingo"] .grad-bg       { background: var(--duo-surface) !important; }
+[data-theme="duolingo"] .grad-xp       { background: var(--duo-xp) !important; }
+[data-theme="duolingo"] .grad-mission  { background: var(--duo-purple) !important; }
+[data-theme="duolingo"] .grad-danger   { background: var(--duo-danger) !important; }
+[data-theme="duolingo"] .grad-fire     { background: #FF6B35 !important; }
+
+[data-theme="duolingo"] .grad-text-primary  { color: var(--duo-green-dark) !important; }
+[data-theme="duolingo"] .grad-text-xp       { color: #C8960C !important; }
+[data-theme="duolingo"] .grad-text-mission  { color: var(--duo-purple) !important; }
+[data-theme="duolingo"] .grad-text-secondary{ color: var(--duo-danger) !important; }
+[data-theme="duolingo"] .grad-text-fire     { color: #FF6B35 !important; }
+
+/* ── Dividers & separators ───────────────────────────────────────────────────── */
+[data-theme="duolingo"] .pixel-divider {
+  background: linear-gradient(90deg, transparent 0%, var(--duo-green) 30%, var(--duo-purple) 70%, transparent 100%) !important;
+  height: 2px !important;
+}
+
+/* ── Glow utilities → soft shadows in Duolingo ───────────────────────────────── */
+[data-theme="duolingo"] .glow-primary,
+[data-theme="duolingo"] .glow-xp,
+[data-theme="duolingo"] .glow-mission,
+[data-theme="duolingo"] .glow-secondary,
+[data-theme="duolingo"] .glow-accent {
+  box-shadow: var(--duo-shadow) !important;
+}
+
+/* ── Journey line colors ─────────────────────────────────────────────────────── */
+[data-theme="duolingo"] .journey-line-vertical { background: var(--duo-border) !important; }
+[data-theme="duolingo"] .journey-line-vertical.completed { background: var(--duo-green) !important; }
+[data-theme="duolingo"] .journey-line-vertical.current   { background: var(--duo-purple) !important; }
+
+/* ── Completed ribbon ────────────────────────────────────────────────────────── */
+[data-theme="duolingo"] .completed-ribbon {
+  background: var(--duo-green) !important;
+  border-radius: 4px !important;
+  font-family: "Nunito", sans-serif !important;
+}
+
+/* ── Quest nodes ─────────────────────────────────────────────────────────────── */
+[data-theme="duolingo"] .quest-node,
+[data-theme="duolingo"] .quest-node-locked,
+[data-theme="duolingo"] .quest-node-active,
+[data-theme="duolingo"] .quest-node-done {
+  border-radius: 50% !important;
+  border: 3px solid var(--duo-border) !important;
+  box-shadow: var(--duo-shadow) !important;
+}
+
+[data-theme="duolingo"] .quest-node-locked {
+  background: var(--duo-surface-2) !important;
+  color: var(--duo-text-tertiary) !important;
+}
+
+[data-theme="duolingo"] .quest-node-active {
+  background: linear-gradient(135deg, var(--duo-green) 0%, var(--duo-green-accent) 100%) !important;
+  color: #000 !important;
+  border-color: var(--duo-green) !important;
+  box-shadow: 0 4px 16px rgba(95, 204, 95, 0.4) !important;
+  animation: duoBounce 0.7s ease-in-out infinite alternate !important;
+}
+
+[data-theme="duolingo"] .quest-node-done {
+  background: linear-gradient(135deg, var(--duo-green) 0%, var(--duo-green-accent) 100%) !important;
+  color: #000 !important;
+  border-color: var(--duo-green) !important;
+}
+
+/* ── Module card states ──────────────────────────────────────────────────────── */
+[data-theme="duolingo"] .module-card-active {
+  border-color: var(--duo-green) !important;
+  box-shadow: 0 4px 20px rgba(95, 204, 95, 0.25) !important;
+  animation: duoPulse 2s ease-in-out infinite !important;
+}
+
+[data-theme="duolingo"] .module-card-locked {
+  filter: grayscale(0.4) brightness(0.9) !important;
+}
+
+/* ── Typography helpers ──────────────────────────────────────────────────────── */
+[data-theme="duolingo"] .text-pixel,
+[data-theme="duolingo"] .font-pixel,
+[data-theme="duolingo"] .font-heading {
+  font-family: "Nunito", sans-serif !important;
+  font-weight: 800 !important;
+  letter-spacing: 0 !important;
+}
+
+[data-theme="duolingo"] .text-game,
+[data-theme="duolingo"] .font-game {
+  font-family: "Nunito", sans-serif !important;
+  font-weight: 700 !important;
+}
+
+[data-theme="duolingo"] .text-body,
+[data-theme="duolingo"] .font-body {
+  font-family: "Nunito", sans-serif !important;
+}
+
+/* ── AppShell header & nav scoped classes ────────────────────────────────────── */
+[data-theme="duolingo"] .duo-header {
+  background: #FFFFFF !important;
+  border-bottom: 1.5px solid var(--duo-border) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+}
+
+[data-theme="duolingo"] .duo-nav {
+  background: #FFFFFF !important;
+  border-top: 1.5px solid var(--duo-border) !important;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05) !important;
+}
+
+[data-theme="duolingo"] .duo-next-action {
+  background: #F0FFF0 !important;
+  border-top: 1.5px solid var(--duo-border-light) !important;
+}
+
+/* ── Theme toggle button ────────────────────────────────────────────────────── */
+.theme-toggle-btn {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1.5px solid rgba(255, 255, 255, 0.22);
+  border-radius: 20px;
+  padding: 4px 10px;
+  transition: all 0.2s ease;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.theme-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.theme-toggle-inner {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.theme-toggle-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.theme-toggle-label {
+  font-family: "Nunito", sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+[data-theme="duolingo"] .theme-toggle-btn {
+  background: #F0FAF0;
+  border: 1.5px solid var(--duo-green);
+  box-shadow: var(--duo-shadow-subtle);
+}
+
+[data-theme="duolingo"] .theme-toggle-btn:hover {
+  background: #E0F7E0;
+}
+
+[data-theme="duolingo"] .theme-toggle-label {
+  color: #1a6b1a;
+}
+
+/* ── Duolingo owl mascot ─────────────────────────────────────────────────────── */
+.duo-mascot {
+  font-size: 32px;
+  animation: duoMascotFloat 2.5s ease-in-out infinite;
+  display: inline-block;
+  filter: drop-shadow(0 4px 8px rgba(95,204,95,0.3));
+}
+
+/* ── Duolingo badge variants ─────────────────────────────────────────────────── */
+.duo-badge-success {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  background: #5FCC5F;
+  color: #000000;
+  border-radius: 999px;
+  font-family: "Nunito", sans-serif;
+  font-weight: 800;
+  font-size: 12px;
+}
+
+.duo-badge-warning {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  background: #FFB84D;
+  color: #000000;
+  border-radius: 999px;
+  font-family: "Nunito", sans-serif;
+  font-weight: 800;
+  font-size: 12px;
+}
+
+.duo-badge-danger {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  background: #FF6B6B;
+  color: #ffffff;
+  border-radius: 999px;
+  font-family: "Nunito", sans-serif;
+  font-weight: 800;
+  font-size: 12px;
+}
+
+.duo-badge-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  background: #60A5FA;
+  color: #000000;
+  border-radius: 999px;
+  font-family: "Nunito", sans-serif;
+  font-weight: 800;
+  font-size: 12px;
+}
+
+/* ── Duolingo card base ────────────────────────────────────────────────────── */
+.duo-card {
+  background: #FFFFFF;
+  border: 1.5px solid #E0E0E0;
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.duo-card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  transform: translateY(-2px);
+}
+
+/* ── Duolingo stat pill ───────────────────────────────────────────────────────── */
+.duo-stat-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #FFFFFF;
+  border: 1.5px solid #E0E0E0;
+  border-radius: 14px;
+  padding: 10px 14px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  min-width: 70px;
+}
+
+.duo-stat-pill .duo-stat-value {
+  font-family: "Nunito", sans-serif;
+  font-weight: 900;
+  font-size: 18px;
+  color: #000000;
+}
+
+.duo-stat-pill .duo-stat-label {
+  font-family: "Nunito", sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  color: #999999;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ── Animations ────────────────────────────────────────────────────────────── */
+@keyframes duoBounce {
+  0%   { transform: scale(1); }
+  100% { transform: scale(1.1); }
+}
+
+@keyframes duoPulse {
+  0%, 100% { box-shadow: 0 4px 20px rgba(95, 204, 95, 0.2); }
+  50%       { box-shadow: 0 4px 28px rgba(95, 204, 95, 0.45), 0 0 0 4px rgba(95, 204, 95, 0.1); }
+}
+
+@keyframes duoMascotFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  30%       { transform: translateY(-6px) rotate(-4deg); }
+  70%       { transform: translateY(-3px) rotate(3deg); }
+}
+
+@keyframes duoHeartPop {
+  0%   { transform: scale(0) rotate(-15deg); opacity: 0; }
+  60%  { transform: scale(1.3) rotate(5deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+   DUOLINGO THEME — Tailwind Arbitrary-Value Dark Background Overrides
+   These cover hardcoded Tailwind classes like bg-[#1E1B4B] that cannot be
+   targeted via inline-style attribute selectors.
+
+   MAPPING LOGIC:
+     #1E1B4B  (surface / card dark)     → --duo-surface  (#FFFFFF)
+     #16103A  (surface-2 / deeper dark) → --duo-surface-2 (#FAFAFA)
+     #151036  (deepest surface)         → --duo-surface-2 (#FAFAFA)
+     #151F3C  (joined-state dark)       → #EEF9EE  (light green tint)
+     #1A1829  (locked dark)             → --duo-border (#E0E0E0)
+     #0F0A2E  (page bg deepest)         → --duo-bg   (#F5F5F5)
+     #0B0F19  (alternate page bg)       → --duo-bg   (#F5F5F5)
+     #0F172A  (slate-900 dark)          → --duo-bg   (#F5F5F5)
+     #110B30  (dark gradient stop)      → --duo-bg   (#F5F5F5)
+     #251E5C  (dark gradient stop)      → --duo-surface (#FFFFFF)
+     pixel-dark / pixel-darker          → --duo-surface / --duo-bg
+   ──────────────────────────────────────────────────────────────────────────── */
+
+/* Primary dark surface (#1E1B4B) → white card */
+[data-theme="duolingo"] [class*="bg-[#1E1B4B]"] {
+  background-color: var(--duo-surface) !important;
+  border-color: var(--duo-border) !important;
+  box-shadow: var(--duo-shadow) !important;
+}
+
+/* Opacity variants of #1E1B4B */
+[data-theme="duolingo"] [class*="bg-[#1E1B4B]/80"],
+[data-theme="duolingo"] [class*="bg-[#1E1B4B]/70"],
+[data-theme="duolingo"] [class*="bg-[#1E1B4B]/60"],
+[data-theme="duolingo"] [class*="bg-[#1E1B4B]/50"],
+[data-theme="duolingo"] [class*="bg-[#1E1B4B]/40"],
+[data-theme="duolingo"] [class*="bg-[#1E1B4B]/30"],
+[data-theme="duolingo"] [class*="bg-[#1E1B4B]/20"] {
+  background-color: rgba(240, 240, 245, 0.7) !important;
+}
+
+/* Secondary dark surface (#16103A) → off-white */
+[data-theme="duolingo"] [class*="bg-[#16103A]"] {
+  background-color: var(--duo-surface-2) !important;
+  border-color: var(--duo-border) !important;
+  box-shadow: var(--duo-shadow) !important;
+}
+
+/* Deepest dark panels (#151036, #151F3C, #1A1829) → light variants */
+[data-theme="duolingo"] [class*="bg-[#151036]"] {
+  background-color: var(--duo-surface-2) !important;
+  border-color: var(--duo-border) !important;
+}
+[data-theme="duolingo"] [class*="bg-[#151F3C]"] {
+  background-color: #EEF9EE !important;
+  border-color: var(--duo-green) !important;
+}
+[data-theme="duolingo"] [class*="bg-[#1A1829]"] {
+  background-color: var(--duo-surface-2) !important;
+  border-color: var(--duo-border) !important;
+}
+
+/* Page-level backgrounds (#0F0A2E, #0B0F19, #0F172A, #110B30) → light bg */
+[data-theme="duolingo"] [class*="bg-[#0F0A2E]"],
+[data-theme="duolingo"] [class*="bg-[#0B0F19]"],
+[data-theme="duolingo"] [class*="bg-[#0F172A]"],
+[data-theme="duolingo"] [class*="bg-[#110B30]"] {
+  background-color: var(--duo-bg) !important;
+  background-image: none !important;
+}
+
+/* Opacity variant for #0F0A2E */
+[data-theme="duolingo"] [class*="bg-[#0F0A2E]/95"],
+[data-theme="duolingo"] [class*="bg-[#0F0A2E]/80"],
+[data-theme="duolingo"] [class*="bg-[#0F0A2E]/60"] {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(8px) !important;
+  border-color: var(--duo-border) !important;
+}
+
+/* Gradient stop colours (#251E5C, deep purples) → white surface */
+[data-theme="duolingo"] [class*="bg-[#251E5C]"] {
+  background-color: var(--duo-surface) !important;
+}
+
+/* pixel-dark & pixel-darker Tailwind colour utilities */
+[data-theme="duolingo"] .bg-pixel-dark {
+  background-color: var(--duo-surface) !important;
+  border-color: var(--duo-border) !important;
+}
+[data-theme="duolingo"] .bg-pixel-darker {
+  background-color: var(--duo-bg) !important;
+}
+
+/* ── Arbitrary pixel shadow overrides ─────────────────────────────────────── */
+/* These Tailwind classes produce hard black drop-shadows from the Minecraft
+   theme. In Duolingo mode we replace them with soft modern shadows.          */
+
+[data-theme="duolingo"] [class*="shadow-[3px_3px_0px_#000]"],
+[data-theme="duolingo"] [class*="shadow-[3px_3px_0px_rgba(0,0,0,0.8)]"],
+[data-theme="duolingo"] [class*="shadow-[4px_4px_0px_#000]"],
+[data-theme="duolingo"] [class*="shadow-[4px_4px_0px_rgba(0,0,0,0.8)]"],
+[data-theme="duolingo"] [class*="shadow-[6px_6px_0px_#000]"],
+[data-theme="duolingo"] [class*="shadow-[2.5px_2.5px_0px_#000]"],
+[data-theme="duolingo"] [class*="shadow-[2px_2px_0px_#000]"],
+[data-theme="duolingo"] [class*="shadow-[0_0_50px_rgba(255,214,10,0.3)]"] {
+  box-shadow: var(--duo-shadow) !important;
+}
+
+/* ── Border colour for pixel-border arbitrary classes ─────────────────────── */
+[data-theme="duolingo"] [class*="border-[#000]"],
+[data-theme="duolingo"] [class*="border-[#000000]"],
+[data-theme="duolingo"] [class*="border-b-[#000]"],
+[data-theme="duolingo"] [class*="border-b-[#000000]"] {
+  border-color: var(--duo-border) !important;
+}
+
+/* Border-color overrides for various colours applied on top of dark panels */
+[data-theme="duolingo"] [class*="bg-[#1E1B4B]"][class*="border-[#3B82F6]"],
+[data-theme="duolingo"] [class*="bg-[#1E1B4B]"][class*="border-[#F59E0B]"],
+[data-theme="duolingo"] [class*="bg-[#1E1B4B]"][class*="border-pink-500"] {
+  border-color: var(--duo-border) !important;
+  border-width: 1.5px !important;
+}
+
+/* ── MissionComplete dark overlay → light modal ───────────────────────────── */
+[data-theme="duolingo"] [class*="bg-[#1E1B4B]"][class*="border-[#FFD60A]"] {
+  background-color: var(--duo-surface) !important;
+  border-color: var(--duo-green) !important;
+  border-width: 2px !important;
+  box-shadow: 0 8px 32px rgba(95, 204, 95, 0.2) !important;
+}
+
+/* ── Inline linear-gradient dark backgrounds ──────────────────────────────── */
+/* Cover gradient backgrounds like linear-gradient(135deg, #1E1B4B …) and
+   linear-gradient(135deg, #0F172A …) that appear as inline styles.          */
+[data-theme="duolingo"] [style*="linear-gradient(135deg, #1E1B4B"],
+[data-theme="duolingo"] [style*="linear-gradient(135deg, #0F172A"],
+[data-theme="duolingo"] [style*="linear-gradient(135deg, #0F0A2E"],
+[data-theme="duolingo"] [style*="linear-gradient(to-br from-[#1E1B4B"],
+[data-theme="duolingo"] [style*="linear-gradient(90deg, #1E1B4B"] {
+  background: var(--duo-surface) !important;
+  background-image: none !important;
+  border-color: var(--duo-border) !important;
+  box-shadow: var(--duo-shadow) !important;
+}
+
+/* Cover the PromptEngineering large gradient hero panel */
+[data-theme="duolingo"] [style*="linear-gradient(135deg, #0F172A 0%, #1E1B4B 100%)"] {
+  background: linear-gradient(135deg, #F0FFF4 0%, #E8F5F8 100%) !important;
+}
+
+/* Cover background: '#1E1B4B60' (alpha hex in inline style) */
+[data-theme="duolingo"] [style*="background: '#1E1B4B60'"],
+[data-theme="duolingo"] [style*="background: #1E1B4B60"] {
+  background-color: rgba(240, 245, 240, 0.6) !important;
+  background: rgba(240, 245, 240, 0.6) !important;
+}
+
+/* ── bg-[#0F0A2E]/95 backdrop header override ─────────────────────────────── */
+[data-theme="duolingo"] [class*="bg-[#0F0A2E]/"] {
+  background-color: rgba(255, 255, 255, 0.96) !important;
+  border-color: var(--duo-border) !important;
+}
+
+/* ── Duolingo theme white text overrides ───────────────────────────────────── */
+[data-theme="duolingo"] .text-white,
+[data-theme="duolingo"] .text-slate-50,
+[data-theme="duolingo"] .text-slate-100,
+[data-theme="duolingo"] .text-slate-200,
+[data-theme="duolingo"] .text-slate-300,
+[data-theme="duolingo"] .text-slate-400,
+[data-theme="duolingo"] .text-gray-50,
+[data-theme="duolingo"] .text-gray-100,
+[data-theme="duolingo"] .text-gray-200,
+[data-theme="duolingo"] .text-gray-300,
+[data-theme="duolingo"] .text-zinc-50,
+[data-theme="duolingo"] .text-zinc-100,
+[data-theme="duolingo"] .text-zinc-200,
+[data-theme="duolingo"] .text-zinc-300,
+[data-theme="duolingo"] .text-neutral-50,
+[data-theme="duolingo"] .text-neutral-100,
+[data-theme="duolingo"] .text-neutral-200,
+[data-theme="duolingo"] .text-neutral-300,
+[data-theme="duolingo"] .text-purple-50,
+[data-theme="duolingo"] .text-purple-100,
+[data-theme="duolingo"] .text-purple-200,
+[data-theme="duolingo"] .text-purple-300,
+[data-theme="duolingo"] .text-blue-50,
+[data-theme="duolingo"] .text-blue-100,
+[data-theme="duolingo"] .text-blue-200,
+[data-theme="duolingo"] .text-blue-300,
+[data-theme="duolingo"] .text-indigo-50,
+[data-theme="duolingo"] .text-indigo-100,
+[data-theme="duolingo"] .text-indigo-200,
+[data-theme="duolingo"] .text-indigo-300 {
+  color: var(--duo-text-primary) !important;
+}
+
+/* Opacity text variants */
+[data-theme="duolingo"] [class*="text-white/"],
+[data-theme="duolingo"] [class*="text-white\/"] {
+  color: var(--duo-text-primary) !important;
+}
+
+[data-theme="duolingo"] [class*="text-white/8"],
+[data-theme="duolingo"] [class*="text-white\/8"],
+[data-theme="duolingo"] [class*="text-white/7"],
+[data-theme="duolingo"] [class*="text-white\/7"],
+[data-theme="duolingo"] [class*="text-white/6"],
+[data-theme="duolingo"] [class*="text-white\/6"],
+[data-theme="duolingo"] [class*="text-white/5"],
+[data-theme="duolingo"] [class*="text-white\/5"],
+[data-theme="duolingo"] [class*="text-white/4"],
+[data-theme="duolingo"] [class*="text-white\/4"] {
+  color: var(--duo-text-secondary) !important;
+}
+
+[data-theme="duolingo"] [class*="text-white/3"],
+[data-theme="duolingo"] [class*="text-white\/3"],
+[data-theme="duolingo"] [class*="text-white/2"],
+[data-theme="duolingo"] [class*="text-white\/2"],
+[data-theme="duolingo"] [class*="text-white/1"],
+[data-theme="duolingo"] [class*="text-white\/1"] {
+  color: var(--duo-text-tertiary) !important;
+}
+
+/* Preserve white text inside buttons and elements with dark backgrounds */
+[data-theme="duolingo"] .btn-danger .text-white,
+[data-theme="duolingo"] .btn-danger [class*="text-white"],
+[data-theme="duolingo"] .btn-danger {
+  color: #FFFFFF !important;
+}
+
+[data-theme="duolingo"] .bg-pixel-red .text-white,
+[data-theme="duolingo"] .bg-pixel-red [class*="text-white"],
+[data-theme="duolingo"] .bg-pixel-red {
+  color: #FFFFFF !important;
+}
+
+[data-theme="duolingo"] .bg-red-500 .text-white,
+[data-theme="duolingo"] .bg-red-500 [class*="text-white"],
+[data-theme="duolingo"] .bg-red-500 {
+  color: #FFFFFF !important;
+}
+
+[data-theme="duolingo"] [class*="bg-slate-600"] .text-white,
+[data-theme="duolingo"] [class*="bg-slate-700"] .text-white,
+[data-theme="duolingo"] [class*="bg-slate-800"] .text-white,
+[data-theme="duolingo"] [class*="bg-slate-900"] .text-white,
+[data-theme="duolingo"] [class*="bg-zinc-600"] .text-white,
+[data-theme="duolingo"] [class*="bg-zinc-700"] .text-white,
+[data-theme="duolingo"] [class*="bg-zinc-800"] .text-white,
+[data-theme="duolingo"] [class*="bg-zinc-900"] .text-white,
+[data-theme="duolingo"] [class*="bg-gray-600"] .text-white,
+[data-theme="duolingo"] [class*="bg-gray-700"] .text-white,
+[data-theme="duolingo"] [class*="bg-gray-800"] .text-white,
+[data-theme="duolingo"] [class*="bg-gray-900"] .text-white,
+[data-theme="duolingo"] [class*="bg-neutral-600"] .text-white,
+[data-theme="duolingo"] [class*="bg-neutral-700"] .text-white,
+[data-theme="duolingo"] [class*="bg-neutral-800"] .text-white,
+[data-theme="duolingo"] [class*="bg-neutral-900"] .text-white,
+[data-theme="duolingo"] .bg-black .text-white,
+[data-theme="duolingo"] [class*="bg-black/"] .text-white,
+[data-theme="duolingo"] [class*="bg-slate-600"] [class*="text-white"],
+[data-theme="duolingo"] [class*="bg-slate-700"] [class*="text-white"],
+[data-theme="duolingo"] [class*="bg-slate-800"] [class*="text-white"],
+[data-theme="duolingo"] [class*="bg-slate-900"] [class*="text-white"],
+[data-theme="duolingo"] [class*="bg-zinc-600"] [class*="text-white"],
+[data-theme="duolingo"] [class*="bg-zinc-700"] [class*="text-white"],
+[data-theme="duolingo"] [class*="bg-zinc-800"] [class*="text-white"],
+[data-theme="duolingo"] [class*="bg-zinc-900"] [class*="text-white"],
+[data-theme="duolingo"] [class*="bg-gray-600"] [class*="text-white"],
+[data-theme="duolingo"] [class*="bg-gray-700"] [class*="text-white"],
+[data-theme="duolingo"] [class*="bg-gray-800"] [class*="text-white"],
+[data-theme="duolingo"] [class*="bg-gray-900"] [class*="text-white"],
+[data-theme="duolingo"] [class*="bg-neutral-600"] [class*="text-white"],
+[data-theme="duolingo"] [class*="bg-neutral-700"] [class*="text-white"],
+[data-theme="duolingo"] [class*="bg-neutral-800"] [class*="text-white"],
+[data-theme="duolingo"] [class*="bg-neutral-900"] [class*="text-white"],
+[data-theme="duolingo"] .bg-black [class*="text-white"],
+[data-theme="duolingo"] [class*="bg-black/"] [class*="text-white"] {
+  color: #FFFFFF !important;
+}
+
+/* ── Global borders and shadow overrides for Duolingo theme ────────────────── */
+[data-theme="duolingo"] .border-black,
+[data-theme="duolingo"] .border-t-black,
+[data-theme="duolingo"] .border-b-black,
+[data-theme="duolingo"] .border-l-black,
+[data-theme="duolingo"] .border-r-black,
+[data-theme="duolingo"] .border-3,
+[data-theme="duolingo"] .border-4,
+[data-theme="duolingo"] .border-b-3,
+[data-theme="duolingo"] .border-t-3,
+[data-theme="duolingo"] [class*="border-[#000]"],
+[data-theme="duolingo"] [class*="border-[#000000]"],
+[data-theme="duolingo"] [class*="border-b-[#000]"],
+[data-theme="duolingo"] [class*="border-b-[#000000]"] {
+  border-color: var(--duo-border) !important;
+  border-width: 1.5px !important;
+}
+
+[data-theme="duolingo"] [class*="shadow-["] {
+  box-shadow: var(--duo-shadow) !important;
+}
+
+/* ── Inline dark background overrides for all labs and components ──────────── */
+[data-theme="duolingo"] [style*="background"][style*="#1E1B4B"],
+[data-theme="duolingo"] [style*="background"][style*="#16103A"],
+[data-theme="duolingo"] [style*="background"][style*="#151036"],
+[data-theme="duolingo"] [style*="background"][style*="#150E36"],
+[data-theme="duolingo"] [style*="background"][style*="#110B30"],
+[data-theme="duolingo"] [style*="background"][style*="#0F0A2E"] {
+  background: var(--duo-surface) !important;
+  background-image: none !important;
+  border-color: var(--duo-border) !important;
+  border-width: 1.5px !important;
+  border-style: solid !important;
+  border-radius: var(--duo-radius) !important;
+  box-shadow: var(--duo-shadow) !important;
+}
+
+[data-theme="duolingo"] select option {
+  background: var(--duo-surface) !important;
+  color: var(--duo-text-primary) !important;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   END OF DUOLINGO THEME
+   ════════════════════════════════════════════════════════════════════════════ */�────────────────────────────
+   DUOLINGO THEME — Tailwind Arbitrary-Value Dark Background Overrides
+   These cover hardcoded Tailwind classes like bg-[#1E1B4B] that cannot be
+   targeted via inline-style attribute selectors.
+   ────────────────────────────────────────────────────────────────────────────
+
+   MAPPING LOGIC:
+     #1E1B4B  (surface / card dark)     → --duo-surface  (#FFFFFF)
+     #16103A  (surface-2 / deeper dark) → --duo-surface-2 (#FAFAFA)
+     #151036  (deepest surface)         → --duo-surface-2 (#FAFAFA)
+     #151F3C  (joined-state dark)       → #EEF9EE  (light green tint)
+     #1A1829  (locked dark)             → --duo-border (#E0E0E0)
+     #0F0A2E  (page bg deepest)         → --duo-bg   (#F5F5F5)
+     #0B0F19  (alternate page bg)       → --duo-bg   (#F5F5F5)
+     #0F172A  (slate-900 dark)          → --duo-bg   (#F5F5F5)
+     #110B30  (dark gradient stop)      → --duo-bg   (#F5F5F5)
+     #251E5C  (dark gradient stop)      → --duo-surface (#FFFFFF)
+     pixel-dark / pixel-darker          → --duo-surface / --duo-bg
+   ──────────────────────────────────────────────────────────────────────────── */
+
+/* Primary dark surface (#1E1B4B) → white card */
+[data-theme="duolingo"] .bg-\[\#1E1B4B\] {
+  background-color: var(--duo-surface) !important;
+  border-color: var(--duo-border) !important;
+  box-shadow: var(--duo-shadow) !important;
+}
+
+/* Opacity variants of #1E1B4B */
+[data-theme="duolingo"] .bg-\[\#1E1B4B\]\/80,
+[data-theme="duolingo"] .bg-\[\#1E1B4B\]\/70,
+[data-theme="duolingo"] .bg-\[\#1E1B4B\]\/60,
+[data-theme="duolingo"] .bg-\[\#1E1B4B\]\/50,
+[data-theme="duolingo"] .bg-\[\#1E1B4B\]\/40,
+[data-theme="duolingo"] .bg-\[\#1E1B4B\]\/30,
+[data-theme="duolingo"] .bg-\[\#1E1B4B\]\/20 {
+  background-color: rgba(240, 240, 245, 0.7) !important;
+}
+
+/* Secondary dark surface (#16103A) → off-white */
+[data-theme="duolingo"] .bg-\[\#16103A\] {
+  background-color: var(--duo-surface-2) !important;
+  border-color: var(--duo-border) !important;
+  box-shadow: var(--duo-shadow) !important;
+}
+
+/* Deepest dark panels (#151036, #151F3C, #1A1829) → light variants */
+[data-theme="duolingo"] .bg-\[\#151036\] {
+  background-color: var(--duo-surface-2) !important;
+  border-color: var(--duo-border) !important;
+}
+[data-theme="duolingo"] .bg-\[\#151F3C\] {
+  background-color: #EEF9EE !important;
+  border-color: var(--duo-green) !important;
+}
+[data-theme="duolingo"] .bg-\[\#1A1829\] {
+  background-color: var(--duo-surface-2) !important;
+  border-color: var(--duo-border) !important;
+}
+
+/* Page-level backgrounds (#0F0A2E, #0B0F19, #0F172A, #110B30) → light bg */
+[data-theme="duolingo"] .bg-\[\#0F0A2E\],
+[data-theme="duolingo"] .bg-\[\#0B0F19\],
+[data-theme="duolingo"] .bg-\[\#0F172A\],
+[data-theme="duolingo"] .bg-\[\#110B30\] {
+  background-color: var(--duo-bg) !important;
+  background-image: none !important;
+}
+
+/* Opacity variant for #0F0A2E */
+[data-theme="duolingo"] .bg-\[\#0F0A2E\]\/95,
+[data-theme="duolingo"] .bg-\[\#0F0A2E\]\/80,
+[data-theme="duolingo"] .bg-\[\#0F0A2E\]\/60 {
+  background-color: rgba(245, 245, 245, 0.95) !important;
+  backdrop-filter: blur(8px) !important;
+  border-color: var(--duo-border) !important;
+}
+
+/* Gradient stop colours (#251E5C, deep purples) → white surface */
+[data-theme="duolingo"] .bg-\[\#251E5C\] {
+  background-color: var(--duo-surface) !important;
+}
+
+/* pixel-dark & pixel-darker Tailwind colour utilities */
+[data-theme="duolingo"] .bg-pixel-dark {
+  background-color: var(--duo-surface) !important;
+  border-color: var(--duo-border) !important;
+}
+[data-theme="duolingo"] .bg-pixel-darker {
+  background-color: var(--duo-bg) !important;
+}
+
+/* ── Arbitrary pixel shadow overrides ─────────────────────────────────────── */
+/* These Tailwind classes produce hard black drop-shadows from the Minecraft
+   theme. In Duolingo mode we replace them with soft modern shadows.          */
+
+[data-theme="duolingo"] .shadow-\[3px_3px_0px_\#000\],
+[data-theme="duolingo"] .shadow-\[3px_3px_0px_rgba\(0\2c 0\2c 0\2c 0\.8\)\],
+[data-theme="duolingo"] .shadow-\[4px_4px_0px_\#000\],
+[data-theme="duolingo"] .shadow-\[4px_4px_0px_rgba\(0\2c 0\2c 0\2c 0\.8\)\],
+[data-theme="duolingo"] .shadow-\[6px_6px_0px_\#000\],
+[data-theme="duolingo"] .shadow-\[2\.5px_2\.5px_0px_\#000\],
+[data-theme="duolingo"] .shadow-\[2px_2px_0px_\#000\],
+[data-theme="duolingo"] .shadow-\[0_0_50px_rgba\(255\2c 214\2c 10\2c 0\.3\)\] {
+  box-shadow: var(--duo-shadow) !important;
+}
+
+/* ── Border colour for pixel-border arbitrary classes ─────────────────────── */
+[data-theme="duolingo"] .border-\[\#000\],
+[data-theme="duolingo"] .border-\[\#000000\],
+[data-theme="duolingo"] .border-b-\[\#000\],
+[data-theme="duolingo"] .border-b-\[\#000000\] {
+  border-color: var(--duo-border) !important;
+}
+
+/* Border-color overrides for various colours applied on top of dark panels */
+[data-theme="duolingo"] .bg-\[\#1E1B4B\].border-\[\#3B82F6\],
+[data-theme="duolingo"] .bg-\[\#1E1B4B\].border-\[\#F59E0B\],
+[data-theme="duolingo"] .bg-\[\#1E1B4B\].border-pink-500 {
+  border-color: var(--duo-border) !important;
+  border-width: 1.5px !important;
+}
+
+/* ── MissionComplete dark overlay → light modal ───────────────────────────── */
+[data-theme="duolingo"] .bg-\[\#1E1B4B\].border-\[\#FFD60A\] {
+  background-color: var(--duo-surface) !important;
+  border-color: var(--duo-green) !important;
+  border-width: 2px !important;
+  box-shadow: 0 8px 32px rgba(95, 204, 95, 0.2) !important;
+}
+
+/* ── Inline linear-gradient dark backgrounds ──────────────────────────────── */
+/* Cover gradient backgrounds like linear-gradient(135deg, #1E1B4B …) and
+   linear-gradient(135deg, #0F172A …) that appear as inline styles.          */
+[data-theme="duolingo"] [style*="linear-gradient(135deg, #1E1B4B"],
+[data-theme="duolingo"] [style*="linear-gradient(135deg, #0F172A"],
+[data-theme="duolingo"] [style*="linear-gradient(135deg, #0F0A2E"],
+[data-theme="duolingo"] [style*="linear-gradient(to-br from-[#1E1B4B"],
+[data-theme="duolingo"] [style*="linear-gradient(90deg, #1E1B4B"] {
+  background: var(--duo-surface) !important;
+  background-image: none !important;
+  border-color: var(--duo-border) !important;
+  box-shadow: var(--duo-shadow) !important;
+}
+
+/* Cover the PromptEngineering large gradient hero panel */
+[data-theme="duolingo"] [style*="linear-gradient(135deg, #0F172A 0%, #1E1B4B 100%)"] {
+  background: linear-gradient(135deg, #F0FFF4 0%, #E8F5F8 100%) !important;
+}
+
+/* Cover background: '#1E1B4B60' (alpha hex in inline style) */
+[data-theme="duolingo"] [style*="background: '#1E1B4B60'"],
+[data-theme="duolingo"] [style*="background: #1E1B4B60"] {
+  background-color: rgba(240, 245, 240, 0.6) !important;
+  background: rgba(240, 245, 240, 0.6) !important;
+}
+
+/* ── bg-[#0F0A2E]/95 backdrop header override ─────────────────────────────── */
+[data-theme="duolingo"] [class*="bg-\\[\\#0F0A2E\\]\\/"] {
+  background-color: rgba(255, 255, 255, 0.96) !important;
+  border-color: var(--duo-border) !important;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   END OF DUOLINGO THEME
+   ════════════════════════════════════════════════════════════════════════════ */

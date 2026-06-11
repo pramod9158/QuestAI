@@ -15,6 +15,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useCurrentProfile, useAuth } from '@/contexts/AuthContext';
 import { ArrowLeft, Coins, Check, Lock } from 'lucide-react';
+import { useThemeStyles } from '@/lib/useThemeStyles';
 
 const AVATAR_STORAGE_KEY = 'questai_avatar';
 
@@ -124,8 +125,10 @@ export default function AvatarCustomization() {
   const navigate = useNavigate();
   const profile = useCurrentProfile();
   const { updateProfile } = useAuth();
+  const ts = useThemeStyles();
+  const D = ts.duo;
   const [avatar, setAvatar] = useState<AvatarData>(loadAvatarData);
-  const [activeCategory, setActiveCategory] = useState<Category>('suit');
+  const [activeCategory, setActiveCategory] = useState<Category>(`suit`);
   const [coins, setCoins] = useState(profile?.coins ?? 0);
   const [buying, setBuying] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -193,7 +196,10 @@ export default function AvatarCustomization() {
   const bgColor = BG_COLORS[`bg_${avatar.background}`] ?? '#0F0A2E';
 
   return (
-    <div className="min-h-full" style={{ background: '#0F0A2E' }}>
+    <div
+      className={D ? '' : 'min-h-full'}
+      style={D ? ts.page : { background: '#0F0A2E' }}
+    >
       {/* Toast */}
       <AnimatePresence>
         {toast && (
@@ -201,8 +207,14 @@ export default function AvatarCustomization() {
             initial={{ y: -40, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: -40, opacity: 0 }}
-            className="fixed top-20 left-1/2 -translate-x-1/2 z-50 px-4 py-2 font-game text-xs text-white"
-            style={{ background: '#1E1B4B', border: '2px solid #7C3AED', boxShadow: '3px 3px 0px #000' }}
+            className={D ? 'fixed top-20 left-1/2 -translate-x-1/2 z-50 px-4 py-2 text-xs font-bold text-gray-700' : 'fixed top-20 left-1/2 -translate-x-1/2 z-50 px-4 py-2 font-game text-xs text-white'}
+            style={D ? {
+              background: '#FFFFFF',
+              border: '1.5px solid #FFB84D',
+              borderRadius: 12,
+              boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
+              fontFamily: '"Nunito", sans-serif',
+            } : { background: '#1E1B4B', border: '2px solid #7C3AED', boxShadow: '3px 3px 0px #000' }}
           >
             {toast}
           </motion.div>
@@ -213,27 +225,45 @@ export default function AvatarCustomization() {
       <div className="px-5 pt-5 pb-3">
         <button
           onClick={() => navigate('/profile')}
-          className="flex items-center gap-2 text-white/40 hover:text-white mb-4 font-body text-sm transition-colors"
+          className={D ? 'flex items-center gap-2 mb-4 font-body text-sm font-bold transition-colors cursor-pointer' : 'flex items-center gap-2 text-white/40 hover:text-white mb-4 font-body text-sm transition-colors'}
+          style={D ? { color: '#8B5CF6' } : {}}
         >
-          <ArrowLeft className="w-4 h-4" /> Back to Profile
+          <ArrowLeft className="w-4 h-4" /> {D ? 'Back to Profile' : 'Back to Profile'}
         </button>
 
         <div className="flex items-center justify-between">
-          <h1 className="font-game text-xl text-white">👾 Avatar Studio</h1>
+          <h1 style={{ color: ts.textPrimary, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 900 : undefined, fontSize: D ? 20 : undefined }} className={D ? '' : 'font-game text-xl text-white'}>
+            👾 Avatar Studio
+          </h1>
           <div
-            className="flex items-center gap-1.5 px-3 py-1.5"
-            style={{ background: '#1E1B4B', border: '2px solid #F59E0B', boxShadow: '2px 2px 0px #000' }}
+            className={D ? '' : 'flex items-center gap-1.5 px-3 py-1.5'}
+            style={D ? {
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              background: '#FFF8E1',
+              border: '1.5px solid #FFB84D',
+              borderRadius: 999,
+              padding: '4px 12px',
+              boxShadow: '0 2px 8px rgba(255,184,77,0.1)',
+            } : { background: '#1E1B4B', border: '2px solid #F59E0B', boxShadow: '2px 2px 0px #000' }}
           >
             <span className="text-sm">🪙</span>
-            <span className="font-pixel text-[8px] text-yellow-300">{coins}</span>
+            <span style={{ fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 900 : undefined, fontSize: D ? 13 : undefined, color: D ? '#C8960C' : undefined }} className={D ? '' : 'font-pixel text-[8px] text-yellow-300'}>{coins}</span>
           </div>
         </div>
       </div>
 
       {/* Avatar Preview */}
       <motion.div
-        className="mx-5 mb-5 p-6 flex flex-col items-center gap-3"
-        style={{
+        className={D ? 'mx-5 mb-5 p-6 flex flex-col items-center gap-3 relative' : 'mx-5 mb-5 p-6 flex flex-col items-center gap-3'}
+        style={D ? {
+          background: bgColor,
+          borderRadius: 20,
+          border: '1.5px solid rgba(255,255,255,0.4)',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.06)',
+          minHeight: 160,
+        } : {
           background: bgColor,
           border: '4px solid #000',
           boxShadow: '4px 4px 0px #000',
@@ -245,8 +275,19 @@ export default function AvatarCustomization() {
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 400, damping: 22 }}
-          className="relative flex items-center justify-center"
-          style={{
+          className={D ? '' : 'relative flex items-center justify-center'}
+          style={D ? {
+            position: 'relative',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 88,
+            height: 88,
+            background: '#FFFFFF',
+            borderRadius: '50%',
+            border: '2px solid rgba(255,255,255,0.5)',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+          } : {
             width: 88,
             height: 88,
             background: '#1E1B4B',
@@ -266,15 +307,32 @@ export default function AvatarCustomization() {
           )}
           {/* Username initial */}
           <div
-            className="absolute -bottom-3 -right-3 w-8 h-8 flex items-center justify-center font-pixel text-xs text-white"
-            style={{ background: '#7C3AED', border: '2px solid #000' }}
+            className={D ? '' : 'absolute -bottom-3 -right-3 w-8 h-8 flex items-center justify-center font-pixel text-xs text-white'}
+            style={D ? {
+              position: 'absolute',
+              bottom: -4,
+              right: -4,
+              width: 32,
+              height: 32,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: '#8B5CF6',
+              borderRadius: '50%',
+              border: '2.5px solid #FFFFFF',
+              color: '#FFFFFF',
+              fontFamily: '"Nunito", sans-serif',
+              fontWeight: 900,
+              fontSize: 14,
+              boxShadow: '0 2px 8px rgba(139,92,246,0.35)',
+            } : { background: '#7C3AED', border: '2px solid #000' }}
           >
             {profile?.username?.charAt(0).toUpperCase()}
           </div>
         </motion.div>
         <div className="text-center">
-          <div className="font-game text-sm text-white">{profile?.username}</div>
-          <div className="font-pixel text-[5px] text-white/40 mt-0.5">
+          <div style={{ color: '#FFFFFF', fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 900 : undefined, fontSize: D ? 15 : undefined }} className={D ? '' : 'font-game text-sm text-white'}>{profile?.username}</div>
+          <div style={D ? { fontFamily: '"Nunito", sans-serif', fontWeight: 700, fontSize: 11, color: 'rgba(255,255,255,0.7)' } : {}} className={D ? '' : 'font-pixel text-[5px] text-white/40 mt-0.5'}>
             {suitItem.label} • {hairItem?.label} Hair • {glassesItem?.label}
           </div>
         </div>
@@ -282,19 +340,33 @@ export default function AvatarCustomization() {
 
       {/* Category tabs */}
       <div className="px-5 mb-4">
-        <div className="flex border-4 border-black bg-surface overflow-hidden">
+        <div
+          className={D ? '' : 'flex border-4 border-black bg-surface overflow-hidden'}
+          style={D ? {
+            display: 'flex',
+            background: '#FFFFFF',
+            border: '1.5px solid #E0E0E0',
+            borderRadius: 14,
+            padding: 4,
+            gap: 4,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+          } : {}}
+        >
           {CATEGORIES.map(cat => (
             <button
               key={cat.id}
               onClick={() => setActiveCategory(cat.id)}
-              className="flex-1 py-2.5 text-center cursor-pointer transition-colors"
-              style={{
+              className={D ? 'flex-1 py-2 text-center cursor-pointer transition-all duration-150 rounded-xl' : 'flex-1 py-2.5 text-center cursor-pointer transition-colors'}
+              style={D ? {
+                background: activeCategory === cat.id ? '#F5F3FF' : 'transparent',
+                color: activeCategory === cat.id ? '#8B5CF6' : '#999999',
+              } : {
                 background: activeCategory === cat.id ? '#7C3AED' : '#16103A',
                 borderRight: '2px solid #000',
               }}
             >
               <div className="text-base">{cat.emoji}</div>
-              <div className="font-pixel text-[5px] text-white mt-0.5">{cat.label}</div>
+              <div style={D ? { fontFamily: '"Nunito", sans-serif', fontWeight: 800, fontSize: 10 } : {}} className={D ? '' : 'font-pixel text-[5px] text-white mt-0.5'}>{cat.label}</div>
             </button>
           ))}
         </div>
@@ -323,7 +395,14 @@ export default function AvatarCustomization() {
                 onClick={() => handleSelectOrBuy(item, activeCategory)}
                 disabled={!isOwned && !canAfford}
                 className="p-4 flex flex-col items-center gap-2 cursor-pointer transition-all"
-                style={{
+                style={D ? {
+                  background: isEquipped ? '#F0FAF0' : '#FFFFFF',
+                  border: isEquipped ? '2px solid #5FCC5F' : '1.5px solid #E0E0E0',
+                  borderRadius: 16,
+                  boxShadow: isEquipped ? '0 4px 12px rgba(95,204,95,0.1)' : '0 2px 6px rgba(0,0,0,0.03)',
+                  opacity: !isOwned && !canAfford ? 0.5 : 1,
+                  cursor: !isOwned && !canAfford ? 'not-allowed' : 'pointer',
+                } : {
                   background: isEquipped ? 'rgba(124,58,237,0.2)' : '#1E1B4B',
                   border: `3px solid ${isEquipped ? '#7C3AED' : '#000'}`,
                   boxShadow: isEquipped ? '3px 3px 0px #000, 0 0 12px rgba(124,58,237,0.4)' : '3px 3px 0px #000',
@@ -332,30 +411,55 @@ export default function AvatarCustomization() {
                 }}
               >
                 <span className="text-4xl">{item.emoji}</span>
-                <span className="font-game text-xs text-white text-center">{item.label}</span>
+                <span style={{ color: ts.textPrimary, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 800 : undefined, fontSize: D ? 12 : undefined }} className={D ? 'text-center' : 'font-game text-xs text-white text-center'}>{item.label}</span>
 
                 {isEquipped ? (
                   <div
-                    className="flex items-center gap-1 px-2 py-0.5 font-pixel text-[5px] text-white"
-                    style={{ background: '#7C3AED', border: '1.5px solid #000' }}
+                    className={D ? '' : 'flex items-center gap-1 px-2 py-0.5 font-pixel text-[5px] text-white'}
+                    style={D ? {
+                      background: '#5FCC5F',
+                      borderRadius: 6,
+                      color: '#FFFFFF',
+                      fontFamily: '"Nunito", sans-serif',
+                      fontWeight: 800,
+                      fontSize: 10,
+                      padding: '2px 8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 4,
+                    } : { background: '#7C3AED', border: '1.5px solid #000' }}
                   >
-                    <Check className="w-2.5 h-2.5" /> EQUIPPED
+                    <Check className="w-2.5 h-2.5" /> {D ? 'Equipped' : 'EQUIPPED'}
                   </div>
                 ) : isOwned || item.cost === 0 ? (
-                  <div className="font-pixel text-[6px] text-white/40">OWNED — TAP TO EQUIP</div>
+                  <div style={D ? { fontFamily: '"Nunito", sans-serif', fontWeight: 700, fontSize: 10, color: '#999999' } : {}} className={D ? '' : 'font-pixel text-[6px] text-white/40'}>
+                    {D ? 'Tap to Equip' : 'OWNED — TAP TO EQUIP'}
+                  </div>
                 ) : (
                   <div
-                    className="flex items-center gap-1 px-2 py-0.5 font-pixel text-[5px]"
-                    style={{
+                    className={D ? '' : 'flex items-center gap-1 px-2 py-0.5 font-pixel text-[5px]'}
+                    style={D ? {
+                      background: canAfford ? '#FFF8E1' : '#F5F5F5',
+                      border: canAfford ? '1.5px solid #FFB84D' : '1.5px solid #E0E0E0',
+                      borderRadius: 8,
+                      color: canAfford ? '#C8960C' : '#999999',
+                      fontFamily: '"Nunito", sans-serif',
+                      fontWeight: 850,
+                      fontSize: 11,
+                      padding: '3px 8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 4,
+                    } : {
                       background: canAfford ? '#F59E0B' : '#374151',
                       border: '1.5px solid #000',
                       color: canAfford ? '#000' : 'rgba(255,255,255,0.4)',
                     }}
                   >
                     {canAfford ? (
-                      <>{isBuyingThis ? '...' : `🪙 ${item.cost} COINS`}</>
+                      <>{isBuyingThis ? '...' : `🪙 ${item.cost}`}</>
                     ) : (
-                      <><Lock className="w-2.5 h-2.5" /> {item.cost} COINS</>
+                      <><Lock className="w-2.5 h-2.5" /> {item.cost}</>
                     )}
                   </div>
                 )}

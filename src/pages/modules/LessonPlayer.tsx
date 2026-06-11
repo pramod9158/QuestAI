@@ -12,6 +12,7 @@ import TeachableMachineTrainer from '@/components/teachable/TeachableMachineTrai
 import { MissionBriefing, AICompanion } from '@/components/ui/AICompanion';
 import { VideoCheckpointOverlay, CheckpointTimeline } from '@/components/ui/VideoCheckpoint';
 import { MissionComplete } from '@/components/ui/MissionComplete';
+import { useThemeStyles } from '@/lib/useThemeStyles';
 
 // New Labs
 import PromptLab from '@/components/labs/PromptLab';
@@ -25,6 +26,8 @@ export default function LessonPlayer() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { profile, guestProfile, isGuest, updateProfile } = useAuth();
+  const ts = useThemeStyles();
+  const D = ts.duo;
   
   const lesson = CURRICULUM.find(l => l.id === id);
   
@@ -391,19 +394,19 @@ export default function LessonPlayer() {
   // Render current step progress indicator bar
   const renderStepTracker = () => {
     return (
-      <div className="bg-[#1E1B4B] border-b-3 border-black py-2.5 px-4 flex justify-between items-center font-pixel text-[8px]">
+      <div className={D ? 'py-2.5 px-4 flex justify-between items-center bg-white border-b border-[#E0E0E0]' : 'bg-[#1E1B4B] border-b-3 border-black py-2.5 px-4 flex justify-between items-center font-pixel text-[8px]'}>
         <div className="flex items-center gap-1.5">
           <span className="text-[#FFD60A] text-xs">🤖</span>
-          <span className="text-white uppercase tracking-wider font-game">Sparky's Mission Flow:</span>
+          <span style={D ? { color: '#000000', fontFamily: '"Nunito", sans-serif', fontWeight: 800, fontSize: 12 } : {}} className={D ? '' : 'text-white uppercase tracking-wider font-game'}>Sparky's Mission Flow:</span>
         </div>
-        <div className="flex gap-2">
-          <span className={`${currentStep >= 1 ? 'text-[#FFD60A]' : 'text-white/30'}`}>Briefing</span>
-          <span className="text-white/20">➔</span>
-          <span className={`${currentStep >= 2 ? 'text-[#FFD60A]' : 'text-white/30'}`}>🎥 Watch</span>
-          <span className="text-white/20">➔</span>
-          <span className={`${currentStep >= 3 ? 'text-[#FFD60A]' : 'text-white/30'}`}>🧪 AI Lab</span>
-          <span className="text-white/20">➔</span>
-          <span className={`${currentStep >= 4 ? 'text-[#FFD60A]' : 'text-white/30'}`}>🛠️ Create</span>
+        <div className="flex gap-2" style={D ? { fontFamily: '"Nunito", sans-serif', fontWeight: 800, fontSize: 11 } : {}}>
+          <span className={`${currentStep >= 1 ? (D ? 'text-[#5FCC5F]' : 'text-[#FFD60A]') : (D ? 'text-gray-300' : 'text-white/30')}`}>Briefing</span>
+          <span className={D ? 'text-gray-300' : 'text-white/20'}>➔</span>
+          <span className={`${currentStep >= 2 ? (D ? 'text-[#5FCC5F]' : 'text-[#FFD60A]') : (D ? 'text-gray-300' : 'text-white/30')}`}>🎥 Watch</span>
+          <span className={D ? 'text-gray-300' : 'text-white/20'}>➔</span>
+          <span className={`${currentStep >= 3 ? (D ? 'text-[#5FCC5F]' : 'text-[#FFD60A]') : (D ? 'text-gray-300' : 'text-white/30')}`}>🧪 AI Lab</span>
+          <span className={D ? 'text-gray-300' : 'text-white/20'}>➔</span>
+          <span className={`${currentStep >= 4 ? (D ? 'text-[#5FCC5F]' : 'text-[#FFD60A]') : (D ? 'text-gray-300' : 'text-white/30')}`}>🛠️ Create</span>
         </div>
       </div>
     );
@@ -450,7 +453,15 @@ export default function LessonPlayer() {
       case 'teachable':
         return (
           <div className="space-y-4">
-            <div className="bg-[#1E1B4B] border-3 border-black p-3 flex gap-3 shadow-[3px_3px_0px_#000]">
+            <div 
+              className={D ? "p-3 flex gap-3" : "bg-[#1E1B4B] border-3 border-black p-3 flex gap-3 shadow-[3px_3px_0px_#000]"}
+              style={D ? {
+                background: '#FFFFFF',
+                border: '1.5px solid #E0E0E0',
+                borderRadius: 14,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+              } : {}}
+            >
               <AICompanion
                 state="teaching"
                 message="Train your own machine learning model to recognize faces or items using your camera!"
@@ -466,7 +477,15 @@ export default function LessonPlayer() {
       case 'quickdraw':
         return (
           <div className="space-y-4">
-            <div className="bg-[#1E1B4B] border-3 border-black p-3 flex gap-3 shadow-[3px_3px_0px_#000]">
+            <div 
+              className={D ? "p-3 flex gap-3" : "bg-[#1E1B4B] border-3 border-black p-3 flex gap-3 shadow-[3px_3px_0px_#000]"}
+              style={D ? {
+                background: '#FFFFFF',
+                border: '1.5px solid #E0E0E0',
+                borderRadius: 14,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+              } : {}}
+            >
               <AICompanion
                 state="teaching"
                 message="Draw items as fast as you can. Watch the neural network try to classify your doodles!"
@@ -490,7 +509,15 @@ export default function LessonPlayer() {
       case 'dragdrop':
         return (
           <div className="space-y-4">
-            <div className="bg-[#1E1B4B] border-3 border-black p-3 flex gap-3 shadow-[3px_3px_0px_#000]">
+            <div 
+              className={D ? "p-3 flex gap-3" : "bg-[#1E1B4B] border-3 border-black p-3 flex gap-3 shadow-[3px_3px_0px_#000]"}
+              style={D ? {
+                background: '#FFFFFF',
+                border: '1.5px solid #E0E0E0',
+                borderRadius: 14,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+              } : {}}
+            >
               <AICompanion
                 state="teaching"
                 message="Sort the devices below. Decrypt which ones contain smart AI sensors vs dumb rule-based programming!"
@@ -506,7 +533,15 @@ export default function LessonPlayer() {
       case 'comic':
         return (
           <div className="space-y-4">
-            <div className="bg-[#1E1B4B] border-3 border-black p-3 flex gap-3 shadow-[3px_3px_0px_#000]">
+            <div 
+              className={D ? "p-3 flex gap-3" : "bg-[#1E1B4B] border-3 border-black p-3 flex gap-3 shadow-[3px_3px_0px_#000]"}
+              style={D ? {
+                background: '#FFFFFF',
+                border: '1.5px solid #E0E0E0',
+                borderRadius: 14,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+              } : {}}
+            >
               <AICompanion
                 state="teaching"
                 message="Use prompts to construct a smart story adventure strip starring Sparky!"
@@ -522,7 +557,15 @@ export default function LessonPlayer() {
       case 'playground':
         return (
           <div className="space-y-4">
-            <div className="bg-[#1E1B4B] border-3 border-black p-3 flex gap-3 shadow-[3px_3px_0px_#000]">
+            <div 
+              className={D ? "p-3 flex gap-3" : "bg-[#1E1B4B] border-3 border-black p-3 flex gap-3 shadow-[3px_3px_0px_#000]"}
+              style={D ? {
+                background: '#FFFFFF',
+                border: '1.5px solid #E0E0E0',
+                borderRadius: 14,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+              } : {}}
+            >
               <AICompanion
                 state="teaching"
                 message="Write customized prompts to shape the AI's personality. Compare prompt modifications side-by-side!"
@@ -538,7 +581,15 @@ export default function LessonPlayer() {
       case 'detective':
         return (
           <div className="space-y-4">
-            <div className="bg-[#1E1B4B] border-3 border-black p-3 flex gap-3 shadow-[3px_3px_0px_#000]">
+            <div 
+              className={D ? "p-3 flex gap-3" : "bg-[#1E1B4B] border-3 border-black p-3 flex gap-3 shadow-[3px_3px_0px_#000]"}
+              style={D ? {
+                background: '#FFFFFF',
+                border: '1.5px solid #E0E0E0',
+                borderRadius: 14,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+              } : {}}
+            >
               <AICompanion
                 state="teaching"
                 message="Analyze the social feed clues carefully. Spot the AI-generated deepfakes from the genuine news reports!"
@@ -554,7 +605,15 @@ export default function LessonPlayer() {
       case 'quiz':
         return (
           <div className="space-y-4">
-            <div className="bg-[#1E1B4B] border-3 border-black p-3 flex gap-3 shadow-[3px_3px_0px_#000]">
+            <div 
+              className={D ? "p-3 flex gap-3" : "bg-[#1E1B4B] border-3 border-black p-3 flex gap-3 shadow-[3px_3px_0px_#000]"}
+              style={D ? {
+                background: '#FFFFFF',
+                border: '1.5px solid #E0E0E0',
+                borderRadius: 14,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+              } : {}}
+            >
               <AICompanion
                 state="teaching"
                 message="Take the Quick-Quiz to test your intelligence metrics and lock in your score!"
@@ -592,7 +651,10 @@ export default function LessonPlayer() {
   };
 
   return (
-    <div className="min-h-full flex flex-col bg-[#0F0A2E] text-white">
+    <div 
+      className={D ? '' : 'min-h-full flex flex-col bg-[#0F0A2E] text-white'}
+      style={D ? { ...ts.page, display: 'flex', flexDirection: 'column', color: '#000000' } : {}}
+    >
       {showXPToast && (
         <XPToast 
           amount={checkpointXp} 
@@ -603,15 +665,15 @@ export default function LessonPlayer() {
 
       {/* Header Bar */}
       <div
-        className="px-4 py-3 flex items-center gap-3 relative z-10"
-        style={{ background: '#1E1B4B', borderBottom: '3px solid #000', boxShadow: '0 3px 0px #000' }}
+        className={D ? 'px-4 py-3 flex items-center gap-3 relative z-10 bg-white border-b border-[#E0E0E0] shadow-sm' : 'px-4 py-3 flex items-center gap-3 relative z-10'}
+        style={D ? {} : { background: '#1E1B4B', borderBottom: '3px solid #000', boxShadow: '0 3px 0px #000' }}
       >
-        <button onClick={() => navigate((lesson.phase === 3 || lesson.phase === 8) ? '/prompts' : '/learn')} className="touch-target text-white/50 hover:text-white transition-colors cursor-pointer">
+        <button onClick={() => navigate((lesson.phase === 3 || lesson.phase === 8) ? '/prompts' : '/learn')} className={D ? 'touch-target text-[#8B5CF6] hover:text-[#7C3AED] transition-colors cursor-pointer font-bold' : 'touch-target text-white/50 hover:text-white transition-colors cursor-pointer'}>
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div className="flex-1 min-w-0">
-          <div className="font-game text-xs text-white uppercase tracking-wide truncate">{lesson.missionTitle || lesson.title}</div>
-          <div className="text-white/45 font-pixel text-[6px] uppercase tracking-wider">{dynamicSubtitle}</div>
+          <div style={{ color: D ? '#000000' : '#FFFFFF', fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 800 : undefined, fontSize: D ? 14 : undefined }} className={D ? 'truncate font-bold' : 'font-game text-xs text-white uppercase tracking-wide truncate'}>{lesson.missionTitle || lesson.title}</div>
+          <div style={{ color: D ? '#999999' : 'rgba(255,255,255,0.45)', fontFamily: D ? '"Nunito", sans-serif' : undefined, fontSize: D ? 10 : undefined, fontWeight: D ? 700 : undefined }} className={D ? 'truncate font-semibold' : 'text-white/45 font-pixel text-[6px] uppercase tracking-wider'}>{dynamicSubtitle}</div>
         </div>
         <SpeakButton text={lesson.ttsIntro} />
       </div>
@@ -640,7 +702,7 @@ export default function LessonPlayer() {
               <div className="flex-1 flex flex-col max-w-xl mx-auto w-full gap-4">
                 <div
                   className="p-3 relative overflow-hidden"
-                  style={{
+                  style={D ? ts.card : {
                     background: '#1E1B4B',
                     border: '3px solid #000',
                     boxShadow: '4px 4px 0px #000',
@@ -749,7 +811,7 @@ export default function LessonPlayer() {
               <div className="flex-1 flex flex-col max-w-xl mx-auto w-full gap-4">
                 <div 
                   className="p-4"
-                  style={{
+                  style={D ? ts.card : {
                     background: '#1E1B4B',
                     border: '3px solid #000',
                     boxShadow: '4px 4px 0px #000',
@@ -835,7 +897,12 @@ export default function LessonPlayer() {
             <div className="w-full md:w-80 flex flex-col gap-3">
               <div 
                 className="p-3 flex-1"
-                style={{
+                style={D ? {
+                  background: '#FFFFFF',
+                  border: '1.5px solid #E0E0E0',
+                  borderRadius: 14,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                } : {
                   background: '#1E1B4B',
                   border: '3px solid #000',
                   boxShadow: '3px 3px 0px #000',
@@ -843,13 +910,13 @@ export default function LessonPlayer() {
               >
                 <div className="flex items-center gap-2 mb-3">
                   <HelpCircle className="w-4 h-4 text-purple-400" />
-                  <h3 className="font-game text-xs text-white uppercase tracking-wider">Lesson Transmission</h3>
+                  <h3 className={D ? "font-game text-xs uppercase tracking-wider text-black font-extrabold" : "font-game text-xs text-white uppercase tracking-wider"}>Lesson Transmission</h3>
                 </div>
 
                 {tutorAnswer && (
-                  <div className="mb-4 bg-black/35 border-l-4 border-[#7C3AED] p-3 text-left">
-                    <span className="font-pixel text-[6px] text-primary block mb-1">🤖 SPARKY REPLIES</span>
-                    <p className="text-white font-body text-[10px] leading-relaxed">{tutorAnswer}</p>
+                  <div className={D ? "mb-4 bg-[#F5F3FF] border-l-4 border-[#B366FF] p-3 text-left rounded-r-lg" : "mb-4 bg-black/35 border-l-4 border-[#7C3AED] p-3 text-left"}>
+                    <span className="font-pixel text-[6px] text-primary block mb-1" style={D ? { color: '#B366FF', fontFamily: '"Nunito", sans-serif', fontWeight: 800, fontSize: 8 } : {}}>🤖 SPARKY REPLIES</span>
+                    <p className={D ? "text-gray-800 font-body text-[11px] leading-relaxed" : "text-white font-body text-[10px] leading-relaxed"}>{tutorAnswer}</p>
                   </div>
                 )}
 
@@ -866,7 +933,7 @@ export default function LessonPlayer() {
                   <button
                     onClick={handleAskTutor}
                     disabled={!tutorInput.trim() || askingTutor}
-                    className="px-3 bg-purple-600 border border-black hover:bg-purple-700 transition-colors flex items-center justify-center cursor-pointer disabled:opacity-50"
+                    className={D ? "px-3 bg-[#B366FF] text-white hover:bg-[#A356FF] rounded-lg transition-colors flex items-center justify-center cursor-pointer disabled:opacity-50" : "px-3 bg-purple-600 border border-black hover:bg-purple-700 transition-colors flex items-center justify-center cursor-pointer disabled:opacity-50"}
                   >
                     <Send className="w-3.5 h-3.5" />
                   </button>
@@ -908,6 +975,8 @@ export default function LessonPlayer() {
 
 // Inline Helper drag-drop "Smart vs Dumb" sorter
 function DragDropSandbox({ onComplete }: { onComplete: () => void }) {
+  const ts = useThemeStyles();
+  const D = ts.duo;
   const items = ['Smart Speaker', 'Pencil', 'Netflix', 'Toaster', 'Google Maps', 'Chair', 'Phone Camera', 'Notebook'];
   const answers: Record<string, boolean> = {
     'Smart Speaker': true, 'Pencil': false, 'Netflix': true, 'Toaster': false,
@@ -932,8 +1001,16 @@ function DragDropSandbox({ onComplete }: { onComplete: () => void }) {
   };
 
   return (
-    <div className="p-3 border-3 border-black bg-[#16103A] shadow-[3px_3px_0px_#000]">
-      <div className="text-white font-game text-[10px] text-center mb-3">Is it powered by smart AI?</div>
+    <div 
+      className={D ? "p-3" : "p-3 border-3 border-black bg-[#16103A] shadow-[3px_3px_0px_#000]"}
+      style={D ? {
+        background: '#FFFFFF',
+        border: '1.5px solid #E0E0E0',
+        borderRadius: 14,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+      } : {}}
+    >
+      <div className="font-game text-[10px] text-center mb-3" style={D ? { color: '#000000' } : { color: '#ffffff' }}>Is it powered by smart AI?</div>
       <div className="grid grid-cols-2 gap-2 max-h-[260px] overflow-y-auto pr-1">
         {items.map(item => {
           const isSelectedSmart = sorted[item] === 'smart';
@@ -941,30 +1018,32 @@ function DragDropSandbox({ onComplete }: { onComplete: () => void }) {
           const hasSelected = isSelectedSmart || isSelectedDumb;
           const isRight = hasSelected && ((answers[item] && isSelectedSmart) || (!answers[item] && isSelectedDumb));
           
-          let cardStyle = 'bg-black/30 border-white/5';
+          let cardStyle = D ? 'bg-gray-50 border-gray-200' : 'bg-black/30 border-white/5';
           if (score !== null) {
-            cardStyle = isRight ? 'bg-[#10B981]/15 border-[#10B981]' : 'bg-[#EF4444]/15 border-[#EF4444] animate-shake';
+            cardStyle = isRight 
+              ? (D ? 'bg-green-50 border-green-300 text-green-800' : 'bg-[#10B981]/15 border-[#10B981]') 
+              : (D ? 'bg-red-50 border-red-300 text-red-800 animate-shake' : 'bg-[#EF4444]/15 border-[#EF4444] animate-shake');
           } else if (isSelectedSmart) {
-            cardStyle = 'bg-[#10B981]/10 border-[#10B981]/40';
+            cardStyle = D ? 'bg-green-50 border-green-200 text-green-700' : 'bg-[#10B981]/10 border-[#10B981]/40';
           } else if (isSelectedDumb) {
-            cardStyle = 'bg-[#F59E0B]/10 border-[#F59E0B]/40';
+            cardStyle = D ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-[#F59E0B]/10 border-[#F59E0B]/40';
           }
 
           return (
-            <div key={item} className={`border-2 p-2 flex flex-col justify-between ${cardStyle}`}>
-              <div className="text-white font-game text-[9px] text-center mb-2">{item}</div>
+            <div key={item} className={D ? `border rounded-xl p-2 flex flex-col justify-between ${cardStyle}` : `border-2 p-2 flex flex-col justify-between ${cardStyle}`}>
+              <div className="font-game text-[9px] text-center mb-2" style={D ? { color: '#000000' } : { color: '#ffffff' }}>{item}</div>
               <div className="flex gap-1">
                 <button 
                   disabled={score !== null} 
                   onClick={() => handleSort(item, 'smart')} 
-                  className={`flex-1 py-1 text-[8px] font-game border border-black cursor-pointer ${isSelectedSmart ? 'bg-[#10B981] text-white' : 'bg-black/20 text-white/50'}`}
+                  className={D ? `flex-1 py-1 text-[8px] font-game rounded-lg cursor-pointer transition-all ${isSelectedSmart ? 'bg-[#5FCC5F] text-white border-none' : 'bg-gray-100 text-gray-500 hover:bg-gray-200 border-gray-100'}` : `flex-1 py-1 text-[8px] font-game border border-black cursor-pointer ${isSelectedSmart ? 'bg-[#10B981] text-white' : 'bg-black/20 text-white/50'}`}
                 >
                   🤖 Yes
                 </button>
                 <button 
                   disabled={score !== null} 
                   onClick={() => handleSort(item, 'dumb')} 
-                  className={`flex-1 py-1 text-[8px] font-game border border-black cursor-pointer ${isSelectedDumb ? 'bg-[#F59E0B] text-black font-bold' : 'bg-black/20 text-white/50'}`}
+                  className={D ? `flex-1 py-1 text-[8px] font-game rounded-lg cursor-pointer transition-all ${isSelectedDumb ? 'bg-[#FFD60A] text-black font-bold border-none' : 'bg-gray-100 text-gray-500 hover:bg-gray-200 border-gray-100'}` : `flex-1 py-1 text-[8px] font-game border border-black cursor-pointer ${isSelectedDumb ? 'bg-[#F59E0B] text-black font-bold' : 'bg-black/20 text-white/50'}`}
                 >
                   📦 No
                 </button>
@@ -975,21 +1054,21 @@ function DragDropSandbox({ onComplete }: { onComplete: () => void }) {
       </div>
       
       {Object.keys(sorted).length === items.length && score === null && (
-        <button onClick={checkAnswers} className="mt-3 w-full py-2.5 bg-purple-600 text-white font-game text-[10px] uppercase border-2 border-black cursor-pointer">
+        <button onClick={checkAnswers} className={D ? "mt-3 w-full py-2.5 bg-[#5FCC5F] text-white font-game text-[10px] uppercase rounded-xl cursor-pointer shadow-[0_3px_0px_rgba(0,0,0,0.15)]" : "mt-3 w-full py-2.5 bg-purple-600 text-white font-game text-[10px] uppercase border-2 border-black cursor-pointer"}>
           Verify Sorting Decryption
         </button>
       )}
 
       {score !== null && (
-        <div className={`mt-3 p-3 text-center border-2 ${score >= 6 ? 'border-[#10B981] bg-[#10B981]/10' : 'border-[#EF4444] bg-[#EF4444]/10'}`}>
-          <div className="text-white font-game text-[10px]">{score}/{items.length} Correct!</div>
-          <p className="font-body text-[10px] text-white/60 mt-0.5">
+        <div className={D ? `mt-3 p-3 text-center border rounded-xl ${score >= 6 ? 'border-green-200 bg-green-50/60 text-green-800' : 'border-red-200 bg-red-50/60 text-red-800'}` : `mt-3 p-3 text-center border-2 ${score >= 6 ? 'border-[#10B981] bg-[#10B981]/10' : 'border-[#EF4444] bg-[#EF4444]/10'}`}>
+          <div className="font-game text-[10px]" style={D ? { fontWeight: 800 } : {}}>{score}/{items.length} Correct!</div>
+          <p className="font-body text-[10px] mt-0.5" style={D ? { color: '#666666' } : { color: 'rgba(255, 255, 255, 0.6)' }}>
             {score >= 6 ? 'Nice observation metrics! Sandbox cracked.' : 'Some items mismatched! Try restarting to reach 6+ correct.'}
           </p>
           {score < 6 && (
             <button 
               onClick={() => { setSorted({}); setScore(null); }}
-              className="mt-2 px-3 py-1 font-game text-[8px] bg-red-600 text-white border border-black cursor-pointer"
+              className={D ? "mt-2 px-3 py-1 font-game text-[8px] bg-[#EF4444] text-white rounded-lg cursor-pointer" : "mt-2 px-3 py-1 font-game text-[8px] bg-red-600 text-white border border-black cursor-pointer"}
             >
               Restart Decryption
             </button>
@@ -1002,6 +1081,8 @@ function DragDropSandbox({ onComplete }: { onComplete: () => void }) {
 
 // Quiz sandbox inline helper
 function QuizSandbox({ lessonId, onComplete }: { lessonId: string; onComplete: () => void }) {
+  const ts = useThemeStyles();
+  const D = ts.duo;
   const questions = [
     { q: 'What helps YouTube recommend videos?', opts: ['Random choice', 'AI learns your preferences', 'Your location', 'Your age'], a: 1 },
     { q: 'How does face recognition work?', opts: ['Magic', 'By comparing pixel patterns', 'By reading your ID', 'By asking you'], a: 1 },
@@ -1028,32 +1109,49 @@ function QuizSandbox({ lessonId, onComplete }: { lessonId: string; onComplete: (
   };
 
   if (done) return (
-    <div className="p-4 text-center border-2 border-[#10B981] bg-[#10B981]/10">
+    <div className={D ? "p-4 text-center border border-green-200 bg-green-50/60 rounded-xl text-green-800" : "p-4 text-center border-2 border-[#10B981] bg-[#10B981]/10"}>
       <div className="text-2xl mb-1">🏆</div>
-      <div className="text-white font-game text-xs">{correct}/{questions.length} Correct!</div>
+      <div className={D ? "font-game text-xs font-bold text-green-800" : "text-white font-game text-xs"}>{correct}/{questions.length} Correct!</div>
     </div>
   );
 
   const q = questions[current];
   return (
-    <div className="p-4 bg-[#1E1B4B] border-3 border-black shadow-[3px_3px_0px_#000] space-y-3">
-      <div className="text-white/50 font-pixel text-[6px]">QUESTION {current + 1}/{questions.length}</div>
-      <div className="text-white font-game text-xs leading-relaxed">{q.q}</div>
+    <div 
+      className={D ? "p-4 space-y-3" : "p-4 bg-[#1E1B4B] border-3 border-black shadow-[3px_3px_0px_#000] space-y-3"}
+      style={D ? {
+        background: '#FFFFFF',
+        border: '1.5px solid #E0E0E0',
+        borderRadius: 14,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+      } : {}}
+    >
+      <div className={D ? "text-gray-400 font-body text-[10px] uppercase font-bold" : "text-white/50 font-pixel text-[6px]"}>QUESTION {current + 1}/{questions.length}</div>
+      <div className="font-game text-xs leading-relaxed" style={D ? { color: '#000000' } : { color: '#ffffff' }}>{q.q}</div>
       <div className="space-y-2">
-        {q.opts.map((opt, i) => (
-          <button
-            key={i}
-            onClick={() => handleAnswer(i)}
-            className={`w-full border-2 border-black p-2.5 text-left font-body text-xs cursor-pointer ${
-              selected === null ? 'bg-black/30 text-white/80 hover:bg-black/50' :
-              i === q.a ? 'bg-[#10B981] text-white font-bold' :
-              i === selected ? 'bg-[#EF4444] text-white font-bold' :
-              'bg-black/20 text-white/30'
-            }`}
-          >
-            {opt}
-          </button>
-        ))}
+        {q.opts.map((opt, i) => {
+          let btnCls = "";
+          if (D) {
+            btnCls = selected === null ? 'bg-gray-50 text-gray-700 hover:bg-gray-100 border-gray-200' :
+              i === q.a ? 'bg-[#5FCC5F] text-white border-none' :
+              i === selected ? 'bg-[#EF4444] text-white border-none' :
+              'bg-gray-100/50 text-gray-400 border-gray-100';
+          } else {
+            btnCls = selected === null ? 'bg-black/30 text-white/80 hover:bg-black/50 border-black' :
+              i === q.a ? 'bg-[#10B981] text-white font-bold border-black' :
+              i === selected ? 'bg-[#EF4444] text-white font-bold border-black' :
+              'bg-black/20 text-white/30 border-black';
+          }
+          return (
+            <button
+              key={i}
+              onClick={() => handleAnswer(i)}
+              className={D ? `w-full border p-2.5 text-left font-body text-xs cursor-pointer rounded-xl transition-all ${btnCls}` : `w-full border-2 p-2.5 text-left font-body text-xs cursor-pointer ${btnCls}`}
+            >
+              {opt}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
@@ -1061,6 +1159,8 @@ function QuizSandbox({ lessonId, onComplete }: { lessonId: string; onComplete: (
 
 // Comic Builder sandbox inline helper
 function ComicSandbox({ onComplete }: { onComplete: () => void }) {
+  const ts = useThemeStyles();
+  const D = ts.duo;
   const [panels, setPanels] = useState<Array<{ hero: string; setting: string; speech: string }>>([
     { hero: '👽', setting: '🪐', speech: 'Hello Earthlings!' },
     { hero: '🤖', setting: '🌆', speech: 'AI makes logic fun!' },
@@ -1081,7 +1181,15 @@ function ComicSandbox({ onComplete }: { onComplete: () => void }) {
   };
 
   return (
-    <div className="p-3 border-3 border-black bg-[#16103A] shadow-[3px_3px_0px_#000] space-y-3">
+    <div 
+      className={D ? "p-3 space-y-3" : "p-3 border-3 border-black bg-[#16103A] shadow-[3px_3px_0px_#000] space-y-3"}
+      style={D ? {
+        background: '#FFFFFF',
+        border: '1.5px solid #E0E0E0',
+        borderRadius: 14,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+      } : {}}
+    >
       {viewMode === 'edit' ? (
         <>
           <div className="text-white font-game text-[10px] text-center">Design Panel {activePanel + 1}/3</div>
@@ -1155,6 +1263,8 @@ function ComicSandbox({ onComplete }: { onComplete: () => void }) {
 
 // Prompt Engineering playground helper
 function PlaygroundSandbox({ onComplete }: { onComplete: () => void }) {
+  const ts = useThemeStyles();
+  const D = ts.duo;
   const [role, setRole] = useState('Emoji Translator');
   const [temperature, setTemperature] = useState(0.7);
   const [promptInput, setPromptInput] = useState('');
@@ -1197,7 +1307,15 @@ function PlaygroundSandbox({ onComplete }: { onComplete: () => void }) {
   };
 
   return (
-    <div className="p-3 border-3 border-black bg-[#16103A] shadow-[3px_3px_0px_#000] space-y-3">
+    <div 
+      className={D ? "p-3 space-y-3" : "p-3 border-3 border-black bg-[#16103A] shadow-[3px_3px_0px_#000] space-y-3"}
+      style={D ? {
+        background: '#FFFFFF',
+        border: '1.5px solid #E0E0E0',
+        borderRadius: 14,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+      } : {}}
+    >
       <div className="text-white font-game text-[10px] text-center">Prompt Design Sandbox</div>
       
       <div>

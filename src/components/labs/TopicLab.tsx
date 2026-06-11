@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle2, ChevronRight, Star, Award } from 'lucide-react';
 import { AICompanion } from '../ui/AICompanion';
+import { CelebrationOverlay } from '../ui/CelebrationOverlay';
 
 interface TopicLabProps {
   lessonId: string;
@@ -117,7 +118,7 @@ function RecommendationLab({ onComplete }: { onComplete: () => void }) {
 }
 
 // ─── Module 9: AI Fairness Simulation (lesson-10-jr) ─────────────────────────
-function FairnessLab({ onComplete }: { onComplete: () => void }) {
+function FairnessLab({ onComplete, onCelebrate }: { onComplete: () => void; onCelebrate: () => void }) {
   const scenarios = [
     {
       q: 'A face recognition app works 98% of the time for light-skinned faces but only 65% for dark-skinned faces. Is this fair?',
@@ -146,11 +147,18 @@ function FairnessLab({ onComplete }: { onComplete: () => void }) {
 
   const handleAnswer = (idx: number) => {
     setSelected(idx);
-    if (idx === scenarios[current].correct) setScore(s => s + 1);
+    const isCorrect = idx === scenarios[current].correct;
+    const nextScore = isCorrect ? score + 1 : score;
+    if (isCorrect) setScore(s => s + 1);
+    
     setTimeout(() => {
       if (current + 1 >= scenarios.length) {
         setFinished(true);
-        setTimeout(onComplete, 2500);
+        if (nextScore === scenarios.length) {
+          setTimeout(onCelebrate, 1000);
+        } else {
+          setTimeout(onComplete, 2500);
+        }
       } else {
         setCurrent(c => c + 1);
         setSelected(null);
@@ -165,7 +173,13 @@ function FairnessLab({ onComplete }: { onComplete: () => void }) {
         <div className="text-3xl">⚖️</div>
         <p className="font-game text-xs text-white">Fairness Score: {score}/{scenarios.length}</p>
         <p className="font-body text-[10px] text-white/60">You now understand how bias sneaks into AI and how to fight it!</p>
-        <button onClick={onComplete} className="mt-2 px-6 py-1.5 font-game text-[10px] text-black bg-[#FFD60A] border-2 border-black cursor-pointer shadow-[2px_2px_0px_#000]">
+        <button onClick={() => {
+          if (score === scenarios.length) {
+            onCelebrate();
+          } else {
+            onComplete();
+          }
+        }} className="mt-2 px-6 py-1.5 font-game text-[10px] text-black bg-[#FFD60A] border-2 border-black cursor-pointer shadow-[2px_2px_0px_#000]">
           Submit Lab ➔
         </button>
       </motion.div>
@@ -371,7 +385,7 @@ function HealthAILab({ onComplete }: { onComplete: () => void }) {
 }
 
 // ─── Module 15: Smart Home Designer (lesson-17-jr) ────────────────────────────
-function SmartHomeLab({ onComplete }: { onComplete: () => void }) {
+function SmartHomeLab({ onComplete, onCelebrate }: { onComplete: () => void; onCelebrate: () => void }) {
   const devices = [
     { id: 'thermostat', name: 'Smart Thermostat 🌡️', isAI: true, reason: 'Learns your schedule and adjusts temperature automatically' },
     { id: 'bulb', name: 'Regular Bulb 💡', isAI: false, reason: 'Just turns on/off — no learning ability' },
@@ -400,7 +414,13 @@ function SmartHomeLab({ onComplete }: { onComplete: () => void }) {
     });
     setScore(correct);
     setChecked(true);
-    if (correct >= 6) setTimeout(onComplete, 3000);
+    if (correct >= 6) {
+      if (correct === devices.length) {
+        setTimeout(onCelebrate, 1500);
+      } else {
+        setTimeout(onComplete, 3000);
+      }
+    }
   };
 
   return (
@@ -475,7 +495,7 @@ function SmartHomeLab({ onComplete }: { onComplete: () => void }) {
 }
 
 // ─── Module 17: Animal Recognition AI (lesson-19-jr) ─────────────────────────
-function WildlifeAILab({ onComplete }: { onComplete: () => void }) {
+function WildlifeAILab({ onComplete, onCelebrate }: { onComplete: () => void; onCelebrate: () => void }) {
   const tigers = [
     { id: 'A', pattern: '🐯 Wide horizontal stripes, broad face', name: 'Raja' },
     { id: 'B', pattern: '🐯 Thin vertical stripes, narrow nose', name: 'Shiva' },
@@ -501,7 +521,11 @@ function WildlifeAILab({ onComplete }: { onComplete: () => void }) {
     const correct = sightings.filter(s => matches[s.id] === s.correctId).length;
     setResult(`AI correctly identified ${correct}/${sightings.length} tigers! ${correct === sightings.length ? '🎉 Perfect match!' : 'Check the stripe patterns more carefully next time!'}`);
     setDone(true);
-    setTimeout(onComplete, 3000);
+    if (correct === sightings.length) {
+      setTimeout(onCelebrate, 1500);
+    } else {
+      setTimeout(onComplete, 3000);
+    }
   };
 
   return (
@@ -567,7 +591,14 @@ function WildlifeAILab({ onComplete }: { onComplete: () => void }) {
           <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }}
             className="mt-3 p-3 border-2 border-orange-400 bg-orange-900/20 text-center">
             <p className="font-body text-[10px] text-white leading-relaxed">{result}</p>
-            <button onClick={onComplete} className="mt-2 px-6 py-1.5 font-game text-[10px] text-black bg-[#FFD60A] border-2 border-black cursor-pointer shadow-[2px_2px_0px_#000]">
+            <button onClick={() => {
+              const correct = sightings.filter(s => matches[s.id] === s.correctId).length;
+              if (correct === sightings.length) {
+                onCelebrate();
+              } else {
+                onComplete();
+              }
+            }} className="mt-2 px-6 py-1.5 font-game text-[10px] text-black bg-[#FFD60A] border-2 border-black cursor-pointer shadow-[2px_2px_0px_#000]">
               Submit Lab ➔
             </button>
           </motion.div>
@@ -695,7 +726,7 @@ function VoiceRecognitionLab({ onComplete }: { onComplete: () => void }) {
 }
 
 // ─── Module 8: Future of AI Quiz (lesson-12) ─────────────────────────────────
-function FutureAILab({ onComplete }: { onComplete: () => void }) {
+function FutureAILab({ onComplete, onCelebrate }: { onComplete: () => void; onCelebrate: () => void }) {
   const futures = [
     { year: '2025', emoji: '🚗', prediction: 'Self-driving cars widely available', likely: true },
     { year: '2030', emoji: '🏥', prediction: 'AI diagnoses most diseases before symptoms appear', likely: true },
@@ -719,7 +750,11 @@ function FutureAILab({ onComplete }: { onComplete: () => void }) {
       if (votes[i] === f.likely) correct++;
     });
     setResult(`You predicted ${correct}/${futures.length} correctly! ${correct >= 4 ? '🎉 Amazing future thinking!' : 'Keep learning — AI futures are complex!'}`);
-    setTimeout(onComplete, 3500);
+    if (correct === futures.length) {
+      setTimeout(onCelebrate, 1500);
+    } else {
+      setTimeout(onComplete, 3500);
+    }
   };
 
   return (
@@ -781,7 +816,17 @@ function FutureAILab({ onComplete }: { onComplete: () => void }) {
                 <span className="font-body text-[8px] text-white/60">{f.prediction} — {f.likely ? 'Likely!' : 'Unlikely in this timeframe'}</span>
               </div>
             ))}
-            <button onClick={onComplete} className="mt-3 px-6 py-1.5 font-game text-[10px] text-black bg-[#FFD60A] border-2 border-black cursor-pointer shadow-[2px_2px_0px_#000]">
+            <button onClick={() => {
+              let correct = 0;
+              futures.forEach((f, i) => {
+                if (votes[i] === f.likely) correct++;
+              });
+              if (correct === futures.length) {
+                onCelebrate();
+              } else {
+                onComplete();
+              }
+            }} className="mt-3 px-6 py-1.5 font-game text-[10px] text-black bg-[#FFD60A] border-2 border-black cursor-pointer shadow-[2px_2px_0px_#000]">
               Submit Lab ➔
             </button>
           </motion.div>
@@ -802,7 +847,7 @@ function FutureAILab({ onComplete }: { onComplete: () => void }) {
 
 // ─── Module 6: lesson-2 — already handled above (RecommendationLab) ──────────
 // ─── Module 13: Eco AI Forest Protection (lesson-15-jr) ───────────────────────
-function EcoAILab({ onComplete }: { onComplete: () => void }) {
+function EcoAILab({ onComplete, onCelebrate }: { onComplete: () => void; onCelebrate: () => void }) {
   const sounds = [
     { id: 'chainsaw', emoji: '🪚', name: 'Chainsaw noise', isThreaten: true },
     { id: 'thunder', emoji: '⛈️', name: 'Thunder clap', isThreaten: false },
@@ -826,7 +871,13 @@ function EcoAILab({ onComplete }: { onComplete: () => void }) {
       if ((s.isThreaten && classified[s.id] === 'threat') || (!s.isThreaten && classified[s.id] === 'safe')) correct++;
     });
     setScore(correct);
-    if (correct >= 4) setTimeout(onComplete, 3000);
+    if (correct >= 4) {
+      if (correct === sounds.length) {
+        setTimeout(onCelebrate, 1500);
+      } else {
+        setTimeout(onComplete, 3000);
+      }
+    }
   };
 
   return (
@@ -893,7 +944,13 @@ function EcoAILab({ onComplete }: { onComplete: () => void }) {
               </button>
             )}
             {score >= 4 && (
-              <button onClick={onComplete} className="mt-2 px-6 py-1.5 font-game text-[10px] text-black bg-[#FFD60A] border-2 border-black cursor-pointer shadow-[2px_2px_0px_#000]">
+              <button onClick={() => {
+                if (score === sounds.length) {
+                  onCelebrate();
+                } else {
+                  onComplete();
+                }
+              }} className="mt-2 px-6 py-1.5 font-game text-[10px] text-black bg-[#FFD60A] border-2 border-black cursor-pointer shadow-[2px_2px_0px_#000]">
                 Submit Lab ➔
               </button>
             )}
@@ -905,7 +962,7 @@ function EcoAILab({ onComplete }: { onComplete: () => void }) {
 }
 
 // ─── Module 10: AI in India — Crop Disease Doctor (lesson-11) ────────────────
-function IndiaAILab({ onComplete }: { onComplete: () => void }) {
+function IndiaAILab({ onComplete, onCelebrate }: { onComplete: () => void; onCelebrate: () => void }) {
   const crops = [
     {
       name: '🌾 Wheat',
@@ -938,11 +995,18 @@ function IndiaAILab({ onComplete }: { onComplete: () => void }) {
   const diagnose = (idx: number) => {
     if (selected !== null) return;
     setSelected(idx);
-    if (idx === crops[current].correct) setScore(s => s + 1);
+    const isCorrect = idx === crops[current].correct;
+    const nextScore = isCorrect ? score + 1 : score;
+    if (isCorrect) setScore(s => s + 1);
+    
     setTimeout(() => {
       if (current + 1 >= crops.length) {
         setDone(true);
-        setTimeout(onComplete, 2500);
+        if (nextScore === crops.length) {
+          setTimeout(onCelebrate, 1000);
+        } else {
+          setTimeout(onComplete, 2500);
+        }
       } else {
         setCurrent(c => c + 1);
         setSelected(null);
@@ -957,7 +1021,13 @@ function IndiaAILab({ onComplete }: { onComplete: () => void }) {
         <div className="text-3xl">🌾</div>
         <p className="font-game text-xs text-white">Crop Diagnosis Score: {score}/{crops.length}</p>
         <p className="font-body text-[10px] text-white/60">You helped diagnose crops just like India's real KisanAI app!</p>
-        <button onClick={onComplete} className="mt-2 px-6 py-1.5 font-game text-[10px] text-black bg-[#FFD60A] border-2 border-black cursor-pointer shadow-[2px_2px_0px_#000]">Submit Lab ➔</button>
+        <button onClick={() => {
+          if (score === crops.length) {
+            onCelebrate();
+          } else {
+            onComplete();
+          }
+        }} className="mt-2 px-6 py-1.5 font-game text-[10px] text-black bg-[#FFD60A] border-2 border-black cursor-pointer shadow-[2px_2px_0px_#000]">Submit Lab ➔</button>
       </motion.div>
     );
   }
@@ -1105,7 +1175,7 @@ function SmartFarmLab({ onComplete }: { onComplete: () => void }) {
 }
 
 // ─── Module 18: Cyber Safety Sorter (lesson-20-jr) ───────────────────────────
-function CyberSafetyLab({ onComplete }: { onComplete: () => void }) {
+function CyberSafetyLab({ onComplete, onCelebrate }: { onComplete: () => void; onCelebrate: () => void }) {
   const scenarios = [
     {
       id: 1,
@@ -1147,12 +1217,17 @@ function CyberSafetyLab({ onComplete }: { onComplete: () => void }) {
   const handleChoice = (choice: boolean) => {
     if (selected !== null) return;
     setSelected(choice);
-    if (choice === scenarios[current].isSafe) {
+    const isCorrect = choice === scenarios[current].isSafe;
+    const nextScore = isCorrect ? score + 1 : score;
+    if (isCorrect) {
       setScore(s => s + 1);
     }
     setTimeout(() => {
       if (current + 1 >= scenarios.length) {
         setDone(true);
+        if (nextScore === scenarios.length) {
+          setTimeout(onCelebrate, 1500);
+        }
       } else {
         setCurrent(c => c + 1);
         setSelected(null);
@@ -1167,7 +1242,13 @@ function CyberSafetyLab({ onComplete }: { onComplete: () => void }) {
         <div className="text-3xl">🔒</div>
         <p className="font-game text-xs text-white">Cyber Safety Score: {score}/{scenarios.length}</p>
         <p className="font-body text-[10px] text-white/60">You successfully classified personal vs safe data sharing! Sparky feels much safer now.</p>
-        <button onClick={onComplete} className="mt-2 px-6 py-1.5 font-game text-[10px] text-black bg-[#FFD60A] border-2 border-black cursor-pointer shadow-[2px_2px_0px_#000]">Submit Lab ➔</button>
+        <button onClick={() => {
+          if (score === scenarios.length) {
+            onCelebrate();
+          } else {
+            onComplete();
+          }
+        }} className="mt-2 px-6 py-1.5 font-game text-[10px] text-black bg-[#FFD60A] border-2 border-black cursor-pointer shadow-[2px_2px_0px_#000]">Submit Lab ➔</button>
       </motion.div>
     );
   }
@@ -1263,38 +1344,157 @@ function MusicComposerLab({ onComplete }: { onComplete: () => void }) {
     'Applying final EQ & rendering...',
   ]);
   const [activeStep, setActiveStep] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [trackTitle, setTrackTitle] = useState('');
+
+  const audioCtxRef = React.useRef<AudioContext | null>(null);
+  const schedulerRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
+  const activeNodesRef = React.useRef<AudioNode[]>([]);
+
+  const stopPlayback = () => {
+    if (schedulerRef.current) {
+      clearInterval(schedulerRef.current);
+      schedulerRef.current = null;
+    }
+    activeNodesRef.current.forEach(n => {
+      try { (n as OscillatorNode).stop?.(); } catch (_) {}
+      try { n.disconnect(); } catch (_) {}
+    });
+    activeNodesRef.current = [];
+    if (audioCtxRef.current) {
+      audioCtxRef.current.close();
+      audioCtxRef.current = null;
+    }
+    setIsPlaying(false);
+  };
+
+  React.useEffect(() => () => { stopPlayback(); }, []);
+
+  const playTrack = () => {
+    stopPlayback();
+    const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    audioCtxRef.current = ctx;
+
+    const bpm = tempo.includes('80') ? 80 : tempo.includes('115') ? 115 : 140;
+    const beatDur = 60 / bpm;
+    const isRetro = genre.includes('8-Bit');
+    const isChill = genre.includes('Lo-Fi');
+
+    const waveType: OscillatorType = lead.includes('Square') ? 'square' : lead.includes('Guitar') ? 'sawtooth' : 'sine';
+    const melodyPatterns = {
+      synth:  [261.6, 329.6, 392.0, 493.9, 392.0, 329.6, 261.6, 220.0],
+      retro:  [261.6, 261.6, 329.6, 0,     392.0, 0,     329.6, 261.6],
+      chill:  [196.0, 220.0, 261.6, 293.7, 261.6, 220.0, 196.0, 164.8],
+    };
+    const melody = isChill ? melodyPatterns.chill : isRetro ? melodyPatterns.retro : melodyPatterns.synth;
+    const chordNotes = isChill ? [[130.8, 164.8, 196.0], [146.8, 185.0, 220.0]] : [[130.8, 164.8, 196.0, 246.9], [110.0, 138.6, 164.8, 207.7]];
+
+    const createReverb = () => {
+      const conv = ctx.createConvolver();
+      const len = ctx.sampleRate * 1.5;
+      const buf = ctx.createBuffer(2, len, ctx.sampleRate);
+      for (let ch = 0; ch < 2; ch++) {
+        const data = buf.getChannelData(ch);
+        for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.5);
+      }
+      conv.buffer = buf;
+      return conv;
+    };
+
+    const master = ctx.createGain();
+    master.gain.value = 0.35;
+    master.connect(ctx.destination);
+    activeNodesRef.current.push(master);
+
+    let effectNode: AudioNode = master;
+    if (isChill) {
+      const rev = createReverb();
+      const dry = ctx.createGain(); dry.gain.value = 0.6;
+      const wet = ctx.createGain(); wet.gain.value = 0.4;
+      dry.connect(master); rev.connect(wet); wet.connect(master);
+      const mid = ctx.createGain(); mid.gain.value = 1; mid.connect(dry); mid.connect(rev);
+      const lpf = ctx.createBiquadFilter(); lpf.type = 'lowpass'; lpf.frequency.value = 2200;
+      const preLpf = ctx.createGain(); preLpf.gain.value = 1; preLpf.connect(lpf); lpf.connect(mid);
+      effectNode = preLpf;
+      activeNodesRef.current.push(rev, dry, wet, mid, lpf, preLpf);
+    }
+
+    let beatIndex = 0;
+    const scheduleNote = () => {
+      const now = ctx.currentTime;
+      const noteFreq = melody[beatIndex % melody.length];
+      const step = beatIndex % 16;
+      if (noteFreq > 0) {
+        const osc = ctx.createOscillator(); const env = ctx.createGain();
+        osc.type = isRetro ? 'square' : waveType; osc.frequency.value = isRetro ? noteFreq * 2 : noteFreq;
+        env.gain.setValueAtTime(0, now); env.gain.linearRampToValueAtTime(0.6, now + 0.01); env.gain.exponentialRampToValueAtTime(0.001, now + beatDur * 0.8);
+        osc.connect(env); env.connect(effectNode as AudioNode); osc.start(now); osc.stop(now + beatDur);
+        activeNodesRef.current.push(osc, env);
+      }
+      if (step % 4 === 0) {
+        const chord = chordNotes[(step / 4) % chordNotes.length];
+        chord.forEach(freq => {
+          const co = ctx.createOscillator(); const ce = ctx.createGain();
+          co.type = isChill ? 'sine' : 'sawtooth'; co.frequency.value = freq;
+          ce.gain.setValueAtTime(0, now); ce.gain.linearRampToValueAtTime(0.18, now + 0.05); ce.gain.exponentialRampToValueAtTime(0.001, now + beatDur * 3.5);
+          co.connect(ce); ce.connect(effectNode as AudioNode); co.start(now); co.stop(now + beatDur * 4);
+          activeNodesRef.current.push(co, ce);
+        });
+      }
+      if (step % 2 === 0) {
+        const bassFreq = melody[beatIndex % melody.length] / 2;
+        const bo = ctx.createOscillator(); const be = ctx.createGain();
+        bo.type = 'sine'; bo.frequency.value = bassFreq || 65.4;
+        be.gain.setValueAtTime(0, now); be.gain.linearRampToValueAtTime(0.4, now + 0.02); be.gain.exponentialRampToValueAtTime(0.001, now + beatDur * 1.5);
+        bo.connect(be); be.connect(effectNode as AudioNode); bo.start(now); bo.stop(now + beatDur * 2);
+        activeNodesRef.current.push(bo, be);
+      }
+      if (!drum.includes('Ambient')) {
+        const isHard = drum.includes('Acoustic');
+        if (step === 0 || step === 8) {
+          const kick = ctx.createOscillator(); const ke = ctx.createGain();
+          kick.frequency.setValueAtTime(isHard ? 150 : 100, now); kick.frequency.exponentialRampToValueAtTime(0.001, now + 0.3);
+          ke.gain.setValueAtTime(1.0, now); ke.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+          kick.connect(ke); ke.connect(master); kick.start(now); kick.stop(now + 0.35); activeNodesRef.current.push(kick, ke);
+        }
+        if (step === 4 || step === 12) {
+          const snareBuf = ctx.createBuffer(1, ctx.sampleRate * 0.15, ctx.sampleRate);
+          const data = snareBuf.getChannelData(0); for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / data.length, isHard ? 1.5 : 3);
+          const snare = ctx.createBufferSource(); snare.buffer = snareBuf; const se = ctx.createGain(); se.gain.value = isHard ? 0.7 : 0.45;
+          snare.connect(se); se.connect(master); snare.start(now); activeNodesRef.current.push(snare, se);
+        }
+        const hatEvery = isChill ? 2 : 1;
+        if (step % hatEvery === 0) {
+          const hatBuf = ctx.createBuffer(1, ctx.sampleRate * 0.04, ctx.sampleRate);
+          const hd = hatBuf.getChannelData(0); for (let i = 0; i < hd.length; i++) hd[i] = Math.random() * 2 - 1;
+          const hat = ctx.createBufferSource(); hat.buffer = hatBuf; const hpf = ctx.createBiquadFilter(); hpf.type = 'highpass'; hpf.frequency.value = 8000;
+          const he = ctx.createGain(); he.gain.value = 0.2; hat.connect(hpf); hpf.connect(he); he.connect(master); hat.start(now); activeNodesRef.current.push(hat, hpf, he);
+        }
+      }
+      beatIndex++;
+    };
+    scheduleNote(); schedulerRef.current = setInterval(scheduleNote, beatDur * 1000); setIsPlaying(true);
+  };
 
   const startComposition = () => {
     if (!genre || !tempo || !lead || !drum) return;
-    setGenerating(true);
-    setComposedTrack(null);
-    setActiveStep(0);
-
+    setGenerating(true); setComposedTrack(null); setActiveStep(0); stopPlayback();
     let step = 0;
     const interval = setInterval(() => {
       step++;
       if (step >= 5) {
-        clearInterval(interval);
-        setGenerating(false);
-        const titles = [
-          'Neon Spark Explorer',
-          'Cyber Forest Groove',
-          '8-Bit Quest Beats',
-          'Pixel Sunset Loop',
-          'Lofi AI Cozy Corner',
-        ];
-        const chosenTitle = titles[Math.floor(Math.random() * titles.length)];
-        setComposedTrack(`✨ Composed '${chosenTitle}' at ${tempo.split(' ')[1]} using ${genre.split(' ')[0]} mood and ${lead.split(' ')[1]} lead!`);
-      } else {
-        setActiveStep(step);
-      }
+        clearInterval(interval); setGenerating(false);
+        const titles = ['Neon Spark Explorer', 'Cyber Forest Groove', '8-Bit Quest Beats', 'Pixel Sunset Loop', 'Lofi AI Cozy Corner'];
+        const title = titles[Math.floor(Math.random() * titles.length)];
+        setTrackTitle(title); setComposedTrack(`✨ '${title}'`);
+      } else setActiveStep(step);
     }, 800);
   };
 
   return (
     <div className="space-y-4">
       <div className="p-3 bg-[#1E1B4B] border-3 border-black shadow-[3px_3px_0px_#000]">
-        <AICompanion state="teaching" message="Mix genre, speed, and instruments to let the AI compose a unique digital track for you!" size="sm" />
+        <AICompanion state="teaching" message="Mix genre, speed, and instruments to let the AI compose a unique track — then hit PLAY to actually hear it!" size="sm" />
       </div>
 
       <div className="p-3 bg-[#1E1B4B] border-2 border-black space-y-4">
@@ -1302,63 +1502,40 @@ function MusicComposerLab({ onComplete }: { onComplete: () => void }) {
 
         {!composedTrack && !generating && (
           <div className="space-y-3">
-            {/* Genre */}
             <div>
               <p className="font-game text-[9px] text-white/60 mb-1">1. Choose Genre Mood</p>
               <div className="grid grid-cols-3 gap-1">
                 {genres.map(g => (
-                  <button key={g} onClick={() => setGenre(g)}
-                    className={`py-1.5 font-pixel text-[5px] border border-black cursor-pointer transition-all ${
-                      genre === g ? 'bg-pink-600 text-white' : 'bg-black/20 text-white/40 hover:bg-black/40'
-                    }`}>{g}</button>
+                  <button key={g} onClick={() => setGenre(g)} className={`py-1.5 font-pixel text-[5px] border border-black cursor-pointer transition-all ${genre === g ? 'bg-pink-600 text-white' : 'bg-black/20 text-white/40 hover:bg-black/40'}`}>{g}</button>
                 ))}
               </div>
             </div>
-
-            {/* Tempo */}
             <div>
               <p className="font-game text-[9px] text-white/60 mb-1">2. Set Tempo Speed</p>
               <div className="grid grid-cols-3 gap-1">
                 {tempos.map(t => (
-                  <button key={t} onClick={() => setTempo(t)}
-                    className={`py-1.5 font-pixel text-[5px] border border-black cursor-pointer transition-all ${
-                      tempo === t ? 'bg-pink-600 text-white' : 'bg-black/20 text-white/40 hover:bg-black/40'
-                    }`}>{t}</button>
+                  <button key={t} onClick={() => setTempo(t)} className={`py-1.5 font-pixel text-[5px] border border-black cursor-pointer transition-all ${tempo === t ? 'bg-pink-600 text-white' : 'bg-black/20 text-white/40 hover:bg-black/40'}`}>{t}</button>
                 ))}
               </div>
             </div>
-
-            {/* Instrument */}
             <div>
               <p className="font-game text-[9px] text-white/60 mb-1">3. Select Lead Instrument</p>
               <div className="grid grid-cols-3 gap-1">
                 {leads.map(l => (
-                  <button key={l} onClick={() => setLead(l)}
-                    className={`py-1.5 font-pixel text-[5px] border border-black cursor-pointer transition-all ${
-                      lead === l ? 'bg-pink-600 text-white' : 'bg-black/20 text-white/40 hover:bg-black/40'
-                    }`}>{l}</button>
+                  <button key={l} onClick={() => setLead(l)} className={`py-1.5 font-pixel text-[5px] border border-black cursor-pointer transition-all ${lead === l ? 'bg-pink-600 text-white' : 'bg-black/20 text-white/40 hover:bg-black/40'}`}>{l}</button>
                 ))}
               </div>
             </div>
-
-            {/* Drums */}
             <div>
               <p className="font-game text-[9px] text-white/60 mb-1">4. Select Backing Beats</p>
               <div className="grid grid-cols-3 gap-1">
                 {drums.map(d => (
-                  <button key={d} onClick={() => setDrum(d)}
-                    className={`py-1.5 font-pixel text-[5px] border border-black cursor-pointer transition-all ${
-                      drum === d ? 'bg-pink-600 text-white' : 'bg-black/20 text-white/40 hover:bg-black/40'
-                    }`}>{d}</button>
+                  <button key={d} onClick={() => setDrum(d)} className={`py-1.5 font-pixel text-[5px] border border-black cursor-pointer transition-all ${drum === d ? 'bg-pink-600 text-white' : 'bg-black/20 text-white/40 hover:bg-black/40'}`}>{d}</button>
                 ))}
               </div>
             </div>
-
             {genre && tempo && lead && drum && (
-              <button onClick={startComposition}
-                className="w-full mt-2 py-2.5 bg-pink-600 text-white font-game text-[10px] border-2 border-black cursor-pointer shadow-[2px_2px_0px_#000]">
-                🎹 Generate AI Music Track!
-              </button>
+              <button onClick={startComposition} className="w-full mt-2 py-2.5 bg-pink-600 text-white font-game text-[10px] border-2 border-black cursor-pointer shadow-[2px_2px_0px_#000]">🎹 Generate AI Music Track!</button>
             )}
           </div>
         )}
@@ -1367,12 +1544,7 @@ function MusicComposerLab({ onComplete }: { onComplete: () => void }) {
           <div className="p-4 border-2 border-pink-500 bg-pink-950/20 text-center space-y-4">
             <div className="flex justify-center items-end gap-1 h-12">
               {[...Array(6)].map((_, i) => (
-                <motion.div
-                  key={i}
-                  animate={{ height: [12, 48, 12] }}
-                  transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.1 }}
-                  className="w-1.5 bg-pink-500"
-                />
+                <motion.div key={i} animate={{ height: [12, 48, 12] }} transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.1 }} className="w-1.5 bg-pink-500" />
               ))}
             </div>
             <div className="space-y-1">
@@ -1383,21 +1555,53 @@ function MusicComposerLab({ onComplete }: { onComplete: () => void }) {
         )}
 
         {composedTrack && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-            className="p-4 border-2 border-[#10B981] bg-[#10B981]/15 text-center space-y-3">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-4 border-2 border-[#10B981] bg-[#10B981]/15 text-center space-y-3">
             <div className="text-3xl">🎵</div>
-            <p className="font-pixel text-[6px] text-[#10B981] uppercase">AI TRACK COMPOSED SUCCESSFULLY</p>
+            <p className="font-pixel text-[6px] text-[#10B981] uppercase">AI TRACK READY — TAP PLAY TO LISTEN</p>
             <p className="font-game text-[10px] text-white leading-relaxed">{composedTrack}</p>
-            
-            {/* Visualizer Loop */}
-            <div className="flex justify-center items-center gap-1.5 py-2">
-              {[...Array(8)].map((_, i) => (
-                <div key={i} className="w-1 bg-green-400 h-4 rounded animate-bounce" style={{ animationDelay: `${i * 0.1}s`, animationDuration: '0.8s' }} />
+
+            {/* Animated equalizer visualizer */}
+            <div className="flex justify-center items-end gap-1 h-8">
+              {[...Array(12)].map((_, i) => (
+                isPlaying ? (
+                  <motion.div
+                    key={i}
+                    animate={{ height: [4, 24 + (i % 3) * 6, 4] }}
+                    transition={{ duration: 0.35 + (i % 4) * 0.1, repeat: Infinity, delay: i * 0.06 }}
+                    className="w-1 bg-pink-400 rounded"
+                  />
+                ) : (
+                  <div key={i} className="w-1 bg-green-400/40 rounded" style={{ height: 6 }} />
+                )
               ))}
             </div>
 
-            <button onClick={onComplete}
-              className="mt-2 w-full py-2 font-game text-[10px] text-black bg-[#FFD60A] border-2 border-black cursor-pointer shadow-[2px_2px_0px_#000]">
+            {isPlaying && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                className="text-[8px] font-pixel text-pink-300 animate-pulse">
+                ▶ NOW PLAYING: {trackTitle.toUpperCase()} — {genre.split(' ')[0].toUpperCase()} · {tempo.match(/\d+ BPM/)?.[0]}
+              </motion.div>
+            )}
+
+            <div className="flex gap-2">
+              <button
+                onClick={isPlaying ? stopPlayback : playTrack}
+                className={`flex-1 py-2.5 font-game text-[10px] border-2 border-black cursor-pointer shadow-[2px_2px_0px_#000] transition-all ${
+                  isPlaying ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-pink-600 text-white hover:bg-pink-700'
+                }`}
+              >
+                {isPlaying ? '⏹ STOP MUSIC' : '▶ PLAY TRACK'}
+              </button>
+              <button
+                onClick={() => { stopPlayback(); setComposedTrack(null); setGenre(''); setTempo(''); setLead(''); setDrum(''); }}
+                className="px-3 py-2.5 font-game text-[10px] bg-black/30 text-white/60 border border-black/40 cursor-pointer hover:bg-black/50"
+              >
+                🔄 Remix
+              </button>
+            </div>
+
+            <button onClick={() => { stopPlayback(); onComplete(); }}
+              className="w-full py-2 font-game text-[10px] text-black bg-[#FFD60A] border-2 border-black cursor-pointer shadow-[2px_2px_0px_#000]">
               Submit Composition ➔
             </button>
           </motion.div>
@@ -1407,8 +1611,9 @@ function MusicComposerLab({ onComplete }: { onComplete: () => void }) {
   );
 }
 
+
 // ─── Module 20: Human vs AI Task Sorter (lesson-22-jr) ───────────────────────
-function HumanAICoLab({ onComplete }: { onComplete: () => void }) {
+function HumanAICoLab({ onComplete, onCelebrate }: { onComplete: () => void; onCelebrate: () => void }) {
   const tasks = [
     {
       id: 1,
@@ -1459,7 +1664,11 @@ function HumanAICoLab({ onComplete }: { onComplete: () => void }) {
     setScore(correct);
     setChecked(true);
     if (correct >= 4) {
-      setTimeout(onComplete, 3500);
+      if (correct === tasks.length) {
+        setTimeout(onCelebrate, 1500);
+      } else {
+        setTimeout(onComplete, 3500);
+      }
     }
   };
 
@@ -1552,21 +1761,48 @@ function HumanAICoLab({ onComplete }: { onComplete: () => void }) {
 
 // ─── Main TopicLab Router ─────────────────────────────────────────────────────
 export default function TopicLab({ lessonId, onComplete }: TopicLabProps) {
-  switch (lessonId) {
-    case 'lesson-5':       return <VoiceRecognitionLab onComplete={onComplete} />;
-    case 'lesson-2':       return <RecommendationLab onComplete={onComplete} />;
-    case 'lesson-12':      return <FutureAILab onComplete={onComplete} />;
-    case 'lesson-10-jr':   return <FairnessLab onComplete={onComplete} />;
-    case 'lesson-13-jr':   return <GameAILab onComplete={onComplete} />;
-    case 'lesson-16-jr':   return <HealthAILab onComplete={onComplete} />;
-    case 'lesson-17-jr':   return <SmartHomeLab onComplete={onComplete} />;
-    case 'lesson-15-jr':   return <EcoAILab onComplete={onComplete} />;
-    case 'lesson-19-jr':   return <WildlifeAILab onComplete={onComplete} />;
-    case 'lesson-11':      return <IndiaAILab onComplete={onComplete} />;
-    case 'lesson-18-jr':   return <SmartFarmLab onComplete={onComplete} />;
-    case 'lesson-20-jr':   return <CyberSafetyLab onComplete={onComplete} />;
-    case 'lesson-21-jr':   return <MusicComposerLab onComplete={onComplete} />;
-    case 'lesson-22-jr':   return <HumanAICoLab onComplete={onComplete} />;
-    default:               return null;
-  }
+  const [showCelebration, setShowCelebration] = useState(false);
+
+  const handleCelebrate = () => {
+    setShowCelebration(true);
+  };
+
+  const handleCelebrationDone = () => {
+    setShowCelebration(false);
+    onComplete();
+  };
+
+  const renderLab = () => {
+    switch (lessonId) {
+      case 'lesson-5':       return <VoiceRecognitionLab onComplete={onComplete} />;
+      case 'lesson-2':       return <RecommendationLab onComplete={onComplete} />;
+      case 'lesson-12':      return <FutureAILab onComplete={onComplete} onCelebrate={handleCelebrate} />;
+      case 'lesson-10-jr':   return <FairnessLab onComplete={onComplete} onCelebrate={handleCelebrate} />;
+      case 'lesson-13-jr':   return <GameAILab onComplete={onComplete} />;
+      case 'lesson-16-jr':   return <HealthAILab onComplete={onComplete} />;
+      case 'lesson-17-jr':   return <SmartHomeLab onComplete={onComplete} onCelebrate={handleCelebrate} />;
+      case 'lesson-15-jr':   return <EcoAILab onComplete={onComplete} onCelebrate={handleCelebrate} />;
+      case 'lesson-19-jr':   return <WildlifeAILab onComplete={onComplete} onCelebrate={handleCelebrate} />;
+      case 'lesson-11':      return <IndiaAILab onComplete={onComplete} onCelebrate={handleCelebrate} />;
+      case 'lesson-18-jr':   return <SmartFarmLab onComplete={onComplete} />;
+      case 'lesson-20-jr':   return <CyberSafetyLab onComplete={onComplete} onCelebrate={handleCelebrate} />;
+      case 'lesson-21-jr':   return <MusicComposerLab onComplete={onComplete} />;
+      case 'lesson-22-jr':   return <HumanAICoLab onComplete={onComplete} onCelebrate={handleCelebrate} />;
+      default:               return null;
+    }
+  };
+
+  return (
+    <>
+      {renderLab()}
+      <CelebrationOverlay
+        show={showCelebration}
+        title="100% Correct!"
+        subtitle="Perfect score! You are an AI genius! 🤖"
+        xpGained={15}
+        coinsGained={10}
+        onDone={handleCelebrationDone}
+      />
+    </>
+  );
 }

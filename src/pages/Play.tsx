@@ -6,6 +6,7 @@ import { PLAY_MODULES_DATA, type PlayModule } from '@/data/curriculum';
 import { getPlatformProgress, getLevel } from '@/lib/gamification';
 import { AICompanion } from '@/components/ui/AICompanion';
 import { Lock, CheckCircle, Trophy, AlertCircle, Gamepad2 } from 'lucide-react';
+import { useThemeStyles } from '@/lib/useThemeStyles';
 
 const PLAY_PHASES = [
   { id: 1, title: 'Foundation Fields', emoji: '🚀', description: 'Master the basics and explore key AI concepts.' },
@@ -17,13 +18,14 @@ const PLAY_PHASES = [
 export default function Play() {
   const navigate = useNavigate();
   const profile = useCurrentProfile();
+  const ts = useThemeStyles();
+  const D = ts.duo;
   const [searchParams, setSearchParams] = useSearchParams();
   const [lockedTarget, setLockedTarget] = useState<PlayModule | null>(null);
   const [lockedActive, setLockedActive] = useState<PlayModule | null>(null);
 
   const userZone = profile?.zone || 'junior';
   const filtered = PLAY_MODULES_DATA.filter(mod => mod.zones.includes(userZone));
-
   const rawInventions = JSON.parse(localStorage.getItem('guest_inventions') || '[]');
   const savedIdeas = JSON.parse(localStorage.getItem('saved_ideas') || '[]');
 
@@ -38,18 +40,14 @@ export default function Play() {
     const mod = PLAY_MODULES_DATA.find(m => m.path === path);
     if (!mod) return false;
     const key = mod.completionKey;
-    if (key === 'quests') {
-      return !!(profile?.completed_quests && profile.completed_quests.length > 0);
-    } else if (key.startsWith('quests_')) {
+    if (key === 'quests') return !!(profile?.completed_quests && profile.completed_quests.length > 0);
+    if (key.startsWith('quests_')) {
       const qId = key.replace('quests_', '');
       return localStorage.getItem(`quests_${qId}`) === 'true' || !!(profile?.completed_quests && profile.completed_quests.includes(qId));
-    } else if (key === 'inventions') {
-      return rawInventions.length > 0;
-    } else if (key === 'ideas') {
-      return savedIdeas.length > 0;
-    } else {
-      return localStorage.getItem(key) === 'true';
     }
+    if (key === 'inventions') return rawInventions.length > 0;
+    if (key === 'ideas') return savedIdeas.length > 0;
+    return localStorage.getItem(key) === 'true';
   };
 
   const activePlayIndex = filtered.findIndex(mod => !isModDone(mod.path));
@@ -86,12 +84,8 @@ export default function Play() {
   };
 
   const getSparkyPlayMessage = () => {
-    if (completedPlayCount === 0) {
-      return `Welcome to the Play Zone, Agent! 🎮 I'm Sparky. Test your AI skills or create prototypes in the interactive play modules below!`;
-    }
-    if (completedPlayCount === 20) {
-      return `BZZZ! AMAZING! 🏆 You have conquered all Play modules! You are a certified AI Master! Keep experimenting!`;
-    }
+    if (completedPlayCount === 0) return `Welcome to the Play Zone, Agent! 🎮 I'm Sparky. Test your AI skills or create prototypes in the interactive play modules below!`;
+    if (completedPlayCount === 20) return `BZZZ! AMAZING! 🏆 You have conquered all Play modules! You are a certified AI Master! Keep experimenting!`;
     const nextMod = filtered[activePlayIndex] || filtered[0];
     return `Welcome back, Agent! We've completed ${completedPlayCount} play missions. Ready to tackle "${nextMod.title}" next? Let's play!`;
   };
@@ -100,40 +94,19 @@ export default function Play() {
     const isDone = isModDone(mod.path);
     let percent = 0;
     const key = mod.completionKey;
-    if (isDone) {
-      percent = 100;
-    } else {
-      if (key === 'quests') {
-        percent = 0;
-      } else if (key.startsWith('quests_')) {
-        const qId = key.replace('quests_', '');
-        percent = parseInt(localStorage.getItem(`play_progress_story_${qId}`) || '0', 10);
-      } else if (key === 'inventions') {
-        percent = localStorage.getItem('play_progress_brainstorm') ? 50 : 0;
-      } else if (key === 'ideas') {
-        percent = localStorage.getItem('play_progress_idea-generator') ? 50 : 0;
-      } else {
-        const progKey = key.replace('play_completed_', 'play_progress_');
-        percent = parseInt(localStorage.getItem(progKey) || '0', 10);
-      }
-    }
-
-    const isLocked = activePlayIndex !== -1 && i > activePlayIndex;
-    const isActive = activePlayIndex !== -1 && i === activePlayIndex;
+    if (isDone) { percent = 100; }
+    else if (key === 'quests') { percent = 0; }
+    else if (key.startsWith('quests_')) { const qId = key.replace('quests_', ''); percent = parseInt(localStorage.getItem(`play_progress_story_${qId}`) || '0', 10); }
+    else if (key === 'inventions') { percent = localStorage.getItem('play_progress_brainstorm') ? 50 : 0; }
+    else if (key === 'ideas') { percent = localStorage.getItem('play_progress_idea-generator') ? 50 : 0; }
+    else { const progKey = key.replace('play_completed_', 'play_progress_'); percent = parseInt(localStorage.getItem(progKey) || '0', 10); }
 
     return {
-      title: mod.title,
-      emoji: mod.emoji,
-      desc: mod.desc,
-      gradFrom: mod.gradFrom,
-      gradTo: mod.gradTo,
-      border: mod.border,
-      shadow: mod.shadow,
+      ...mod,
       isDone,
-      isLocked,
-      isActive,
+      isLocked: activePlayIndex !== -1 && i > activePlayIndex,
+      isActive: activePlayIndex !== -1 && i === activePlayIndex,
       percent,
-      path: mod.path
     };
   });
 
@@ -144,80 +117,93 @@ export default function Play() {
 
   const isPhaseLocked = (phaseId: number) => {
     if (activePlayIndex === -1) return false;
-    const firstIndexInPhase = (phaseId - 1) * 5;
-    return activePlayIndex < firstIndexInPhase;
+    return activePlayIndex < (phaseId - 1) * 5;
   };
 
   return (
-    <div className="min-h-full pb-20 bg-stars bg-[#0F0A2E] text-white">
-      
+    <div
+      className={D ? '' : 'min-h-full pb-20 bg-stars bg-[#0F0A2E] text-white'}
+      style={D ? { minHeight: '100%', paddingBottom: 80, background: '#F5F5F5' } : {}}
+    >
       {/* GLOBAL PROGRESS HEADER */}
-      <div className="sticky top-0 z-30 px-4 pt-3 pb-2 bg-[#0F0A2E]/95 backdrop-blur-md border-b-3 border-black">
-        <div 
-          className="p-3 relative overflow-hidden"
-          style={{
-            background: 'linear-gradient(135deg, #1E1B4B 0%, #16103A 100%)',
-            border: '3px solid #10B981',
-            boxShadow: '4px 4px 0px #000',
-          }}
-        >
-          {/* Progress Header Row */}
-          <div className="flex items-center justify-between border-b border-white/10 pb-1.5 mb-2">
-            <div className="flex items-center gap-1.5">
-              <Trophy className="w-4 h-4 text-[#10B981]" />
-              <span className="font-game text-[10px] text-white uppercase tracking-wider">Mission Control</span>
+      <div
+        style={D ? { position: 'sticky', top: 0, zIndex: 30, padding: '12px 16px 10px', background: '#FFFFFF', borderBottom: '1px solid #E0E0E0', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }
+             : { position: 'sticky', top: 0, zIndex: 30, padding: '12px 16px 8px', background: 'rgba(15,10,46,0.95)', backdropFilter: 'blur(12px)', borderBottom: '3px solid #000' }}
+      >
+        <div style={D ? { padding: '12px 16px' } : {
+          background: 'linear-gradient(135deg, #1E1B4B 0%, #16103A 100%)',
+          border: '3px solid #10B981', boxShadow: '4px 4px 0px #000', padding: 12,
+        }}>
+          <div className="flex items-center justify-between" style={{ borderBottom: D ? '1px solid #F0F0F0' : '1px solid rgba(255,255,255,0.1)', paddingBottom: 8, marginBottom: 8 }}>
+            <div className="flex items-center gap-2">
+              <Trophy className="w-4 h-4" style={{ color: D ? '#5FCC5F' : '#10B981' }} />
+              <span style={{ fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 800 : undefined, fontSize: D ? 14 : 10, color: D ? '#000' : '#fff', textTransform: 'uppercase', letterSpacing: D ? 0.5 : undefined }}>
+                Mission Control
+              </span>
             </div>
-            <div className="font-pixel text-[6px] text-[#10B981] bg-[#10B981]/10 px-2 py-0.5 border border-[#10B981]/20">
+            <div style={D ? {
+              fontFamily: '"Nunito", sans-serif', fontWeight: 800, fontSize: 11,
+              color: '#5FCC5F', background: '#F0FFF4', border: '1px solid #BBF7D0',
+              borderRadius: 999, padding: '2px 10px',
+            } : {
+              fontFamily: '"Press Start 2P", monospace', fontSize: 6,
+              color: '#10B981', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', padding: '2px 8px',
+            }}>
               {completedPlayCount} / 20 CONQUERED
             </div>
           </div>
 
-          {/* Stats Bar */}
-          <div className="grid grid-cols-3 gap-2 text-center mb-2">
-            <div className="bg-black/35 border border-white/5 py-1 px-0.5">
-              <div className="font-pixel text-[5px] text-white/40 uppercase">RANK</div>
-              <div className="font-game text-[10px] text-white truncate">{getLevelTitle(level)}</div>
-              <div className="font-pixel text-[5px] text-[#A78BFA] mt-0.5">Lv {level}</div>
-            </div>
-            <div className="bg-black/35 border border-white/5 py-1 px-0.5">
-              <div className="font-pixel text-[5px] text-white/40 uppercase">TOTAL ENERGY</div>
-              <div className="font-game text-[10px] text-warning truncate">⚡ {totalXp} XP</div>
-              <div className="font-pixel text-[5px] text-white/30 mt-0.5">Loot</div>
-            </div>
-            <div className="bg-black/35 border border-white/5 py-1 px-0.5">
-              <div className="font-pixel text-[5px] text-white/40 uppercase">STREAK</div>
-              <div className="font-game text-[10px] text-orange-400 truncate">{streak} Days</div>
-              <div className="font-pixel text-[5px] text-white/30 mt-0.5">Active 🔥</div>
-            </div>
+          <div className="grid grid-cols-3 gap-2 text-center" style={{ marginBottom: 8 }}>
+            {[
+              { label: 'RANK', value: getLevelTitle(level), sub: `Lv ${level}`, subColor: D ? '#8B5CF6' : '#A78BFA' },
+              { label: 'TOTAL ENERGY', value: `⚡ ${totalXp} XP`, sub: 'Loot', subColor: D ? '#999999' : 'rgba(255,255,255,0.3)' },
+              { label: 'STREAK', value: `${streak} Days`, sub: 'Active 🔥', subColor: D ? '#999999' : 'rgba(255,255,255,0.3)' },
+            ].map(s => (
+              <div key={s.label} style={D ? {
+                background: '#F8F8F8', border: '1px solid #EEEEEE', borderRadius: 8, padding: '6px 4px',
+              } : {
+                background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.05)', padding: '4px 2px',
+              }}>
+                <div style={{ fontFamily: D ? '"Nunito", sans-serif' : '"Press Start 2P", monospace', fontSize: D ? 9 : 5, color: D ? '#999' : 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>{s.label}</div>
+                <div style={{ fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 800 : undefined, fontSize: D ? 11 : 10, color: D ? '#000' : '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.value}</div>
+                <div style={{ fontFamily: D ? '"Nunito", sans-serif' : '"Press Start 2P", monospace', fontSize: D ? 9 : 5, color: s.subColor, marginTop: 2 }}>{s.sub}</div>
+              </div>
+            ))}
           </div>
 
-          {/* Progress Bar */}
-          <div className="space-y-0.5">
-            <div className="flex justify-between items-baseline text-[7px] font-pixel text-[#10B981]">
-              <span>PLAY ZONE COMPLETED</span>
-              <span>{totalPlayPercent}%</span>
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+              <span style={{ fontFamily: D ? '"Nunito", sans-serif' : '"Press Start 2P", monospace', fontSize: D ? 10 : 7, fontWeight: D ? 700 : undefined, color: D ? '#5FCC5F' : '#10B981' }}>
+                {D ? 'Play Zone Completed' : 'PLAY ZONE COMPLETED'}
+              </span>
+              <span style={{ fontFamily: D ? '"Nunito", sans-serif' : '"Press Start 2P", monospace', fontSize: D ? 10 : 7, fontWeight: D ? 700 : undefined, color: D ? '#5FCC5F' : '#10B981' }}>{totalPlayPercent}%</span>
             </div>
-            <div className="w-full h-3 bg-[#0F0A2E] border-2 border-black p-[2px] flex items-center">
-              <div 
-                className="h-full bg-gradient-to-r from-[#10B981] to-[#059669] transition-all duration-800 ease-out" 
-                style={{ width: `${totalPlayPercent}%` }} 
-              />
+            <div style={D ? { height: 10, background: '#E0E0E0', borderRadius: 999, overflow: 'hidden' }
+                       : { height: 12, background: '#0F0A2E', border: '2px solid #000', padding: '2px', display: 'flex', alignItems: 'center' }}>
+              <div style={D ? {
+                width: `${totalPlayPercent}%`, height: '100%',
+                background: 'linear-gradient(90deg, #5FCC5F, #1EBC6B)', borderRadius: 999, transition: 'width 0.8s ease',
+              } : {
+                width: `${totalPlayPercent}%`, height: '100%',
+                background: 'linear-gradient(90deg, #10B981, #059669)', transition: 'width 0.8s ease',
+              }} />
             </div>
           </div>
         </div>
       </div>
 
-      {/* SPARKY mascot welcome banner */}
+      {/* Companion Banner */}
       <div className="px-4 pt-4">
-        <div 
-          className="p-3 mb-4 flex items-center gap-3 relative overflow-hidden"
-          style={{
+        <div className="p-3 mb-4 flex items-center gap-3 relative overflow-hidden"
+          style={D ? {
+            background: '#FFFFFF', border: '1.5px solid #BBF7D0',
+            borderRadius: 14, boxShadow: '0 2px 10px rgba(16,185,129,0.1)',
+          } : {
             background: 'linear-gradient(135deg, #1E1B4B 0%, #110B30 100%)',
-            border: '2.5px solid #10B981',
-            boxShadow: '3px 3px 0px #000',
+            border: '2.5px solid #10B981', boxShadow: '3px 3px 0px #000',
           }}
         >
-          <AICompanion 
+          <AICompanion
             state={completedPlayCount === 20 ? 'celebrating' : completedPlayCount === 0 ? 'welcome' : 'idle'}
             message={getSparkyPlayMessage()}
             name="SPARKY"
@@ -227,8 +213,8 @@ export default function Play() {
         </div>
       </div>
 
+      {/* Play Zone Map */}
       <div className="px-4">
-        {/* PLAY ZONE MAP */}
         <div className="space-y-6">
           {PLAY_PHASES.map((phase) => {
             const phaseModules = getPhaseModules(phase.id);
@@ -236,35 +222,51 @@ export default function Play() {
 
             return (
               <div key={phase.id} className="space-y-3">
-                {/* PHASE WORLD HEADER */}
-                <div 
-                  className="p-3 flex items-center justify-between border-2 border-black"
-                  style={{
+                {/* Phase Header */}
+                <div className="p-3 flex items-center justify-between"
+                  style={D ? {
+                    background: isLocked ? '#F8F8F8' : '#FFFFFF',
+                    border: `1.5px solid ${isLocked ? '#E0E0E0' : '#BBF7D0'}`,
+                    borderLeft: `5px solid ${isLocked ? '#D1D5DB' : '#5FCC5F'}`,
+                    borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+                  } : {
                     background: isLocked ? '#1A1829' : 'linear-gradient(90deg, #1E1B4B 0%, #16103A 100%)',
+                    border: '2px solid #000',
+                    borderLeft: `6px solid ${isLocked ? '#4B5563' : '#10B981'}`,
                     boxShadow: '3px 3px 0px #000',
-                    borderLeftWidth: '6px',
-                    borderLeftColor: isLocked ? '#4B5563' : '#10B981',
                   }}
                 >
                   <div className="flex items-center gap-2">
                     <span className="text-xl">{phase.emoji}</span>
                     <div>
-                      <h2 className="font-game text-xs text-white uppercase tracking-wider flex items-center gap-1.5">
-                        WORLD {phase.id}: {phase.title}
-                        {isLocked && <Lock className="w-3 h-3 text-white/40" />}
+                      <h2 style={{ color: ts.textPrimary, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 800 : undefined, fontSize: D ? 13 : undefined, display: 'flex', alignItems: 'center', gap: 6 }}
+                          className={D ? '' : 'font-game text-xs text-white uppercase tracking-wider flex items-center gap-1.5'}
+                      >
+                        {D ? `World ${phase.id}: ${phase.title}` : `WORLD ${phase.id}: ${phase.title}`}
+                        {isLocked && <Lock className="w-3 h-3" style={{ color: D ? '#9CA3AF' : 'rgba(255,255,255,0.4)' }} />}
                       </h2>
-                      <p className="font-body text-[10px] text-white/50">{phase.description}</p>
+                      <p style={{ color: ts.textSecondary, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontSize: D ? 11 : 10 }}
+                         className={D ? '' : 'font-body text-[10px] text-white/50'}
+                      >
+                        {phase.description}
+                      </p>
                     </div>
                   </div>
                   {isLocked ? (
-                    <span className="font-pixel text-[5px] text-red-400 bg-red-950/20 border border-red-900/30 px-1.5 py-0.5">LOCKED</span>
+                    <span style={D ? { fontFamily: '"Nunito", sans-serif', fontWeight: 800, fontSize: 10, color: '#EF4444', background: '#FFF5F5', border: '1px solid #FCA5A5', borderRadius: 999, padding: '2px 8px' }
+                                  : { fontFamily: '"Press Start 2P", monospace', fontSize: 5, color: '#F87171', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', padding: '2px 6px' }}>
+                      LOCKED
+                    </span>
                   ) : (
-                    <span className="font-pixel text-[5px] text-emerald-400 bg-emerald-950/20 border border-emerald-900/30 px-1.5 py-0.5">OPEN</span>
+                    <span style={D ? { fontFamily: '"Nunito", sans-serif', fontWeight: 800, fontSize: 10, color: '#5FCC5F', background: '#F0FFF4', border: '1px solid #BBF7D0', borderRadius: 999, padding: '2px 8px' }
+                                  : { fontFamily: '"Press Start 2P", monospace', fontSize: 5, color: '#34D399', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', padding: '2px 6px' }}>
+                      OPEN
+                    </span>
                   )}
                 </div>
 
-                {/* MODULES IN THIS PHASE */}
-                <div className="pl-2 space-y-4 border-l-2 border-white/5 relative">
+                {/* Modules */}
+                <div className="pl-2 space-y-4" style={{ borderLeft: D ? '2px solid #E0E0E0' : '2px solid rgba(255,255,255,0.05)' }}>
                   {phaseModules.map((mod) => {
                     const isDone = mod.isDone;
                     const isModLocked = isLocked || mod.isLocked;
@@ -272,24 +274,27 @@ export default function Play() {
 
                     return (
                       <div key={mod.path} className="relative flex gap-3">
-                        {/* Indicator circle */}
+                        {/* Dot */}
                         <div className="flex flex-col items-center flex-shrink-0 relative z-10">
                           <motion.div
                             whileHover={!isModLocked ? { scale: 1.15 } : {}}
                             onClick={() => handleCardClick(mod.path, isModLocked)}
-                            className={`w-8 h-8 border-2 border-black flex items-center justify-center text-xs cursor-pointer ${
-                              isDone ? 'bg-[#10B981] text-white' :
-                              isActive ? 'bg-gradient-to-br from-[#10B981] to-[#3B82F6] text-white shadow-[0_0_12px_rgba(16,185,129,0.5)]' :
-                              'bg-slate-800 text-white/30'
-                            }`}
+                            className="w-8 h-8 flex items-center justify-center text-xs cursor-pointer"
+                            style={D ? {
+                              background: isDone ? '#5FCC5F' : isActive ? '#5FCC5F' : '#E0E0E0',
+                              border: `2px solid ${isDone ? '#5FCC5F' : isActive ? '#5FCC5F' : '#D1D5DB'}`,
+                              borderRadius: '50%',
+                              boxShadow: isActive ? '0 0 12px rgba(95,204,95,0.4)' : 'none',
+                            } : {
+                              background: isDone ? '#10B981' : isActive ? undefined : '#1E293B',
+                              backgroundImage: isActive ? 'linear-gradient(135deg, #10B981, #3B82F6)' : undefined,
+                              border: '2px solid #000',
+                              boxShadow: isActive ? '0 0 12px rgba(16,185,129,0.5)' : 'none',
+                            }}
                           >
-                            {isDone ? (
-                              <CheckCircle className="w-4 h-4" />
-                            ) : isModLocked ? (
-                              <Lock className="w-3 h-3" />
-                            ) : (
-                              <Gamepad2 className="w-3.5 h-3.5 text-white" />
-                            )}
+                            {isDone ? <CheckCircle className="w-4 h-4" style={{ color: '#fff' }} />
+                              : isModLocked ? <Lock className="w-3 h-3" style={{ color: D ? '#9CA3AF' : 'rgba(255,255,255,0.3)' }} />
+                              : <Gamepad2 className="w-3.5 h-3.5" style={{ color: '#fff' }} />}
                           </motion.div>
                         </div>
 
@@ -298,62 +303,80 @@ export default function Play() {
                           <motion.div
                             whileHover={!isModLocked ? { y: -2, scale: 1.01 } : {}}
                             onClick={() => handleCardClick(mod.path, isModLocked)}
-                            className={`relative p-3.5 border-2 border-black transition-all flex flex-col justify-between overflow-hidden cursor-pointer ${
-                              isDone ? 'bg-[#1E1B4B]/60 opacity-60' :
-                              isActive ? 'bg-gradient-to-br from-[#1E1B4B] to-[#251E5C] border-[#10B981] shadow-[3px_3px_0px_#000]' :
-                              'bg-[#151036]'
-                            }`}
-                            style={{
-                              borderColor: isModLocked ? '#374151' : isActive ? '#10B981' : '#000000',
-                              boxShadow: isActive ? '3px 3px 0px #10B981' : '3px 3px 0px #000000',
+                            className="relative p-3.5 transition-all flex flex-col justify-between overflow-hidden cursor-pointer"
+                            style={D ? {
+                              background: '#FFFFFF',
+                              border: `${isDone ? '1.5px solid #E0E0E0' : isActive ? '2px solid #5FCC5F' : '1.5px solid #E0E0E0'}`,
+                              borderRadius: 12,
+                              boxShadow: isActive ? '0 4px 16px rgba(95,204,95,0.15)' : '0 1px 4px rgba(0,0,0,0.06)',
+                              opacity: isDone ? 0.65 : 1,
+                            } : {
+                              background: isDone ? 'rgba(30,27,75,0.6)' : isActive ? undefined : '#151036',
+                              backgroundImage: isActive ? 'linear-gradient(135deg, #1E1B4B, #251E5C)' : undefined,
+                              borderColor: isModLocked ? '#374151' : isActive ? '#10B981' : '#000',
+                              border: '2px solid',
+                              boxShadow: isActive ? '3px 3px 0px #10B981' : '3px 3px 0px #000',
+                              opacity: isDone ? 0.6 : 1,
                             }}
                           >
-                            {/* Active Glow Bar */}
                             {isActive && (
-                              <div className="absolute top-0 left-0 right-0 h-1 bg-[#10B981] animate-pulse" />
+                              <div className="absolute top-0 left-0 right-0 h-1 animate-pulse"
+                                style={{ background: D ? '#5FCC5F' : '#10B981', borderRadius: D ? '12px 12px 0 0' : 0 }} />
                             )}
 
                             <div className="flex items-start justify-between gap-1 mb-1">
                               <div>
-                                {/* Mission Emoji + Title */}
                                 <div className="flex items-center gap-1.5">
-                                  <div
-                                    className="w-7 h-7 flex items-center justify-center text-sm flex-shrink-0"
-                                    style={{
+                                  <div className="w-7 h-7 flex items-center justify-center text-sm flex-shrink-0"
+                                    style={D ? {
+                                      background: isModLocked ? '#F5F5F5' : `${mod.gradFrom}18`,
+                                      border: `1.5px solid ${isModLocked ? '#E0E0E0' : mod.gradFrom + '40'}`,
+                                      borderRadius: 8,
+                                    } : {
                                       background: isModLocked ? '#374151' : mod.gradFrom,
-                                      border: '1.5px solid #000000',
+                                      border: '1.5px solid #000',
                                     }}
                                   >
                                     {isModLocked ? '🔒' : mod.emoji}
                                   </div>
-                                  <h3 className="font-game text-xs text-white leading-snug uppercase tracking-wide">
+                                  <h3 style={{ color: ts.textPrimary, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 800 : undefined, fontSize: D ? 13 : undefined }}
+                                      className={D ? '' : 'font-game text-xs text-white leading-snug uppercase tracking-wide'}
+                                  >
                                     {mod.title}
                                   </h3>
                                 </div>
-                                {/* Description */}
-                                <p className="font-body text-[10px] text-purple-300 italic mt-1 leading-relaxed">
+                                <p style={D ? { color: '#8B5CF6', fontFamily: '"Nunito", sans-serif', fontStyle: 'italic', fontSize: 11, marginTop: 4, lineHeight: 1.5 } : {}}
+                                   className={D ? '' : 'font-body text-[10px] text-purple-300 italic mt-1 leading-relaxed'}
+                                >
                                   "{mod.desc}"
                                 </p>
                               </div>
                               {isDone && (
-                                <span className="font-pixel text-[5px] text-[#10B981] bg-[#10B981]/10 px-1 py-0.5 border border-[#10B981]/20">DONE</span>
+                                <span style={D ? { fontFamily: '"Nunito", sans-serif', fontWeight: 800, fontSize: 10, color: '#5FCC5F', background: '#F0FFF4', border: '1px solid #BBF7D0', borderRadius: 999, padding: '2px 8px', whiteSpace: 'nowrap' }
+                                            : { fontFamily: '"Press Start 2P", monospace', fontSize: 5, color: '#10B981', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', padding: '2px 4px' }}>
+                                  {D ? '✅ Done' : 'DONE'}
+                                </span>
                               )}
                             </div>
 
-                            {/* Progress bar inside card */}
+                            {/* Progress bar */}
                             <div className="mt-3 space-y-1">
-                              <div className="flex justify-between items-baseline text-[5px] font-pixel text-white/45">
-                                <span>MODULE PROGRESS</span>
-                                <span>{mod.percent}%</span>
+                              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <span style={{ color: ts.textMuted, fontFamily: D ? '"Nunito", sans-serif' : '"Press Start 2P", monospace', fontSize: D ? 9 : 5, textTransform: 'uppercase' }}>Module Progress</span>
+                                <span style={{ color: ts.textMuted, fontFamily: D ? '"Nunito", sans-serif' : '"Press Start 2P", monospace', fontSize: D ? 9 : 5 }}>{mod.percent}%</span>
                               </div>
-                              <div className="w-full h-1.5 bg-black/45 border border-black p-[0.5px] flex items-center">
-                                <div className="h-full bg-[#10B981]" style={{ width: `${mod.percent}%` }} />
+                              <div style={D ? { height: 6, background: '#E0E0E0', borderRadius: 999, overflow: 'hidden' }
+                                         : { height: 6, background: 'rgba(0,0,0,0.45)', border: '1px solid #000', padding: '0.5px', display: 'flex', alignItems: 'center' }}>
+                                <div style={D ? { width: `${mod.percent}%`, height: '100%', background: '#5FCC5F', borderRadius: 999 }
+                                           : { width: `${mod.percent}%`, height: '100%', background: '#10B981' }} />
                               </div>
                             </div>
 
-                            {/* Gated locked message */}
                             {isModLocked && (
-                              <div className="mt-2.5 flex items-center gap-1 font-pixel text-[5px] text-white/30 bg-black/20 p-1 border border-white/5 uppercase">
+                              <div className="mt-2.5 flex items-center gap-1 p-1"
+                                style={D ? { background: '#FFF5F5', border: '1px solid #FCA5A5', borderRadius: 6, color: '#EF4444', fontFamily: '"Nunito", sans-serif', fontWeight: 700, fontSize: 10 }
+                                       : { background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.3)', fontFamily: '"Press Start 2P", monospace', fontSize: 5 }}
+                              >
                                 <AlertCircle className="w-2.5 h-2.5" />
                                 <span>Complete previous play missions to unlock</span>
                               </div>
@@ -370,7 +393,7 @@ export default function Play() {
         </div>
       </div>
 
-      {/* LOCKED MISSION CLARIFICATION MODAL */}
+      {/* Locked Modal */}
       <AnimatePresence>
         {lockedTarget && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-[2px]">
@@ -378,55 +401,45 @@ export default function Play() {
               initial={{ scale: 0.9, y: 20, opacity: 0 }}
               animate={{ scale: 1, y: 0, opacity: 1 }}
               exit={{ scale: 0.9, y: 20, opacity: 0 }}
-              className="w-full max-w-sm p-6 space-y-5 text-center relative"
-              style={{ background: '#1E1B4B', border: '4px solid #EF4444', boxShadow: '8px 8px 0px 0px #000000' }}
+              className="w-full max-w-sm space-y-5 text-center relative"
+              style={ts.modal}
             >
               <div className="text-3xl">🔒</div>
-              
               <div className="space-y-1">
-                <h3 className="font-game text-xs text-red-400 uppercase tracking-wide">Play Mission Gated!</h3>
-                <p className="text-white/60 font-body text-[11px] leading-relaxed">
-                  BZZZT! Agent, you must complete your current active play module first to build the necessary AI experience before unlocking this activity!
+                <h3 style={{ color: '#EF4444', fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 800 : undefined, fontSize: D ? 16 : 12, textTransform: 'uppercase' }}>
+                  Play Mission Gated!
+                </h3>
+                <p style={{ color: ts.textSecondary, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontSize: D ? 13 : 11, lineHeight: 1.6 }}>
+                  You must complete your current active play module first to unlock this activity!
                 </p>
               </div>
-
-              {/* Locked Module Info */}
-              <div className="p-3 bg-red-950/20 border border-red-900/30 text-left space-y-1">
-                <div className="font-pixel text-[5px] text-red-400 uppercase">LOCKED TARGET:</div>
-                <div className="font-game text-xs text-white uppercase truncate">
+              <div className="p-3 text-left space-y-1" style={D ? { background: '#FFF5F5', border: '1px solid #FCA5A5', borderRadius: 10 } : { background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}>
+                <div style={{ color: '#EF4444', fontFamily: D ? '"Nunito", sans-serif' : '"Press Start 2P", monospace', fontWeight: D ? 700 : undefined, fontSize: D ? 10 : 5, textTransform: 'uppercase' }}>LOCKED TARGET:</div>
+                <div style={{ color: ts.textPrimary, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 800 : undefined, fontSize: D ? 13 : 12 }}>
                   {lockedTarget.emoji} {lockedTarget.title}
                 </div>
               </div>
-
-              {/* Active Module Info */}
               {lockedActive && (
-                <div className="p-3 bg-[#064E3B]/20 border border-[#064E3B]/30 text-left space-y-1">
-                  <div className="font-pixel text-[5px] text-emerald-400 uppercase">YOUR CURRENT ACTIVE PLAY ZONE:</div>
-                  <div className="font-game text-xs text-white uppercase truncate">
+                <div className="p-3 text-left space-y-1" style={D ? { background: '#F0FFF4', border: '1px solid #BBF7D0', borderRadius: 10 } : { background: 'rgba(6,78,59,0.2)', border: '1px solid rgba(6,78,59,0.3)' }}>
+                  <div style={{ color: '#5FCC5F', fontFamily: D ? '"Nunito", sans-serif' : '"Press Start 2P", monospace', fontWeight: D ? 700 : undefined, fontSize: D ? 10 : 5, textTransform: 'uppercase' }}>YOUR CURRENT ACTIVE PLAY ZONE:</div>
+                  <div style={{ color: ts.textPrimary, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 800 : undefined, fontSize: D ? 13 : 12 }}>
                     {lockedActive.emoji} {lockedActive.title}
                   </div>
                 </div>
               )}
-
               <div className="space-y-3 pt-2">
                 {lockedActive && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setLockedTarget(null);
-                      navigate(lockedActive.path);
-                    }}
-                    className="w-full bg-[#10B981] text-white font-game text-xs py-3 border-4 border-black shadow-[4px_4px_0px_#000] cursor-pointer hover:bg-emerald-600 transition-colors uppercase font-bold flex items-center justify-center gap-1"
+                  <button type="button"
+                    onClick={() => { setLockedTarget(null); navigate(lockedActive.path); }}
+                    style={D ? { width: '100%', background: '#5FCC5F', color: '#000', border: 'none', borderRadius: 12, padding: '13px', fontFamily: '"Nunito", sans-serif', fontWeight: 800, fontSize: 14, boxShadow: '0 4px 0px rgba(0,0,0,0.15)', cursor: 'pointer' } : {}}
+                    className={D ? '' : 'w-full bg-[#10B981] text-white font-game text-xs py-3 border-4 border-black shadow-[4px_4px_0px_#000] cursor-pointer hover:bg-emerald-600 transition-colors uppercase font-bold flex items-center justify-center gap-1'}
                   >
-                    ⚡ Start Active Mission ⚡
+                    {D ? '🎮 Go to Active Module' : '⚡ Start Active Mission ⚡'}
                   </button>
                 )}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setLockedTarget(null);
-                  }}
-                  className="w-full text-center text-white/45 font-body text-xs hover:text-white/70 transition-colors cursor-pointer"
+                <button type="button" onClick={() => setLockedTarget(null)}
+                  style={{ color: ts.textMuted, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontSize: D ? 13 : 12 }}
+                  className="w-full text-center font-body text-xs hover:opacity-70 transition-colors cursor-pointer"
                 >
                   Back to Play Zone
                 </button>

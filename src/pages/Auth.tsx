@@ -4,11 +4,14 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/contexts/AuthContext';
 import { Mail, Lock, User, ArrowLeft } from 'lucide-react';
+import { useThemeStyles } from '@/lib/useThemeStyles';
 
 export default function Auth() {
   const navigate = useNavigate();
   const location = useLocation();
   const { signIn, signUp, profile } = useAuth();
+  const ts = useThemeStyles();
+  const D = ts.duo;
   const [tab, setTab] = useState<'login' | 'signup'>(() => {
     return location.state?.mode === 'signup' ? 'signup' : 'login';
   });
@@ -55,7 +58,8 @@ export default function Auth() {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center p-5 relative overflow-hidden bg-game"
+      className={D ? 'min-h-screen flex items-center justify-center p-5 relative overflow-hidden' : 'min-h-screen flex items-center justify-center p-5 relative overflow-hidden bg-game'}
+      style={D ? ts.page : {}}
     >
       <div className="w-full max-w-sm relative z-10">
         <motion.div
@@ -67,9 +71,10 @@ export default function Auth() {
           {/* Back */}
           <button
             onClick={() => navigate('/onboarding')}
-            className="flex items-center gap-2 text-white/40 hover:text-white/70 font-body text-sm w-fit transition-colors"
+            className={D ? 'flex items-center gap-2 mb-4 font-body text-sm font-bold transition-colors cursor-pointer w-fit' : 'flex items-center gap-2 text-white/40 hover:text-white/70 font-body text-sm w-fit transition-colors'}
+            style={D ? { color: '#8B5CF6' } : {}}
           >
-            <ArrowLeft className="w-4 h-4" /> Back to Start
+            <ArrowLeft className="w-4 h-4" /> {D ? 'Back to Start' : 'Back to Start'}
           </button>
 
           {/* Logo */}
@@ -79,41 +84,42 @@ export default function Auth() {
               transition={{ repeat: Infinity, duration: 4 }}
               className="text-7xl mb-4"
             >
-              🤖
+              {D ? '🦉' : '🤖'}
             </motion.div>
-            <h1 className="font-pixel text-[12px] tracking-wider grad-text-primary">
-              QUEST AI
+            <h1 style={{ color: ts.textPrimary, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 950 : undefined, fontSize: D ? 26 : undefined }} className={D ? '' : 'font-pixel text-[12px] tracking-wider grad-text-primary'}>
+              {D ? 'Quest AI' : 'QUEST AI'}
             </h1>
-            <p className="text-white/40 font-body text-sm mt-2">Your AI Learning Adventure</p>
+            <p style={{ color: ts.textSecondary, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontSize: D ? 14 : undefined }} className={D ? '' : 'text-white/40 font-body text-sm mt-2'}>Your AI Learning Adventure</p>
           </div>
 
           {/* Card */}
           <div
             className="p-6"
-            style={{
-              background: '#1E1B4B',
-              border: '3px solid #000000',
-              boxShadow: '6px 6px 0px 0px #000000',
-            }}
+            style={ts.card}
           >
             {/* Category Indicator */}
             <div 
-              className="p-3 mb-4 flex flex-col items-center gap-2 border-2 border-black"
-              style={{ background: '#16103A' }}
+              className={D ? 'p-3.5 mb-4 flex flex-col items-center gap-2' : 'p-3 mb-4 flex flex-col items-center gap-2 border-2 border-black'}
+              style={D ? {
+                background: '#F9F9F9',
+                border: '1.5px solid #E0E0E0',
+                borderRadius: 12,
+              } : { background: '#16103A' }}
             >
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap justify-center">
                 <span className="text-xl">{selectedZone === 'junior' ? '🚀' : '🧠'}</span>
-                <span className="font-game text-xs text-white uppercase tracking-wider">
+                <span style={{ color: ts.textPrimary, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 800 : undefined, fontSize: D ? 12 : undefined }} className={D ? '' : 'font-game text-xs text-white uppercase tracking-wider'}>
                   {selectedZone === 'junior' ? 'Junior Explorer' : 'Future Innovator'}
                 </span>
-                <span className="text-white/40 font-body text-[10px]">
+                <span style={{ color: ts.textSecondary, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontSize: D ? 10 : undefined }} className={D ? '' : 'text-white/40 font-body text-[10px]'}>
                   ({selectedZone === 'junior' ? 'Ages 6–11' : 'Ages 12–16'})
                 </span>
               </div>
               <button
                 type="button"
                 onClick={() => setSelectedZone(z => z === 'junior' ? 'innovator' : 'junior')}
-                className="text-[#FFD60A] hover:opacity-80 font-body text-[11px] underline cursor-pointer"
+                style={D ? { color: '#8B5CF6', fontFamily: '"Nunito", sans-serif', fontWeight: 800, fontSize: 11 } : {}}
+                className={D ? 'underline cursor-pointer' : 'text-[#FFD60A] hover:opacity-80 font-body text-[11px] underline cursor-pointer'}
               >
                 Switch to {selectedZone === 'junior' ? 'Future Innovator' : 'Junior Explorer'}
               </button>
@@ -121,22 +127,33 @@ export default function Auth() {
 
             {/* Tabs */}
             <div
-              className="flex p-1 mb-6"
-              style={{ background: '#16103A', border: '2px solid #000000' }}
+              className={D ? '' : 'flex p-1 mb-6'}
+              style={D ? {
+                display: 'flex',
+                background: '#FFFFFF',
+                border: '1.5px solid #E0E0E0',
+                borderRadius: 12,
+                padding: 4,
+                marginBottom: 24,
+                gap: 4,
+              } : { background: '#16103A', border: '2px solid #000000' }}
             >
               {(['login', 'signup'] as const).map((t) => (
                 <button
                   key={t}
                   onClick={() => setTab(t)}
-                  className="flex-1 py-2.5 font-pixel text-[7px] transition-all duration-150 tracking-wide"
-                  style={tab === t ? {
+                  className={D ? 'flex-1 py-2 font-body text-xs font-bold transition-all duration-150 rounded-lg cursor-pointer' : 'flex-1 py-2.5 font-pixel text-[7px] transition-all duration-150 tracking-wide'}
+                  style={tab === t ? (D ? {
+                    background: '#F0FAF0',
+                    color: '#5FCC5F',
+                  } : {
                     background: '#7C3AED',
                     color: 'white',
                     border: '1.5px solid #000000',
                     boxShadow: '2px 2px 0px #000000',
-                  } : { color: 'rgba(255,255,255,0.4)' }}
+                  }) : (D ? { color: '#999999' } : { color: 'rgba(255,255,255,0.4)' })}
                 >
-                  {t === 'login' ? '🔑 SIGN IN' : '⭐ SIGN UP'}
+                  {t === 'login' ? (D ? 'Sign In' : '🔑 SIGN IN') : (D ? 'Sign Up' : '⭐ SIGN UP')}
                 </button>
               ))}
             </div>
@@ -145,46 +162,82 @@ export default function Auth() {
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               {tab === 'signup' && (
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-white/55 font-pixel text-[6px] flex items-center gap-2 tracking-wide">
-                    <User className="w-4 h-4" /> USERNAME
+                  <label style={{ color: ts.textSecondary, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 700 : undefined, fontSize: D ? 11 : undefined }} className={D ? 'flex items-center gap-1.5' : 'text-white/55 font-pixel text-[6px] flex items-center gap-2 tracking-wide'}>
+                    <User className="w-4 h-4" /> {D ? 'Username' : 'USERNAME'}
                   </label>
                   <input
                     type="text" value={username} onChange={e => setUsername(e.target.value)}
-                    placeholder="SuperCoder123" className="pixel-input" maxLength={20} required
+                    placeholder="SuperCoder123" className="pixel-input bg-transparent" maxLength={20} required
+                    style={D ? {
+                      border: '1.5px solid #E0E0E0',
+                      borderRadius: 12,
+                      padding: 10,
+                      fontSize: 13,
+                      fontFamily: '"Nunito", sans-serif',
+                      color: '#000000',
+                    } : {}}
                   />
                 </div>
               )}
               <div className="flex flex-col gap-1.5">
-                <label className="text-white/55 font-pixel text-[6px] flex items-center gap-2 tracking-wide">
-                  <Mail className="w-4 h-4" /> EMAIL
+                <label style={{ color: ts.textSecondary, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 700 : undefined, fontSize: D ? 11 : undefined }} className={D ? 'flex items-center gap-1.5' : 'text-white/55 font-pixel text-[6px] flex items-center gap-2 tracking-wide'}>
+                  <Mail className="w-4 h-4" /> {D ? 'Email' : 'EMAIL'}
                 </label>
                 <input
                   type="email" value={email} onChange={e => setEmail(e.target.value)}
-                  placeholder="explorer@school.com" className="pixel-input" required
+                  placeholder="explorer@school.com" className="pixel-input bg-transparent" required
+                  style={D ? {
+                    border: '1.5px solid #E0E0E0',
+                    borderRadius: 12,
+                    padding: 10,
+                    fontSize: 13,
+                    fontFamily: '"Nunito", sans-serif',
+                    color: '#000000',
+                  } : {}}
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className="text-white/55 font-pixel text-[6px] flex items-center gap-2 tracking-wide">
-                  <Lock className="w-4 h-4" /> PASSWORD
+                <label style={{ color: ts.textSecondary, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 700 : undefined, fontSize: D ? 11 : undefined }} className={D ? 'flex items-center gap-1.5' : 'text-white/55 font-pixel text-[6px] flex items-center gap-2 tracking-wide'}>
+                  <Lock className="w-4 h-4" /> {D ? 'Password' : 'PASSWORD'}
                 </label>
                 <input
                   type="password" value={password} onChange={e => setPassword(e.target.value)}
-                  placeholder="••••••••" className="pixel-input" required minLength={6}
+                  placeholder="••••••••" className="pixel-input bg-transparent" required minLength={6}
+                  style={D ? {
+                    border: '1.5px solid #E0E0E0',
+                    borderRadius: 12,
+                    padding: 10,
+                    fontSize: 13,
+                    fontFamily: '"Nunito", sans-serif',
+                    color: '#000000',
+                  } : {}}
                 />
               </div>
 
               {error && (
                 <div
-                  className="px-4 py-3 font-body text-sm text-red-300"
-                  style={{ background: '#3B1414', border: '2px solid #000000', boxShadow: '2px 2px 0px #000000' }}
+                  className="px-4 py-3 font-body text-sm"
+                  style={D ? {
+                    background: '#FFF5F5',
+                    border: '1.5px solid #FCA5A5',
+                    borderRadius: 12,
+                    color: '#EF4444',
+                    fontFamily: '"Nunito", sans-serif',
+                  } : { background: '#3B1414', border: '2px solid #000000', boxShadow: '2px 2px 0px #000000', color: '#FECACA' }}
                 >
                   {error}
                 </div>
               )}
               {success && (
                 <div
-                  className="px-4 py-3 font-body text-sm text-green-300"
-                  style={{ background: '#0D3B2E', border: '2px solid #000000', boxShadow: '2px 2px 0px #000000' }}
+                  className="px-4 py-3 font-body text-sm"
+                  style={D ? {
+                    background: '#F0FAF0',
+                    border: '1.5px solid #BBF7D0',
+                    borderRadius: 12,
+                    color: '#5FCC5F',
+                    fontFamily: '"Nunito", sans-serif',
+                  } : { background: '#0D3B2E', border: '2px solid #000000', boxShadow: '2px 2px 0px #000000', color: '#A7F3D0' }}
                 >
                   {success}
                 </div>
@@ -199,18 +252,19 @@ export default function Auth() {
                   <button
                     type="button"
                     onClick={() => setTab('signup')}
-                    className="font-body text-sm font-semibold hover:opacity-80 transition-opacity"
-                    style={{ color: '#F59E0B' }}
+                    className="font-body text-sm font-semibold hover:opacity-80 transition-opacity cursor-pointer"
+                    style={{ color: D ? '#8B5CF6' : '#F59E0B', fontFamily: D ? '"Nunito", sans-serif' : undefined }}
                   >
-                    ⭐ New to Quest AI? Sign Up
+                    {D ? 'New to Quest AI? Sign Up' : '⭐ New to Quest AI? Sign Up'}
                   </button>
                 ) : (
                   <button
                     type="button"
                     onClick={() => setTab('login')}
-                    className="text-white/55 font-body text-sm font-semibold hover:text-white transition-colors"
+                    className={D ? 'text-[#8B5CF6] font-body text-sm font-semibold hover:opacity-80 transition-opacity cursor-pointer' : "text-white/55 font-body text-sm font-semibold hover:text-white transition-colors cursor-pointer"}
+                    style={D ? { fontFamily: '"Nunito", sans-serif' } : {}}
                   >
-                    🔑 Already have an account? Sign In
+                    {D ? 'Already have an account? Sign In' : '🔑 Already have an account? Sign In'}
                   </button>
                 )}
               </div>

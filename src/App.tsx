@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth, useCurrentProfile } from '@/contexts/AuthContext';
+import { ThemeProvider, useTheme } from '@/contexts/ThemeContext';
 import { AppShell } from '@/layouts/AppShell';
 import { PLAY_MODULES_DATA } from '@/data/curriculum';
 
@@ -143,18 +144,52 @@ function AppRoutes() {
   );
 }
 
+// ── Theme-aware Toaster ─────────────────────────────────────────────────────
+function ThemedToaster() {
+  const { isDuolingo } = useTheme();
+  return (
+    <Toaster
+      position="top-center"
+      toastOptions={isDuolingo ? {
+        style: {
+          background: '#FFFFFF',
+          color: '#000000',
+          border: '1.5px solid #E0E0E0',
+          borderRadius: 12,
+          fontFamily: '"Nunito", sans-serif',
+          fontWeight: 700,
+          boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+          padding: '10px 16px',
+        },
+        success: {
+          iconTheme: { primary: '#5FCC5F', secondary: '#fff' },
+        },
+        error: {
+          iconTheme: { primary: '#FF6B6B', secondary: '#fff' },
+        },
+      } : {
+        style: {
+          background: '#1E1B4B',
+          color: 'white',
+          border: '3px solid #000000',
+          borderRadius: 0,
+          fontFamily: '"Fredoka One", cursive',
+          boxShadow: '4px 4px 0px #000000',
+        },
+      }}
+    />
+  );
+}
+
 export default function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <Toaster
-          position="top-center"
-          toastOptions={{
-            style: { background: '#1E1B4B', color: 'white', border: '3px solid #000000', borderRadius: 0, fontFamily: '"Fredoka One", cursive', boxShadow: '4px 4px 0px #000000' },
-          }}
-        />
-        <AppRoutes />
-      </AuthProvider>
-    </BrowserRouter>
+    <ThemeProvider>
+      <BrowserRouter>
+        <AuthProvider>
+          <ThemedToaster />
+          <AppRoutes />
+        </AuthProvider>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }

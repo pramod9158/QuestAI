@@ -109,14 +109,79 @@ export function getEarnedBadges(xp: number, streak = 0): typeof BADGES {
 }
 
 // --- TTS ---
-export function speak(text: string, rate = 0.9, pitch = 1.1): void {
+// Preferred female voice names in priority order
+const FEMALE_VOICE_PREFERENCES = [
+  'Google UK English Female',
+  'Google US English Female',
+  'Microsoft Zira Online (Natural) - English (United States)',
+  'Microsoft Zira Desktop - English (United States)',
+  'Samantha',
+  'Karen',
+  'Moira',
+  'Tessa',
+  'Fiona',
+  'Victoria',
+  'Google हिन्दी',
+  'Microsoft Heera Online (Natural) - English (India)',
+];
+
+function getBestFemaleVoice(): SpeechSynthesisVoice | null {
+  const voices = window.speechSynthesis.getVoices();
+  if (!voices.length) return null;
+
+  // Try each preferred name
+  for (const name of FEMALE_VOICE_PREFERENCES) {
+    const v = voices.find(v => v.name === name);
+    if (v) return v;
+  }
+
+  // Fallback: find any voice with 'female' in name or en-GB/en-US female-sounding
+  const femaleHint = voices.find(v =>
+    v.name.toLowerCase().includes('female') ||
+    v.name.toLowerCase().includes('woman') ||
+    v.name.toLowerCase().includes('girl') ||
+    v.name.toLowerCase().includes('zira') ||
+    v.name.toLowerCase().includes('samantha') ||
+    v.name.toLowerCase().includes('karen') ||
+    v.name.toLowerCase().includes('victoria') ||
+    v.name.toLowerCase().includes('fiona') ||
+    v.name.toLowerCase().includes('heera')
+  );
+  if (femaleHint) return femaleHint;
+
+  // Last resort: first English voice
+  return voices.find(v => v.lang.startsWith('en')) || voices[0] || null;
+}
+
+export function speak(text: string, rate = 0.88, pitch = 1.08): void {
   if (!window.speechSynthesis) return;
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = 'en-IN';
+  utterance.lang = 'en-US';
   utterance.rate = rate;
   utterance.pitch = pitch;
-  window.speechSynthesis.speak(utterance);
+  utterance.volume = 1;
+
+  const setVoiceAndSpeak = () => {
+    const voice = getBestFemaleVoice();
+    if (voice) utterance.voice = voice;
+    window.speechSynthesis.speak(utterance);
+  };
+
+  // Voices may not be loaded yet — handle async loading
+  const voices = window.speechSynthesis.getVoices();
+  if (voices.length > 0) {
+    setVoiceAndSpeak();
+  } else {
+    window.speechSynthesis.onvoiceschanged = () => {
+      window.speechSynthesis.onvoiceschanged = null;
+      setVoiceAndSpeak();
+    };
+    // Fallback timeout if onvoiceschanged never fires
+    setTimeout(() => {
+      if (!window.speechSynthesis.speaking) setVoiceAndSpeak();
+    }, 500);
+  }
 }
 
 export function stopSpeaking(): void {

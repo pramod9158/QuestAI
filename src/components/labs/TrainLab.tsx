@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { HelpCircle, Star, Sparkles, RefreshCw, Send, CheckCircle2, ShieldAlert, Award } from 'lucide-react';
 import { AICompanion } from '../ui/AICompanion';
+import { useThemeStyles } from '@/lib/useThemeStyles';
 import TeachableMachineTrainer from '../teachable/TeachableMachineTrainer';
 
 interface TrainLabProps {
@@ -9,6 +10,8 @@ interface TrainLabProps {
 }
 
 export default function TrainLab({ onComplete }: TrainLabProps) {
+  const ts = useThemeStyles();
+  const D = ts.duo;
   const [activeStep, setActiveStep] = useState<'label' | 'train' | 'test' | 'complete'>('label');
   const [tipsIndex, setTipsIndex] = useState(0);
 
@@ -31,7 +34,12 @@ export default function TrainLab({ onComplete }: TrainLabProps) {
       {/* Visual Instruction Header with Sparky */}
       <div 
         className="p-4 flex flex-col gap-3 relative overflow-hidden"
-        style={{
+        style={D ? {
+          background: '#FFFFFF',
+          border: '1.5px solid #E0E0E0',
+          borderRadius: 14,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+        } : {
           background: 'linear-gradient(135deg, #1E1B4B 0%, #150E36 100%)',
           border: '3px solid #10B981',
           boxShadow: '4px 4px 0px #000',
@@ -53,17 +61,17 @@ export default function TrainLab({ onComplete }: TrainLabProps) {
         />
 
         {/* Guided Steps tracker */}
-        <div className="grid grid-cols-4 gap-1.5 pt-2 border-t border-white/5 text-center text-[7px] font-pixel text-white/50">
-          <div className={`py-1 border border-black ${activeStep === 'label' ? 'bg-[#10B981]/20 text-[#10B981] border-[#10B981]/40' : 'bg-black/20'}`}>
+        <div className="grid grid-cols-4 gap-1.5 pt-2 border-t border-white/5 text-center text-[7px] font-pixel text-white/50" style={D ? { borderTopColor: '#EEEEEE', fontFamily: '"Nunito", sans-serif', fontSize: 10, fontWeight: 700 } : {}}>
+          <div className={D ? `py-1 border rounded-lg ${activeStep === 'label' ? 'bg-[#ECFDF5] text-[#10B981] border-[#10B981]/40' : 'bg-gray-50 border-gray-100 text-gray-400'}` : `py-1 border border-black ${activeStep === 'label' ? 'bg-[#10B981]/20 text-[#10B981] border-[#10B981]/40' : 'bg-black/20'}`}>
             1. LABEL
           </div>
-          <div className={`py-1 border border-black ${activeStep === 'train' ? 'bg-[#10B981]/20 text-[#10B981] border-[#10B981]/40' : 'bg-black/20'}`}>
+          <div className={D ? `py-1 border rounded-lg ${activeStep === 'train' ? 'bg-[#ECFDF5] text-[#10B981] border-[#10B981]/40' : 'bg-gray-50 border-gray-100 text-gray-400'}` : `py-1 border border-black ${activeStep === 'train' ? 'bg-[#10B981]/20 text-[#10B981] border-[#10B981]/40' : 'bg-black/20'}`}>
             2. TRAIN
           </div>
-          <div className={`py-1 border border-black ${activeStep === 'test' ? 'bg-[#10B981]/20 text-[#10B981] border-[#10B981]/40' : 'bg-black/20'}`}>
+          <div className={D ? `py-1 border rounded-lg ${activeStep === 'test' ? 'bg-[#ECFDF5] text-[#10B981] border-[#10B981]/40' : 'bg-gray-50 border-gray-100 text-gray-400'}` : `py-1 border border-black ${activeStep === 'test' ? 'bg-[#10B981]/20 text-[#10B981] border-[#10B981]/40' : 'bg-black/20'}`}>
             3. TEST
           </div>
-          <div className={`py-1 border border-black ${activeStep === 'complete' ? 'bg-[#10B981]/20 text-[#10B981] border-[#10B981]/40' : 'bg-black/20'}`}>
+          <div className={D ? `py-1 border rounded-lg ${activeStep === 'complete' ? 'bg-[#ECFDF5] text-[#10B981] border-[#10B981]/40' : 'bg-gray-50 border-gray-100 text-gray-400'}` : `py-1 border border-black ${activeStep === 'complete' ? 'bg-[#10B981]/20 text-[#10B981] border-[#10B981]/40' : 'bg-black/20'}`}>
             4. ACCURACY ✓
           </div>
         </div>
@@ -71,8 +79,10 @@ export default function TrainLab({ onComplete }: TrainLabProps) {
 
       {/* Embedded TeachableMachineTrainer wrapper */}
       <div 
-        className="border-3 border-black relative overflow-hidden"
-        style={{
+        className={D ? "border border-gray-200 rounded-xl relative overflow-hidden" : "border-3 border-black relative overflow-hidden"}
+        style={D ? {
+          boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+        } : {
           boxShadow: '4px 4px 0px #000',
         }}
       >

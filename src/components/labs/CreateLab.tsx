@@ -4,6 +4,7 @@ import { testPromptPlayground, modifySvgWithInstruction, evaluateSvgDrawing } fr
 import { BookOpen, MessageSquare, Paintbrush, Send, RefreshCw, Sparkles, Award } from 'lucide-react';
 import { AICompanion } from '../ui/AICompanion';
 import { useCurrentProfile } from '@/contexts/AuthContext';
+import { useThemeStyles } from '@/lib/useThemeStyles';
 
 interface CreateLabProps {
   onComplete: () => void;
@@ -101,6 +102,8 @@ export default function CreateLab({ onComplete }: CreateLabProps) {
   const profile = useCurrentProfile();
   const zone = profile?.zone || 'junior';
   const activeChallenges = zone === 'innovator' ? INNOVATOR_ART_CHALLENGES : JUNIOR_ART_CHALLENGES;
+  const ts = useThemeStyles();
+  const D = ts.duo;
 
   const [activeMode, setActiveMode] = useState<Mode>('story');
   const [loading, setLoading] = useState(false);
@@ -270,7 +273,12 @@ export default function CreateLab({ onComplete }: CreateLabProps) {
       {/* Tab selection */}
       <div 
         className="p-3"
-        style={{
+        style={D ? {
+          background: '#FFFFFF',
+          border: '1.5px solid #E0E0E0',
+          borderRadius: 14,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+        } : {
           background: 'linear-gradient(135deg, #1E1B4B 0%, #150E36 100%)',
           border: '3px solid #EC4899',
           boxShadow: '4px 4px 0px #000',
@@ -288,7 +296,9 @@ export default function CreateLab({ onComplete }: CreateLabProps) {
         <div className="flex gap-1.5">
           <button
             onClick={() => { setActiveMode('story'); setGeneratedStory(null); }}
-            className={`flex-1 py-2 font-game text-[10px] border-2 border-black flex justify-center items-center gap-1 cursor-pointer transition-all ${
+            className={D ? `flex-1 py-2 font-game text-[10px] flex justify-center items-center gap-1 cursor-pointer transition-all rounded-xl ${
+              activeMode === 'story' ? 'bg-[#B366FF] text-white' : 'bg-[#F5F5F5] text-[#999999]'
+            }` : `flex-1 py-2 font-game text-[10px] border-2 border-black flex justify-center items-center gap-1 cursor-pointer transition-all ${
               activeMode === 'story' ? 'bg-[#EC4899] text-white' : 'bg-black/20 text-white/50'
             }`}
           >
@@ -297,7 +307,9 @@ export default function CreateLab({ onComplete }: CreateLabProps) {
           </button>
           <button
             onClick={() => { setActiveMode('chatbot'); setChatHistory([]); }}
-            className={`flex-1 py-2 font-game text-[10px] border-2 border-black flex justify-center items-center gap-1 cursor-pointer transition-all ${
+            className={D ? `flex-1 py-2 font-game text-[10px] flex justify-center items-center gap-1 cursor-pointer transition-all rounded-xl ${
+              activeMode === 'chatbot' ? 'bg-[#B366FF] text-white' : 'bg-[#F5F5F5] text-[#999999]'
+            }` : `flex-1 py-2 font-game text-[10px] border-2 border-black flex justify-center items-center gap-1 cursor-pointer transition-all ${
               activeMode === 'chatbot' ? 'bg-[#EC4899] text-white' : 'bg-black/20 text-white/50'
             }`}
           >
@@ -306,7 +318,9 @@ export default function CreateLab({ onComplete }: CreateLabProps) {
           </button>
           <button
             onClick={() => { setActiveMode('art'); setGeneratedSvg(null); }}
-            className={`flex-1 py-2 font-game text-[10px] border-2 border-black flex justify-center items-center gap-1 cursor-pointer transition-all ${
+            className={D ? `flex-1 py-2 font-game text-[10px] flex justify-center items-center gap-1 cursor-pointer transition-all rounded-xl ${
+              activeMode === 'art' ? 'bg-[#B366FF] text-white' : 'bg-[#F5F5F5] text-[#999999]'
+            }` : `flex-1 py-2 font-game text-[10px] border-2 border-black flex justify-center items-center gap-1 cursor-pointer transition-all ${
               activeMode === 'art' ? 'bg-[#EC4899] text-white' : 'bg-black/20 text-white/50'
             }`}
           >
@@ -319,7 +333,12 @@ export default function CreateLab({ onComplete }: CreateLabProps) {
       {/* Main Interactive Screen */}
       <div 
         className="p-4"
-        style={{
+        style={D ? {
+          background: '#FFFFFF',
+          border: '1.5px solid #E0E0E0',
+          borderRadius: 14,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+        } : {
           background: '#1E1B4B',
           border: '3px solid #000',
           boxShadow: '4px 4px 0px #000',
@@ -330,7 +349,7 @@ export default function CreateLab({ onComplete }: CreateLabProps) {
           <div className="space-y-4">
             <div className="flex gap-2">
               <div className="flex-1">
-                <span className="text-white/40 font-pixel text-[5px] block mb-1">STORY THEME:</span>
+                <span className={D ? "text-gray-400 font-body text-[10px] block mb-1 font-bold" : "text-white/40 font-pixel text-[5px] block mb-1"}>STORY THEME:</span>
                 <select 
                   value={storyGenre}
                   onChange={e => setStoryGenre(e.target.value)}
@@ -345,7 +364,7 @@ export default function CreateLab({ onComplete }: CreateLabProps) {
             </div>
 
             <div>
-              <span className="text-white/40 font-pixel text-[5px] block mb-1">WHAT IS THE STORY ABOUT?</span>
+              <span className={D ? "text-gray-400 font-body text-[10px] block mb-1 font-bold" : "text-white/40 font-pixel text-[5px] block mb-1"}>WHAT IS THE STORY ABOUT?</span>
               <input
                 type="text"
                 value={storyTopic}
@@ -359,7 +378,7 @@ export default function CreateLab({ onComplete }: CreateLabProps) {
             <button
               onClick={handleGenerateStory}
               disabled={!storyTopic.trim() || loading}
-              className="w-full py-3 bg-[#EC4899] hover:bg-pink-700 text-white font-game text-xs border-3 border-black shadow-[3px_3px_0px_#000] flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+              className={D ? "w-full py-3 bg-[#5FCC5F] hover:bg-[#4CAF50] text-black font-game text-xs rounded-xl shadow-[0_4px_0px_rgba(0,0,0,0.15)] flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 transition-all active:translate-y-[2px]" : "w-full py-3 bg-[#EC4899] hover:bg-pink-700 text-white font-game text-xs border-3 border-black shadow-[3px_3px_0px_#000] flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"}
             >
               {loading ? (
                 <>
@@ -378,12 +397,12 @@ export default function CreateLab({ onComplete }: CreateLabProps) {
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="border-3 border-black bg-black/40 p-4 text-center relative shadow-[3px_3px_0px_#000]"
+                style={D ? { background: '#F0FFF4', border: '1.5px solid #BBF7D0', borderRadius: 12, boxShadow: 'none' } : {}} className={D ? "p-4 text-center relative" : "border-3 border-black bg-black/40 p-4 text-center relative shadow-[3px_3px_0px_#000]"}
               >
-                <span className="absolute -top-3 left-4 bg-pink-600 font-pixel text-[5px] text-white px-2 py-0.5 border-2 border-black">
+                <span className={D ? "absolute -top-3 left-4 bg-[#5FCC5F] font-body font-extrabold text-[9px] text-black px-2 py-0.5 rounded-full" : "absolute -top-3 left-4 bg-pink-600 font-pixel text-[5px] text-white px-2 py-0.5 border-2 border-black"}>
                   📖 Generated Story
                 </span>
-                <p className="text-white font-body text-xs leading-relaxed italic mt-1">
+                <p className={D ? "text-gray-700 font-body text-xs leading-relaxed italic mt-1" : "text-white font-body text-xs leading-relaxed italic mt-1"}>
                   "{generatedStory}"
                 </p>
               </motion.div>
@@ -396,7 +415,7 @@ export default function CreateLab({ onComplete }: CreateLabProps) {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <span className="text-white/40 font-pixel text-[5px] block mb-1">BOT NAME:</span>
+                <span className={D ? "text-gray-400 font-body text-[10px] block mb-1 font-bold" : "text-white/40 font-pixel text-[5px] block mb-1"}>BOT NAME:</span>
                 <input
                   type="text"
                   value={botName}
@@ -407,7 +426,7 @@ export default function CreateLab({ onComplete }: CreateLabProps) {
                 />
               </div>
               <div>
-                <span className="text-white/40 font-pixel text-[5px] block mb-1">PERSONALITY:</span>
+                <span className={D ? "text-gray-400 font-body text-[10px] block mb-1 font-bold" : "text-white/40 font-pixel text-[5px] block mb-1"}>PERSONALITY:</span>
                 <select 
                   value={botPersonality}
                   onChange={e => setBotPersonality(e.target.value)}
@@ -422,22 +441,26 @@ export default function CreateLab({ onComplete }: CreateLabProps) {
             </div>
 
             {/* Chat Messages */}
-            <div className="h-44 overflow-y-auto border-2 border-black bg-black/35 p-3.5 space-y-2 flex flex-col no-scrollbar">
+            <div className={D ? "h-44 overflow-y-auto border border-gray-200 bg-[#FAFAFA] rounded-xl p-3.5 space-y-2 flex flex-col no-scrollbar" : "h-44 overflow-y-auto border-2 border-black bg-black/35 p-3.5 space-y-2 flex flex-col no-scrollbar"}>
               {chatHistory.length === 0 && (
-                <p className="text-white/30 font-body text-xs text-center my-auto">
+                <p className={D ? "text-gray-400 font-body text-xs text-center my-auto" : "text-white/30 font-body text-xs text-center my-auto"}>
                   Type a message below to initialize conversation with {botName}!
                 </p>
               )}
               {chatHistory.map((msg, idx) => (
                 <div 
                   key={idx} 
-                  className={`max-w-[80%] p-2 rounded-lg text-xs leading-relaxed ${
+                  className={D ? `max-w-[80%] p-2 rounded-lg text-xs leading-relaxed ${
+                    msg.sender === 'user' 
+                      ? 'bg-[#B366FF] text-white self-end rounded-br-none' 
+                      : 'bg-[#FFFFFF] text-[#000000] border border-gray-200 self-start rounded-bl-none shadow-sm'
+                  }` : `max-w-[80%] p-2 rounded-lg text-xs leading-relaxed ${
                     msg.sender === 'user' 
                       ? 'bg-purple-600 text-white self-end rounded-br-none' 
                       : 'bg-black/40 text-pink-300 border border-[#EC4899]/30 self-start rounded-bl-none'
                   }`}
                 >
-                  <span className="font-pixel text-[4px] block text-white/40 uppercase mb-0.5">
+                  <span className={D ? "font-body font-bold text-[8px] block text-gray-400 uppercase mb-0.5" : "font-pixel text-[4px] block text-white/40 uppercase mb-0.5"}>
                     {msg.sender === 'user' ? 'YOU' : botName.toUpperCase()}
                   </span>
                   {msg.text}
@@ -458,7 +481,7 @@ export default function CreateLab({ onComplete }: CreateLabProps) {
               <button
                 onClick={handleSendChatMessage}
                 disabled={!chatInput.trim() || loading}
-                className="px-4 bg-[#EC4899] text-white border-2 border-black hover:bg-pink-700 transition-colors flex items-center justify-center cursor-pointer disabled:opacity-50"
+                className={D ? "px-4 bg-[#5FCC5F] text-black rounded-xl hover:bg-[#4CAF50] transition-colors flex items-center justify-center cursor-pointer disabled:opacity-50" : "px-4 bg-[#EC4899] text-white border-2 border-black hover:bg-pink-700 transition-colors flex items-center justify-center cursor-pointer disabled:opacity-50"}
               >
                 {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
               </button>
@@ -473,10 +496,10 @@ export default function CreateLab({ onComplete }: CreateLabProps) {
               // Challenge Setup/Selection Phase
               <div className="space-y-4 py-2">
                 <div 
-                  className="p-3 bg-indigo-950/40 border-2 border-dashed border-pink-500/40 rounded-lg text-left"
+                  className={D ? "p-3 bg-[#F5F3FF] border-2 border-dashed border-[#B366FF]/40 rounded-xl text-left" : "p-3 bg-indigo-950/40 border-2 border-dashed border-pink-500/40 rounded-lg text-left"}
                 >
-                  <p className="font-game text-xs text-pink-400 mb-1">🎮 Shape Matching Challenges</p>
-                  <p className="font-body text-xs text-white/70 leading-relaxed">
+                  <p className={D ? "font-game text-xs text-[#8B5CF6] mb-1" : "font-game text-xs text-pink-400 mb-1"}>🎮 Shape Matching Challenges</p>
+                  <p className={D ? "font-body text-xs text-gray-600 leading-relaxed" : "font-body text-xs text-white/70 leading-relaxed"}>
                     Select a drawing challenge below. Your goal is to guide the AI to match the target reference shape by giving structured English prompts (e.g., "draw a red rectangle in the center"). You have unlimited attempts, but using fewer prompts gets higher marks!
                   </p>
                 </div>
@@ -494,28 +517,27 @@ export default function CreateLab({ onComplete }: CreateLabProps) {
                           <div
                             key={challenge.id}
                             onClick={() => setActiveChallenge(challenge)}
-                            className="p-3 bg-black/45 hover:bg-pink-600/15 border-2 border-black hover:border-pink-500 transition-all cursor-pointer rounded flex flex-col justify-between shadow-[3px_3px_0px_#000]"
+                            className={D ? "p-3 bg-[#FFFFFF] hover:bg-[#FDF2F8] border border-gray-200 hover:border-pink-300 transition-all cursor-pointer rounded-xl flex flex-col justify-between shadow-sm" : "p-3 bg-black/45 hover:bg-pink-600/15 border-2 border-black hover:border-pink-500 transition-all cursor-pointer rounded flex flex-col justify-between shadow-[3px_3px_0px_#000]"}
                           >
                             <div>
                               <div className="flex justify-between items-start">
-                                <span className="font-game text-xs text-white">{challenge.emoji} {challenge.name}</span>
+                                <span className={D ? "font-game text-xs text-black" : "font-game text-xs text-white"}>{challenge.emoji} {challenge.name}</span>
                                 <span 
-                                  className="font-pixel text-[4px] px-1.5 py-0.5 border border-black rounded"
+                                  className={D ? "font-body text-[9px] px-1.5 py-0.5 rounded-full text-white font-bold" : "font-pixel text-[4px] px-1.5 py-0.5 border border-black rounded"}
                                   style={{
-                                    background: challenge.difficulty === 'Simple' ? '#064E3B' : challenge.difficulty === 'Medium' ? '#78350F' : '#7F1D1D',
-                                    color: '#fff'
+                                    background: challenge.difficulty === 'Simple' ? '#5FCC5F' : challenge.difficulty === 'Medium' ? '#FFB84D' : '#FF6B6B',
                                   }}
                                 >
                                   {challenge.difficulty}
                                 </span>
                               </div>
-                              <p className="font-body text-[10px] text-white/60 mt-1 leading-normal">
+                              <p className={D ? "font-body text-[10px] text-gray-500 mt-1 leading-normal" : "font-body text-[10px] text-white/60 mt-1 leading-normal"}>
                                 {challenge.description}
                               </p>
                             </div>
-                            <div className="flex justify-between items-center mt-3 pt-2 border-t border-white/5 font-pixel text-[5px] text-white/40">
+                            <div className={D ? "flex justify-between items-center mt-3 pt-2 border-t border-gray-100 font-body text-[10px] text-gray-400" : "flex justify-between items-center mt-3 pt-2 border-t border-white/5 font-pixel text-[5px] text-white/40"}>
                               <span>Min Prompts: {challenge.minPrompts}</span>
-                              <span className="text-yellow-400">Target Budget: {challenge.minPrompts} prompts</span>
+                              <span className={D ? "text-[#D97706] font-bold" : "text-yellow-400"}>Target Budget: {challenge.minPrompts} prompts</span>
                             </div>
                           </div>
                         ))}
@@ -528,17 +550,17 @@ export default function CreateLab({ onComplete }: CreateLabProps) {
               // Active Challenge Drawing & Feedback Phase
               <div className="space-y-4">
                 {/* Challenge Header */}
-                <div className="flex justify-between items-center bg-black/20 p-2.5 border-2 border-black">
+                <div className={D ? "flex justify-between items-center bg-[#FAFAFA] p-2.5 border border-gray-200 rounded-xl" : "flex justify-between items-center bg-black/20 p-2.5 border-2 border-black"}>
                   <div className="flex items-center gap-1.5">
-                    <span className="font-game text-xs text-pink-400">Mission: {activeChallenge.emoji} {activeChallenge.name}</span>
-                    <span className="font-pixel text-[5px] text-white/40">({activeChallenge.difficulty} Mode)</span>
+                    <span className={D ? "font-game text-xs text-pink-500 font-bold" : "font-game text-xs text-pink-400"}>Mission: {activeChallenge.emoji} {activeChallenge.name}</span>
+                    <span className={D ? "font-body text-[10px] text-gray-400" : "font-pixel text-[5px] text-white/40"}>({activeChallenge.difficulty} Mode)</span>
                   </div>
                   <button
                     onClick={() => {
                       handleResetArt();
                       setActiveChallenge(null);
                     }}
-                    className="font-pixel text-[5px] text-white/40 hover:text-pink-400 border border-white/10 px-2 py-0.5 cursor-pointer"
+                    className={D ? "font-body text-[10px] text-gray-500 hover:text-pink-500 px-2 py-0.5 cursor-pointer" : "font-pixel text-[5px] text-white/40 hover:text-pink-400 border border-white/10 px-2 py-0.5 cursor-pointer"}
                   >
                     Change Mission ✕
                   </button>
@@ -551,9 +573,9 @@ export default function CreateLab({ onComplete }: CreateLabProps) {
                   const extra = Math.max(0, used - target);
                   const penalty = extra * 3;
                   return (
-                    <div className="p-3 bg-black/25 border-2 border-black space-y-1">
-                      <div className="flex justify-between items-center font-pixel text-[5px]">
-                        <span className="text-white/60">PROMPTS USED: {used} (TARGET: {target})</span>
+                    <div className={D ? "p-3 bg-[#FFFBEB] border border-[#FDE68A] rounded-xl space-y-1" : "p-3 bg-black/25 border-2 border-black space-y-1"}>
+                      <div className={D ? "flex justify-between items-center font-body text-[10px] font-bold" : "flex justify-between items-center font-pixel text-[5px]"}>
+                        <span className={D ? "text-gray-700" : "text-white/60"}>PROMPTS USED: {used} (TARGET: {target})</span>
                         {penalty > 0 ? (
                           <span className="text-red-400 font-bold animate-pulse">
                             EFFICIENCY DEDUCTION: -{penalty} MARKS
@@ -564,7 +586,7 @@ export default function CreateLab({ onComplete }: CreateLabProps) {
                           </span>
                         )}
                       </div>
-                      <div className="text-[7px] font-body text-white/40">
+                      <div className={D ? "text-[10px] font-body text-gray-500" : "text-[7px] font-body text-white/40"}>
                         {penalty > 0 
                           ? `Using ${extra} extra prompts. Every extra prompt reduces your final score by 3 marks. Try to keep your instructions clear and concise!`
                           : `Great job! You are within the target shape prompt budget. Clear instructions get full marks!`
@@ -580,9 +602,9 @@ export default function CreateLab({ onComplete }: CreateLabProps) {
                   <div className="grid grid-cols-2 gap-2">
                     {/* Student SVG Canvas */}
                     <div className="flex flex-col items-center">
-                      <span className="font-pixel text-[5px] text-white/45 mb-1 uppercase">Your Drawing</span>
+                      <span className={D ? "font-body text-[10px] text-gray-500 mb-1 uppercase font-bold" : "font-pixel text-[5px] text-white/45 mb-1 uppercase"}>Your Drawing</span>
                       <div
-                        className="border-3 border-black bg-white/5 relative shadow-[3px_3px_0px_#000] aspect-square w-full flex items-center justify-center overflow-hidden"
+                        className={D ? "border border-gray-200 bg-white relative shadow-sm aspect-square w-full flex items-center justify-center overflow-hidden rounded-xl" : "border-3 border-black bg-white/5 relative shadow-[3px_3px_0px_#000] aspect-square w-full flex items-center justify-center overflow-hidden"}
                       >
                         {generatedSvg ? (
                           <div 
@@ -602,9 +624,9 @@ export default function CreateLab({ onComplete }: CreateLabProps) {
 
                     {/* Reference target Canvas */}
                     <div className="flex flex-col items-center">
-                      <span className="font-pixel text-[5px] text-yellow-400/70 mb-1 uppercase">Target Shape Goal</span>
+                      <span className={D ? "font-body text-[10px] text-yellow-600 mb-1 uppercase font-bold" : "font-pixel text-[5px] text-yellow-400/70 mb-1 uppercase"}>Target Shape Goal</span>
                       <div
-                        className="border-3 border-yellow-500/40 bg-white/5 relative shadow-[3px_3px_0px_#000] aspect-square w-full flex items-center justify-center overflow-hidden"
+                        className={D ? "border border-yellow-300 bg-white relative shadow-sm aspect-square w-full flex items-center justify-center overflow-hidden rounded-xl" : "border-3 border-yellow-500/40 bg-white/5 relative shadow-[3px_3px_0px_#000] aspect-square w-full flex items-center justify-center overflow-hidden"}
                       >
                         <div 
                           className="w-full h-full flex items-center justify-center opacity-85"
@@ -615,27 +637,27 @@ export default function CreateLab({ onComplete }: CreateLabProps) {
                   </div>
 
                   {/* Right Column: Chat/Prompt Steps Log */}
-                  <div className="flex flex-col h-[260px] border-2 border-black bg-black/30 p-2.5 justify-between">
-                    <span className="font-pixel text-[5px] text-white/40 border-b border-white/5 pb-1 block">
+                  <div className={D ? "flex flex-col h-[260px] border border-gray-200 bg-[#FAFAFA] rounded-xl p-2.5 justify-between" : "flex flex-col h-[260px] border-2 border-black bg-black/30 p-2.5 justify-between"}>
+                    <span className={D ? "font-body text-[10px] text-gray-400 border-b border-gray-100 pb-1 block font-bold" : "font-pixel text-[5px] text-white/40 border-b border-white/5 pb-1 block"}>
                       BUILD STEPS ({promptHistory.length})
                     </span>
 
                     {/* Chat log overflow wrapper */}
                     <div className="flex-1 overflow-y-auto py-2 space-y-2 no-scrollbar text-xs">
                       {/* Starter prompt */}
-                      <div className="bg-pink-900/10 border border-pink-500/10 p-2 rounded text-pink-300">
-                        <span className="font-pixel text-[4px] block text-pink-400">SPARKY BOT</span>
+                      <div className={D ? "bg-pink-50 border border-pink-100 p-2 rounded-lg text-pink-700" : "bg-pink-900/10 border border-pink-500/10 p-2 rounded text-pink-300"}>
+                        <span className={D ? "font-body font-bold text-[8px] block text-pink-500" : "font-pixel text-[4px] block text-pink-400"}>SPARKY BOT</span>
                         Let's draw a {activeChallenge.name}! What mathematical shape (like square, circle, or triangle) should we start with?
                       </div>
 
                       {promptHistory.map((step, idx) => (
                         <React.Fragment key={idx}>
-                          <div className="bg-purple-900/20 p-2 rounded text-purple-200 self-end">
-                            <span className="font-pixel text-[4px] block text-purple-400">YOU (STEP {idx + 1})</span>
+                          <div className={D ? "bg-purple-50 p-2 rounded-lg text-purple-700 self-end" : "bg-purple-900/20 p-2 rounded text-purple-200 self-end"}>
+                            <span className={D ? "font-body font-bold text-[8px] block text-purple-500" : "font-pixel text-[4px] block text-purple-400"}>YOU (STEP {idx + 1})</span>
                             {step}
                           </div>
-                          <div className="bg-pink-900/10 border border-pink-500/10 p-2 rounded text-pink-300">
-                            <span className="font-pixel text-[4px] block text-pink-400">SPARKY BOT</span>
+                          <div className={D ? "bg-pink-50 border border-pink-100 p-2 rounded-lg text-pink-700" : "bg-pink-900/10 border border-pink-500/10 p-2 rounded text-pink-300"}>
+                            <span className={D ? "font-body font-bold text-[8px] block text-pink-500" : "font-pixel text-[4px] block text-pink-400"}>SPARKY BOT</span>
                             Added shape successfully! What should we add next?
                           </div>
                         </React.Fragment>
@@ -661,7 +683,7 @@ export default function CreateLab({ onComplete }: CreateLabProps) {
                         <button
                           onClick={handleGenerateArt}
                           disabled={!artPrompt.trim() || loading || grading}
-                          className="px-3 bg-pink-600 hover:bg-pink-700 text-white border-2 border-black flex items-center justify-center cursor-pointer disabled:opacity-50"
+                          className={D ? "px-3 bg-[#5FCC5F] text-black rounded-lg flex items-center justify-center cursor-pointer disabled:opacity-50" : "px-3 bg-pink-600 hover:bg-pink-700 text-white border-2 border-black flex items-center justify-center cursor-pointer disabled:opacity-50"}
                         >
                           {loading ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
                         </button>
@@ -675,7 +697,7 @@ export default function CreateLab({ onComplete }: CreateLabProps) {
                   <button
                     onClick={handleUndoArt}
                     disabled={svgHistory.length === 0 || loading || grading}
-                    className="flex-1 min-w-[80px] py-1.5 bg-black/40 hover:bg-black/60 text-white/80 disabled:opacity-30 border-2 border-black font-game text-[10px] cursor-pointer"
+                    className={D ? "flex-1 min-w-[80px] py-1.5 bg-[#FFFFFF] hover:bg-gray-50 text-gray-700 disabled:opacity-30 border border-gray-200 rounded-xl font-game text-[10px] cursor-pointer" : "flex-1 min-w-[80px] py-1.5 bg-black/40 hover:bg-black/60 text-white/80 disabled:opacity-30 border-2 border-black font-game text-[10px] cursor-pointer"}
                   >
                     ↩️ Undo Step
                   </button>
@@ -683,7 +705,7 @@ export default function CreateLab({ onComplete }: CreateLabProps) {
                   <button
                     onClick={handleResetArt}
                     disabled={(promptHistory.length === 0 && !generatedSvg) || loading || grading}
-                    className="flex-1 min-w-[80px] py-1.5 bg-black/40 hover:bg-black/60 text-white/80 disabled:opacity-30 border-2 border-black font-game text-[10px] cursor-pointer"
+                    className={D ? "flex-1 min-w-[80px] py-1.5 bg-[#FFFFFF] hover:bg-gray-50 text-gray-700 disabled:opacity-30 border border-gray-200 rounded-xl font-game text-[10px] cursor-pointer" : "flex-1 min-w-[80px] py-1.5 bg-black/40 hover:bg-black/60 text-white/80 disabled:opacity-30 border-2 border-black font-game text-[10px] cursor-pointer"}
                   >
                     🔄 Clear Canvas
                   </button>
@@ -691,7 +713,7 @@ export default function CreateLab({ onComplete }: CreateLabProps) {
                   <button
                     onClick={handleGradeDrawing}
                     disabled={promptHistory.length === 0 || loading || grading}
-                    className="flex-[2] min-w-[120px] py-1.5 bg-[#FFD60A] text-black hover:bg-yellow-500 disabled:opacity-40 border-2 border-black font-game text-[10px] cursor-pointer font-bold shadow-[2px_2px_0px_#000]"
+                    className={D ? "flex-[2] min-w-[120px] py-1.5 bg-[#5FCC5F] text-black hover:bg-[#4CAF50] disabled:opacity-40 rounded-xl font-game text-[10px] cursor-pointer font-bold shadow-[0_4px_0px_rgba(0,0,0,0.15)] transition-all active:translate-y-[2px]" : "flex-[2] min-w-[120px] py-1.5 bg-[#FFD60A] text-black hover:bg-yellow-500 disabled:opacity-40 border-2 border-black font-game text-[10px] cursor-pointer font-bold shadow-[2px_2px_0px_#000]"}
                   >
                     {grading ? 'Evaluating Work...' : '🏆 Grade My Drawing!'}
                   </button>
@@ -702,15 +724,18 @@ export default function CreateLab({ onComplete }: CreateLabProps) {
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="p-3 border-3 border-black relative"
-                    style={{
+                    className={D ? "p-3 border relative rounded-xl" : "p-3 border-3 border-black relative"}
+                    style={D ? {
+                      background: gradeResult.score >= 70 ? '#ECFDF5' : '#FEF2F2',
+                      border: gradeResult.score >= 70 ? '1.5px solid #10B981' : '1.5px solid #EF4444',
+                    } : {
                       background: gradeResult.score >= 70 ? 'linear-gradient(135deg, #064E3B 0%, #022C22 100%)' : '#311010',
                       border: gradeResult.score >= 70 ? '3px solid #10B981' : '3px solid #EF4444',
                       boxShadow: '4px 4px 0px #000',
                     }}
                   >
                     <span 
-                      className="absolute -top-3 left-4 font-pixel text-[5px] text-white px-2 py-0.5 border-2 border-black"
+                      className={D ? "absolute -top-3 left-4 font-body font-extrabold text-[9px] text-white px-2 py-0.5 rounded-full" : "absolute -top-3 left-4 font-pixel text-[5px] text-white px-2 py-0.5 border-2 border-black"}
                       style={{ background: gradeResult.score >= 70 ? '#10B981' : '#EF4444' }}
                     >
                       🎓 AI ART TEACHER REPORT
@@ -718,10 +743,10 @@ export default function CreateLab({ onComplete }: CreateLabProps) {
 
                     <div className="flex flex-col gap-2.5 mt-1">
                       <div className="flex items-center gap-4">
-                        <div className="text-center bg-black/30 p-2 border border-white/10 min-w-[85px] rounded">
-                          <p className="font-pixel text-[5px] text-white/50 uppercase">Final Grade</p>
+                        <div className={D ? "text-center bg-white p-2 border border-gray-100 min-w-[85px] rounded-xl shadow-sm" : "text-center bg-black/30 p-2 border border-white/10 min-w-[85px] rounded"}>
+                          <p className={D ? "font-body font-bold text-[8px] text-gray-400 uppercase" : "font-pixel text-[5px] text-white/50 uppercase"}>Final Grade</p>
                           <p className="font-game text-xl text-yellow-400 font-bold">{gradeResult.score}</p>
-                          <p className="font-pixel text-[4px] text-white/30">out of 100</p>
+                          <p className={D ? "font-body text-[8px] text-gray-400" : "font-pixel text-[4px] text-white/30"}>out of 100</p>
                         </div>
 
                         <div className="flex-1 space-y-1.5">
@@ -748,11 +773,11 @@ export default function CreateLab({ onComplete }: CreateLabProps) {
                         </div>
                       </div>
 
-                      <div className="border-t border-white/5 pt-2 space-y-1">
-                        <p className="text-white font-body text-xs italic leading-relaxed">
+                      <div className={D ? "border-t border-gray-100 pt-2 space-y-1" : "border-t border-white/5 pt-2 space-y-1"}>
+                        <p className={D ? "text-gray-700 font-body text-xs italic leading-relaxed" : "text-white font-body text-xs italic leading-relaxed"}>
                           "{gradeResult.feedback}"
                         </p>
-                        <p className="font-pixel text-[5px] pt-1">
+                        <p className={D ? "font-body text-[10px] text-gray-500 font-bold pt-1" : "font-pixel text-[5px] pt-1"}>
                           {gradeResult.score >= 70 
                             ? '🎉 PASSING GRADE! Art Studio Lab Step completed successfully!' 
                             : 'Try using fewer prompts or editing your shapes to resemble the reference better.'}
@@ -770,13 +795,13 @@ export default function CreateLab({ onComplete }: CreateLabProps) {
       {/* Completion alert button if completed all three */}
       {isLabFinished && (
         <div 
-          className="p-3 text-center border-2 border-[#10B981] bg-[#10B981]/15"
-          style={{ boxShadow: '3px 3px 0px #000' }}
+          className={D ? "p-3 text-center border border-[#10B981] bg-[#E8F5E9] rounded-xl shadow-sm" : "p-3 text-center border-2 border-[#10B981] bg-[#10B981]/15"}
+          style={D ? {} : { boxShadow: '3px 3px 0px #000' }}
         >
-          <p className="font-game text-xs text-white">🎉 Creation Lab fully solved! Click continue to proceed.</p>
+          <p className={D ? "font-game text-xs text-gray-800" : "font-game text-xs text-white"}>🎉 Creation Lab fully solved! Click continue to proceed.</p>
           <button
             onClick={onComplete}
-            className="mt-2.5 px-6 py-1.5 font-game text-[10px] text-black bg-[#FFD60A] border-2 border-black cursor-pointer shadow-[2px_2px_0px_#000]"
+            className={D ? "mt-2.5 px-6 py-2 font-game text-[10px] text-black bg-[#5FCC5F] rounded-xl cursor-pointer shadow-[0_4px_0px_rgba(0,0,0,0.15)] transition-all active:translate-y-[2px] font-bold" : "mt-2.5 px-6 py-1.5 font-game text-[10px] text-black bg-[#FFD60A] border-2 border-black cursor-pointer shadow-[2px_2px_0px_#000]"}
           >
             Submit Lab ➔
           </button>

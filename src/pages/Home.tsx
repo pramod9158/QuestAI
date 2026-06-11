@@ -11,6 +11,7 @@ import { askHomeQuestBot } from '@/lib/ai';
 import { TreasureChestModal } from '@/components/ui/TreasureChestModal';
 import { getUnopenedChests, getUnopenedCount, type Chest } from '@/lib/treasureChest';
 import { Map } from 'lucide-react';
+import { useThemeStyles } from '@/lib/useThemeStyles';
 
 const MODULE_CARDS = [
   { path: '/play/around-me', emoji: '🌍', title: 'AI Around Me', desc: 'Discover AI in your world', gradFrom: '#3B82F6', gradTo: '#8B5CF6', border: '#3B82F6', shadow: '#1D4ED8', zone: 'junior' },
@@ -23,6 +24,18 @@ const MODULE_CARDS = [
   { path: '/play/inventor-hall', emoji: '🏛️', title: 'Inventor Hall', desc: 'Share your inventions', gradFrom: '#8B5CF6', gradTo: '#EF4444', border: '#8B5CF6', shadow: '#6D28D9', zone: 'both' },
 ];
 
+// Duolingo-friendly light pastel colors for module cards
+const DUO_MODULE_COLORS: Record<string, string> = {
+  '/play/around-me':    '#3B82F6',
+  '/play/story':        '#8B5CF6',
+  '/play/detective':    '#10B981',
+  '/play/brainstorm':   '#F59E0B',
+  '/play/idea-generator': '#EF4444',
+  '/play/quiz':         '#EC4899',
+  '/play/cards':        '#F59E0B',
+  '/play/inventor-hall': '#8B5CF6',
+};
+
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0 },
@@ -33,6 +46,9 @@ export default function Home() {
   const navigate = useNavigate();
   const profile = useCurrentProfile();
   const { updateProfile } = useAuth();
+  const ts = useThemeStyles();
+  const D = ts.duo; // shorthand
+
   const [xpToastInfo, setXpToastInfo] = useState<{ amount: number; reason: string } | null>(null);
   const [timeOfDay, setTimeOfDay] = useState('');
 
@@ -51,8 +67,7 @@ export default function Home() {
 
   const handleChestClaim = async (chest: Chest) => {
     if (!profile) return;
-    
-    // Apply rewards based on chest content
+
     if (chest.reward.type === 'coins' && chest.reward.amount) {
       await updateProfile({ coins: (profile.coins ?? 0) + chest.reward.amount });
       setShowCoinsToast(chest.reward.amount);
@@ -61,12 +76,8 @@ export default function Home() {
       await updateProfile({ xp: (profile.xp ?? 0) + chest.reward.amount });
       setXpToastInfo({ amount: chest.reward.amount, reason: `Treasure Chest: ${chest.reward.label}!` });
     } else if (chest.reward.type === 'ai_card' && chest.reward.item) {
-      // Unlock the card in profiles or DB if it exists, fallback to localStorage
       try {
-        const { data: currentCards } = await supabase
-          .from('user_cards')
-          .select('card_id');
-        // Unlocked cards catalog logic
+        const { data: currentCards } = await supabase.from('user_cards').select('card_id');
       } catch (err) {
         console.warn('Failed to save card in DB:', err);
       }
@@ -91,51 +102,33 @@ export default function Home() {
     setCurrentChest(null);
   };
 
-  // Parent mailbox states
   const [unreadEndorsement, setUnreadEndorsement] = useState<any | null>(null);
   const [showMailboxModal, setShowMailboxModal] = useState(false);
   const [showCoinsToast, setShowCoinsToast] = useState<number | null>(null);
-
 
   const todayDate = new Date().toISOString().split('T')[0];
 
   useEffect(() => {
     const endorsements = JSON.parse(localStorage.getItem('parent_endorsements') || '[]');
     const unread = endorsements.find((e: any) => !e.claimed);
-    if (unread) {
-      setUnreadEndorsement(unread);
-    }
+    if (unread) setUnreadEndorsement(unread);
   }, []);
-
 
   const handleClaimEndorsement = async () => {
     if (!unreadEndorsement || !profile) return;
-    const currentCoins = profile.coins || 0;
-    await updateProfile({
-      coins: currentCoins + 50
-    });
+    await updateProfile({ coins: (profile.coins || 0) + 50 });
 
     const endorsements = JSON.parse(localStorage.getItem('parent_endorsements') || '[]');
-    const updated = endorsements.map((e: any) => {
-      if (e.id === unreadEndorsement.id) {
-        return { ...e, claimed: true };
-      }
-      return e;
-    });
+    const updated = endorsements.map((e: any) =>
+      e.id === unreadEndorsement.id ? { ...e, claimed: true } : e
+    );
     localStorage.setItem('parent_endorsements', JSON.stringify(updated));
-
     setUnreadEndorsement(null);
     setShowMailboxModal(false);
-    
-    // Show coin toast
     setShowCoinsToast(50);
-    setTimeout(() => {
-      setShowCoinsToast(null);
-    }, 2500);
+    setTimeout(() => setShowCoinsToast(null), 2500);
   };
 
-
-  // QuestBot Companion states
   const [questBotInput, setQuestBotInput] = useState('');
   const [questBotAnswer, setQuestBotAnswer] = useState<string | null>(null);
   const [askingQuestBot, setAskingQuestBot] = useState(false);
@@ -148,7 +141,7 @@ export default function Home() {
       setQuestBotAnswer(response);
       setQuestBotInput('');
     } catch (err) {
-      setQuestBotAnswer("Beep boop! I failed to compute that. Try again!");
+      setQuestBotAnswer('Beep boop! I failed to compute that. Try again!');
     } finally {
       setAskingQuestBot(false);
     }
@@ -169,17 +162,10 @@ export default function Home() {
   const xpInfo = getXPForNextLevel(profile.xp);
   const badges = getEarnedBadges(profile.xp, profile.current_streak);
   const stats = getPlatformProgress(profile);
-  const completedLessons = stats.completedLessons;
-  const totalLessons = stats.totalLessons;
-  const playCompletedCount = stats.completedPlay;
-  const totalPlayModules = stats.totalPlay;
-  const completedMissionsCount = stats.completedMissions;
-  const totalMissions = stats.totalMissions;
-  const overallPercent = stats.overallPercent;
+  const { completedLessons, totalLessons, completedPlay: playCompletedCount, totalPlay: totalPlayModules, completedMissions: completedMissionsCount, totalMissions, overallPercent } = stats;
 
   const userZone = profile.zone || 'junior';
   const filteredCards = MODULE_CARDS.filter(mod => mod.zone === userZone || mod.zone === 'both');
-
   const rawInventions = JSON.parse(localStorage.getItem('guest_inventions') || '[]');
   const savedIdeas = JSON.parse(localStorage.getItem('saved_ideas') || '[]');
 
@@ -187,37 +173,47 @@ export default function Home() {
     const mod = PLAY_MODULES_DATA.find(m => m.path === path);
     if (!mod) return false;
     const key = mod.completionKey;
-    if (key === 'quests') {
-      return !!(profile?.completed_quests && profile.completed_quests.length > 0);
-    } else if (key.startsWith('quests_')) {
+    if (key === 'quests') return !!(profile?.completed_quests && profile.completed_quests.length > 0);
+    if (key.startsWith('quests_')) {
       const qId = key.replace('quests_', '');
       return localStorage.getItem(`quests_${qId}`) === 'true' || !!(profile?.completed_quests && profile.completed_quests.includes(qId));
-    } else if (key === 'inventions') {
-      return rawInventions.length > 0;
-    } else if (key === 'ideas') {
-      return savedIdeas.length > 0;
-    } else {
-      return localStorage.getItem(key) === 'true';
     }
+    if (key === 'inventions') return rawInventions.length > 0;
+    if (key === 'ideas') return savedIdeas.length > 0;
+    return localStorage.getItem(key) === 'true';
   };
 
   const filteredPlay = PLAY_MODULES_DATA.filter(m => m.zones.includes(userZone));
   const activePlayIndex = filteredPlay.findIndex(m => !isPlayModuleDone(m.path));
   const activePlayMod = activePlayIndex !== -1 ? filteredPlay[activePlayIndex] : null;
 
+  // ── Duolingo section label component ──────────────────────────────────────
+  const SectionLabel = ({ icon, text }: { icon: string | React.ReactNode; text: string }) => D ? (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <span style={{ fontSize: 20 }}>{icon}</span>
+      <span style={{ fontFamily: '"Nunito", sans-serif', fontWeight: 800, fontSize: 15, color: '#000' }}>{text}</span>
+    </div>
+  ) : (
+    <h2 className="font-pixel text-[8px] text-white flex items-center gap-2 tracking-wide">
+      <span>{icon}</span>
+      {text}
+    </h2>
+  );
+
   return (
-    <div className="min-h-full bg-game" style={{ backgroundAttachment: 'fixed' }}>
+    <div
+      className={D ? '' : 'min-h-full bg-game'}
+      style={D ? { minHeight: '100%', background: '#F5F5F5', backgroundAttachment: 'fixed' } : { backgroundAttachment: 'fixed' }}
+    >
       {xpToastInfo && (
-        <XPToast 
-          amount={xpToastInfo.amount} 
-          reason={xpToastInfo.reason} 
-          onDone={() => setXpToastInfo(null)} 
+        <XPToast
+          amount={xpToastInfo.amount}
+          reason={xpToastInfo.reason}
+          onDone={() => setXpToastInfo(null)}
         />
       )}
       {showCoinsToast && <CoinToast amount={showCoinsToast} />}
 
-
-      {/* Treasure Chest Modal */}
       {currentChest && (
         <TreasureChestModal
           chest={currentChest}
@@ -226,39 +222,49 @@ export default function Home() {
         />
       )}
 
-      {/* ── Hero Section ── */}
+      {/* ── Hero Section ─────────────────────────────────────────────────────── */}
       <div className="relative overflow-hidden px-5 pt-6 pb-10">
         <div className="relative flex items-start justify-between">
           <div>
-            <p className="text-white/40 font-body text-sm">{timeOfDay},</p>
+            <p style={{ color: ts.textMuted, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontSize: D ? 13 : undefined }}>
+              {timeOfDay},
+            </p>
             <motion.h1
               {...fadeUp(0.05)}
-              className="font-game text-2xl mt-1 text-white"
+              style={{ color: ts.textPrimary, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 900 : undefined, fontSize: D ? 26 : undefined }}
+              className={D ? '' : 'font-game text-2xl mt-1 text-white'}
             >
               {profile.username}! 👋
             </motion.h1>
-            <p className="text-white/40 font-pixel text-[6px] mt-2 tracking-wide">
-              {profile.zone === 'junior' ? '🚀 JUNIOR EXPLORER' : '🧠 FUTURE INNOVATOR'}
+            <p style={{ color: ts.textMuted, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontSize: D ? 11 : undefined, fontWeight: D ? 700 : undefined, marginTop: 4 }}
+               className={D ? '' : 'text-white/40 font-pixel text-[6px] mt-2 tracking-wide'}
+            >
+              {profile.zone === 'junior' ? '🚀 Junior Explorer' : '🧠 Future Innovator'}
             </p>
           </div>
 
-          {/* Level Box */}
+          {/* Level Ring */}
           <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.2, type: 'spring', stiffness: 300 }}>
-            <ProgressRing progress={xpInfo.progress} size={76} color="#7C3AED">
+            <ProgressRing progress={xpInfo.progress} size={76} color={D ? '#5FCC5F' : '#7C3AED'}>
               <div className="text-center">
-                <div className="font-pixel text-[6px] text-white/60">LV</div>
-                <div className="font-pixel text-sm text-white">{level}</div>
+                <div style={{ fontFamily: D ? '"Nunito", sans-serif' : '"Press Start 2P", monospace', fontSize: D ? 9 : 6, color: ts.textSecondary }}>LV</div>
+                <div style={{ fontFamily: D ? '"Nunito", sans-serif' : '"Press Start 2P", monospace', fontWeight: D ? 900 : undefined, fontSize: D ? 18 : 12, color: ts.textPrimary }}>{level}</div>
               </div>
             </ProgressRing>
           </motion.div>
         </div>
 
-        {/* Daily Mission Banner */}
+        {/* ── Daily Mission Banner ───────────────────────────────────────────── */}
         <motion.div
           {...fadeUp(0.15)}
           onClick={() => navigate('/missions')}
           className="mt-5 p-4 flex items-center gap-3 cursor-pointer active:scale-98 transition-transform"
-          style={{
+          style={D ? {
+            background: '#FFFFFF',
+            border: '1.5px solid #60A5FA',
+            borderRadius: 14,
+            boxShadow: '0 2px 10px rgba(96,165,250,0.15)',
+          } : {
             background: '#1E1B4B',
             border: '3px solid #000000',
             boxShadow: '4px 4px 0px 0px #000000',
@@ -266,23 +272,37 @@ export default function Home() {
         >
           <div
             className="w-10 h-10 flex items-center justify-center text-xl flex-shrink-0"
-            style={{ background: '#3B82F6', border: '2px solid #000000', boxShadow: '2px 2px 0px #000000' }}
+            style={D ? { background: '#EFF6FF', border: '1.5px solid #BFDBFE', borderRadius: 10 }
+                     : { background: '#3B82F6', border: '2px solid #000000', boxShadow: '2px 2px 0px #000000' }}
           >
             🎯
           </div>
           <div className="flex-1 min-w-0">
-            <div className="font-game text-sm" style={{ color: '#93C5FD' }}>Daily Mission Active!</div>
-            <div className="text-white/50 font-body text-xs truncate">{WEEKLY_MISSIONS_DATA[0].title}</div>
+            <div style={{ fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 800 : undefined, fontSize: D ? 14 : undefined, color: D ? '#3B82F6' : '#93C5FD' }}
+                 className={D ? '' : 'font-game text-sm'}
+            >
+              Daily Mission Active!
+            </div>
+            <div style={{ color: ts.textMuted, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontSize: D ? 12 : undefined }}
+                 className={D ? '' : 'text-white/50 font-body text-xs truncate'}
+            >
+              {WEEKLY_MISSIONS_DATA[0].title}
+            </div>
           </div>
-          <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: '#93C5FD' }} />
+          <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: D ? '#3B82F6' : '#93C5FD' }} />
         </motion.div>
 
-        {/* 🗺️ World Map Adventure Banner */}
+        {/* ── World Map Banner ───────────────────────────────────────────────── */}
         <motion.div
           {...fadeUp(0.18)}
           onClick={() => navigate('/worlds')}
           className="mt-4 p-4 flex items-center gap-3 cursor-pointer active:scale-98 transition-transform"
-          style={{
+          style={D ? {
+            background: '#FFFFFF',
+            border: '1.5px solid #C4B5FD',
+            borderRadius: 14,
+            boxShadow: '0 2px 10px rgba(139,92,246,0.12)',
+          } : {
             background: '#1E1B4B',
             border: '3px solid #7C3AED',
             boxShadow: '4px 4px 0px 0px #000000',
@@ -290,29 +310,39 @@ export default function Home() {
         >
           <div
             className="w-10 h-10 flex items-center justify-center text-xl flex-shrink-0"
-            style={{
-              background: 'linear-gradient(135deg, #7C3AED, #3B82F6)',
-              border: '2px solid #000000',
-              boxShadow: '2px 2px 0px #000000',
-            }}
+            style={D ? { background: '#F5F3FF', border: '1.5px solid #DDD6FE', borderRadius: 10 }
+                     : { background: 'linear-gradient(135deg, #7C3AED, #3B82F6)', border: '2px solid #000000', boxShadow: '2px 2px 0px #000000' }}
           >
             🗺️
           </div>
           <div className="flex-1 min-w-0">
-            <div className="font-game text-sm text-white">AI Adventure World Map</div>
-            <div className="text-white/50 font-body text-xs">Explore 5 worlds • Defeat boss challenges</div>
+            <div style={{ fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 800 : undefined, fontSize: D ? 14 : undefined, color: ts.textPrimary }}
+                 className={D ? '' : 'font-game text-sm text-white'}
+            >
+              AI Adventure World Map
+            </div>
+            <div style={{ color: ts.textMuted, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontSize: D ? 12 : undefined }}
+                 className={D ? '' : 'text-white/50 font-body text-xs'}
+            >
+              Explore 5 worlds • Defeat boss challenges
+            </div>
           </div>
-          <ChevronRight className="w-4 h-4 flex-shrink-0 text-purple-400" />
+          <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: D ? '#8B5CF6' : '#A78BFA' }} />
         </motion.div>
 
-        {/* 📦 Treasure Chest Notification */}
+        {/* ── Treasure Chest ────────────────────────────────────────────────── */}
         {unopenedCount > 0 && (
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             onClick={handleOpenNextChest}
             className="mt-4 p-3 flex items-center justify-between cursor-pointer active:scale-98 transition-transform"
-            style={{
+            style={D ? {
+              background: '#FFFBEB',
+              border: '1.5px solid #FCD34D',
+              borderRadius: 14,
+              boxShadow: '0 2px 10px rgba(252,211,77,0.2)',
+            } : {
               background: '#1E1B4B',
               border: '3px solid #F59E0B',
               boxShadow: '4px 4px 0px 0px #000000',
@@ -327,121 +357,245 @@ export default function Home() {
                 📦
               </motion.span>
               <div>
-                <div className="font-game text-[10px] text-yellow-300 uppercase">{unopenedCount} Treasure Chest{unopenedCount > 1 ? 's' : ''} Waiting!</div>
-                <div className="font-body text-xs text-white/60">Tap to open your reward</div>
+                <div style={{ fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 800 : undefined, fontSize: D ? 12 : undefined, color: D ? '#C8960C' : undefined }}
+                     className={D ? '' : 'font-game text-[10px] text-yellow-300 uppercase'}
+                >
+                  {unopenedCount} Treasure Chest{unopenedCount > 1 ? 's' : ''} Waiting!
+                </div>
+                <div style={{ color: ts.textMuted, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontSize: D ? 11 : undefined }}
+                     className={D ? '' : 'font-body text-xs text-white/60'}
+                >
+                  Tap to open your reward
+                </div>
               </div>
             </div>
-            <button className="bg-yellow-500 text-black font-game text-[9px] px-2.5 py-1 uppercase border-2 border-black shadow-[2px_2px_0px_#000] cursor-pointer">
+            <button
+              style={D ? {
+                background: '#FCD34D',
+                color: '#000',
+                border: 'none',
+                borderRadius: 8,
+                padding: '5px 12px',
+                fontFamily: '"Nunito", sans-serif',
+                fontWeight: 800,
+                fontSize: 12,
+                boxShadow: '0 2px 0px rgba(0,0,0,0.12)',
+                cursor: 'pointer',
+              } : {}}
+              className={D ? '' : 'bg-yellow-500 text-black font-game text-[9px] px-2.5 py-1 uppercase border-2 border-black shadow-[2px_2px_0px_#000] cursor-pointer'}
+            >
               Open
             </button>
           </motion.div>
         )}
 
-        {/* 📬 Parent Mailbox Banner */}
+        {/* ── Parent Mailbox ────────────────────────────────────────────────── */}
         {unreadEndorsement && (
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             onClick={() => setShowMailboxModal(true)}
-            className="mt-5 p-3 bg-purple-900 border-4 border-black text-white flex items-center justify-between cursor-pointer shadow-[4px_4px_0px_#000] active:scale-98 transition-transform"
+            className="mt-5 p-3 flex items-center justify-between cursor-pointer active:scale-98 transition-transform"
+            style={D ? {
+              background: '#FFF5F5',
+              border: '1.5px solid #FCA5A5',
+              borderRadius: 14,
+              boxShadow: '0 2px 10px rgba(252,165,165,0.2)',
+            } : {
+              background: '#4C1D95',
+              border: '4px solid #000',
+              boxShadow: '4px 4px 0px #000',
+            }}
           >
             <div className="flex items-center gap-2.5">
               <span className="text-2xl animate-bounce">📬</span>
               <div>
-                <div className="font-game text-[10px] text-warning uppercase">Parent Note Alert!</div>
-                <div className="font-body text-xs text-white/80">Open message from your Parent</div>
+                <div style={{ fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 800 : undefined, fontSize: D ? 12 : undefined, color: D ? '#EF4444' : undefined }}
+                     className={D ? '' : 'font-game text-[10px] text-warning uppercase'}
+                >
+                  Parent Note Alert!
+                </div>
+                <div style={{ color: ts.textMuted, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontSize: D ? 11 : undefined }}
+                     className={D ? '' : 'font-body text-xs text-white/80'}
+                >
+                  Open message from your Parent
+                </div>
               </div>
             </div>
-            <button className="bg-success text-white font-game text-[9px] px-2.5 py-1 uppercase border-2 border-black shadow-[2px_2px_0px_#000] cursor-pointer">
+            <button
+              style={D ? {
+                background: '#5FCC5F',
+                color: '#000',
+                border: 'none',
+                borderRadius: 8,
+                padding: '5px 12px',
+                fontFamily: '"Nunito", sans-serif',
+                fontWeight: 800,
+                fontSize: 12,
+                boxShadow: '0 2px 0px rgba(0,0,0,0.12)',
+                cursor: 'pointer',
+              } : {}}
+              className={D ? '' : 'bg-success text-white font-game text-[9px] px-2.5 py-1 uppercase border-2 border-black shadow-[2px_2px_0px_#000] cursor-pointer'}
+            >
               Open
             </button>
           </motion.div>
         )}
 
-        {/* 🏆 My Learning Journey (Overall Progress) */}
+        {/* ── My Learning Journey ───────────────────────────────────────────── */}
         <motion.div
           {...fadeUp(0.18)}
           className="mt-5 p-4 space-y-3"
-          style={{
+          style={D ? {
+            background: '#FFFFFF',
+            border: '1.5px solid #E0E0E0',
+            borderRadius: 16,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+          } : {
             background: '#1E1B4B',
             border: '3px solid #FFD60A',
             boxShadow: '4px 4px 0px 0px #000000',
           }}
         >
           <div className="flex items-center justify-between">
-            <h3 className="font-game text-xs text-[#FFD60A] uppercase flex items-center gap-1.5">
-              🏆 My Learning Journey
-            </h3>
-            <span className="font-pixel text-[8px] text-[#FFD60A]">{overallPercent}% Complete</span>
+            {D ? (
+              <>
+                <span style={{ fontFamily: '"Nunito", sans-serif', fontWeight: 800, fontSize: 14, color: '#000' }}>🏆 My Learning Journey</span>
+                <span style={{ fontFamily: '"Nunito", sans-serif', fontWeight: 800, fontSize: 12, color: '#5FCC5F' }}>{overallPercent}% Complete</span>
+              </>
+            ) : (
+              <>
+                <h3 className="font-game text-xs text-[#FFD60A] uppercase flex items-center gap-1.5">🏆 My Learning Journey</h3>
+                <span className="font-pixel text-[8px] text-[#FFD60A]">{overallPercent}% Complete</span>
+              </>
+            )}
           </div>
 
-          <div className="w-full h-5 bg-[#0F0A2E] border-2 border-black p-[2px] flex items-center shadow-[inset_2px_2px_0px_rgba(0,0,0,0.5)]">
-            <div 
-              className="h-full bg-[#FFD60A] shadow-[inset_-2px_0px_0px_rgba(0,0,0,0.2)]" 
-              style={{ width: `${overallPercent}%`, transition: 'width 0.8s ease' }} 
+          {/* Progress bar */}
+          <div style={D ? {
+            height: 14,
+            background: '#F0F0F0',
+            borderRadius: 999,
+            overflow: 'hidden',
+            padding: 2,
+          } : {
+            height: 20,
+            background: '#0F0A2E',
+            border: '2px solid black',
+            padding: '2px',
+            display: 'flex',
+            alignItems: 'center',
+            boxShadow: 'inset 2px 2px 0px rgba(0,0,0,0.5)',
+          }}>
+            <div
+              style={D ? {
+                width: `${overallPercent}%`,
+                height: '100%',
+                background: 'linear-gradient(90deg, #5FCC5F, #1EBC6B)',
+                borderRadius: 999,
+                transition: 'width 0.8s ease',
+              } : {
+                width: `${overallPercent}%`,
+                height: '100%',
+                background: '#FFD60A',
+                boxShadow: 'inset -2px 0px 0px rgba(0,0,0,0.2)',
+                transition: 'width 0.8s ease',
+              }}
             />
           </div>
 
-          <div className="grid grid-cols-3 gap-2 pt-1.5 border-t border-white/5">
-            <div className="text-center bg-[#16103A] border border-black p-2 shadow-[2px_2px_0px_#000]">
-              <div className="text-sm">📚</div>
-              <div className="font-game text-[7px] text-white mt-1">Lessons</div>
-              <div className="font-pixel text-[6px] text-white/55 mt-0.5">{completedLessons}/{totalLessons} ({Math.round(completedLessons/(totalLessons || 1)*100)}%)</div>
-            </div>
-            <div className="text-center bg-[#16103A] border border-black p-2 shadow-[2px_2px_0px_#000]">
-              <div className="text-sm">🎮</div>
-              <div className="font-game text-[7px] text-white mt-1">Play</div>
-              <div className="font-pixel text-[6px] text-white/55 mt-0.5">{playCompletedCount}/{totalPlayModules} ({Math.round(playCompletedCount/totalPlayModules*100)}%)</div>
-            </div>
-            <div className="text-center bg-[#16103A] border border-black p-2 shadow-[2px_2px_0px_#000]">
-              <div className="text-sm">🎯</div>
-              <div className="font-game text-[7px] text-white mt-1">Missions</div>
-              <div className="font-pixel text-[6px] text-white/55 mt-0.5">{completedMissionsCount}/{totalMissions} ({Math.round(completedMissionsCount/totalMissions*100)}%)</div>
-            </div>
+          {/* 3-col stats */}
+          <div className="grid grid-cols-3 gap-2 pt-1.5" style={{ borderTop: `1px solid ${ts.divider}` }}>
+            {[
+              { icon: '📚', label: 'Lessons', value: `${completedLessons}/${totalLessons}`, sub: `${Math.round(completedLessons/(totalLessons||1)*100)}%` },
+              { icon: '🎮', label: 'Play', value: `${playCompletedCount}/${totalPlayModules}`, sub: `${Math.round(playCompletedCount/totalPlayModules*100)}%` },
+              { icon: '🎯', label: 'Missions', value: `${completedMissionsCount}/${totalMissions}`, sub: `${Math.round(completedMissionsCount/totalMissions*100)}%` },
+            ].map((s) => (
+              <div
+                key={s.label}
+                className="text-center p-2"
+                style={D ? {
+                  background: '#F8F8F8',
+                  borderRadius: 10,
+                  border: '1px solid #EEEEEE',
+                } : {
+                  background: '#16103A',
+                  border: '1px solid #000',
+                  boxShadow: '2px 2px 0px #000',
+                }}
+              >
+                <div className="text-sm">{s.icon}</div>
+                <div style={{ fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 700 : undefined, fontSize: D ? 11 : undefined, color: ts.textPrimary }}
+                     className={D ? '' : 'font-game text-[7px] text-white mt-1'}
+                >
+                  {s.label}
+                </div>
+                <div style={{ color: ts.textMuted, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontSize: D ? 10 : undefined }}
+                     className={D ? '' : 'font-pixel text-[6px] text-white/55 mt-0.5'}
+                >
+                  {s.value} ({s.sub})
+                </div>
+              </div>
+            ))}
           </div>
         </motion.div>
       </div>
 
-      {/* ── Stats Row (Yellow bordered as in screenshot) ── */}
+      {/* ── Stats Row ─────────────────────────────────────────────────────────── */}
       <div className="px-5 mt-5 grid grid-cols-3 gap-3 relative z-10">
         {[
-          { icon: '🔥', label: 'Streak', value: `${profile.current_streak} days`, gradFrom: '#EF4444', gradTo: '#F59E0B', borderColor: '#F59E0B', shadowColor: '#D97706' },
-          { icon: '⚡', label: 'Total XP', value: profile.xp.toString(), gradFrom: '#F59E0B', gradTo: '#FCD34D', borderColor: '#F59E0B', shadowColor: '#D97706' },
-          { icon: '🪙', label: 'Coins', value: profile.coins?.toString() ?? '0', gradFrom: '#F59E0B', gradTo: '#FCD34D', borderColor: '#F59E0B', shadowColor: '#D97706' },
+          { icon: '🔥', label: 'Streak', value: `${profile.current_streak} days`, borderColor: '#EF4444', duoColor: '#EF4444' },
+          { icon: '⚡', label: 'Total XP', value: profile.xp.toString(), borderColor: '#F59E0B', duoColor: '#C8960C' },
+          { icon: '🪙', label: 'Coins', value: profile.coins?.toString() ?? '0', borderColor: '#F59E0B', duoColor: '#C8960C' },
         ].map((stat, i) => (
           <motion.div
             key={stat.label}
             {...fadeUp(i * 0.07)}
             className="p-3 text-center"
-            style={{
+            style={D ? {
+              background: '#FFFFFF',
+              border: `1.5px solid ${stat.duoColor}30`,
+              borderRadius: 14,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+            } : {
               background: '#1E1B4B',
               border: `3px solid ${stat.borderColor}`,
               boxShadow: '4px 4px 0px 0px #000000',
             }}
           >
             <div className="text-2xl mb-1">{stat.icon}</div>
-            <div
-              className="font-game text-sm"
-              style={{ color: stat.borderColor }}
+            <div style={D
+              ? { fontFamily: '"Nunito", sans-serif', fontWeight: 900, fontSize: 15, color: '#000' }
+              : { color: stat.borderColor }
+            }
+              className={D ? '' : 'font-game text-sm'}
             >
               {stat.value}
             </div>
-            <div className="text-white/40 font-pixel text-[5px] mt-1 tracking-wider uppercase">{stat.label}</div>
+            <div style={{ color: ts.textMuted, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontSize: D ? 9 : undefined, fontWeight: D ? 700 : undefined, textTransform: 'uppercase' as const, letterSpacing: D ? '0.5px' : undefined }}
+                 className={D ? '' : 'text-white/40 font-pixel text-[5px] mt-1 tracking-wider uppercase'}
+            >
+              {stat.label}
+            </div>
           </motion.div>
         ))}
       </div>
 
-      {/* ── Continue Learning ── */}
+      {/* ── Continue Learning ─────────────────────────────────────────────────── */}
       <div className="px-5 mt-6">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-pixel text-[8px] text-white flex items-center gap-2 tracking-wide">
-            <BookOpen className="w-4 h-4" style={{ color: '#3B82F6' }} />
-            CONTINUE LEARNING
-          </h2>
+          {D ? (
+            <SectionLabel icon="📚" text="Continue Learning" />
+          ) : (
+            <h2 className="font-pixel text-[8px] text-white flex items-center gap-2 tracking-wide">
+              <BookOpen className="w-4 h-4" style={{ color: '#3B82F6' }} />
+              CONTINUE LEARNING
+            </h2>
+          )}
           <button
             onClick={() => navigate('/learn')}
+            style={{ color: D ? '#5FCC5F' : '#93C5FD', fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 700 : undefined }}
             className="font-body text-xs flex items-center gap-1 transition-opacity hover:opacity-80"
-            style={{ color: '#93C5FD' }}
           >
             See all <ChevronRight className="w-3 h-3" />
           </button>
@@ -461,7 +615,12 @@ export default function Home() {
               whileTap={{ scale: 0.98 }}
               onClick={() => navigate(nextLesson ? `/learn/${nextLesson.id}` : '/learn')}
               className="p-4 flex items-center gap-4 cursor-pointer"
-              style={{
+              style={D ? {
+                background: '#FFFFFF',
+                border: '1.5px solid #C4B5FD',
+                borderRadius: 14,
+                boxShadow: '0 2px 10px rgba(124,58,237,0.1)',
+              } : {
                 background: '#1E1B4B',
                 border: '3px solid #000000',
                 boxShadow: '4px 4px 0px 0px #000000',
@@ -469,53 +628,70 @@ export default function Home() {
             >
               <div
                 className="w-14 h-14 flex items-center justify-center text-3xl flex-shrink-0"
-                style={{ 
-                  background: nextLesson ? '#7C3AED' : '#10B981', 
-                  border: '2px solid #000000', 
-                  boxShadow: '2px 2px 0px #000000' 
+                style={D ? {
+                  background: nextLesson ? '#F5F3FF' : '#F0FFF4',
+                  border: `1.5px solid ${nextLesson ? '#DDD6FE' : '#BBF7D0'}`,
+                  borderRadius: 12,
+                } : {
+                  background: nextLesson ? '#7C3AED' : '#10B981',
+                  border: '2px solid #000000',
+                  boxShadow: '2px 2px 0px #000000',
                 }}
               >
                 {nextLesson ? nextLesson.emoji : '🎉'}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="font-game text-sm text-white truncate">
+                <div style={{ color: ts.textPrimary, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 800 : undefined, fontSize: D ? 14 : undefined }}
+                     className={D ? '' : 'font-game text-sm text-white truncate'}
+                >
                   {nextLesson ? nextLesson.title : 'Curriculum Completed!'}
                 </div>
-                <div className="text-white/45 font-body text-xs mt-0.5 truncate">
+                <div style={{ color: ts.textSecondary, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontSize: D ? 12 : undefined }}
+                     className={D ? '' : 'text-white/45 font-body text-xs mt-0.5 truncate'}
+                >
                   {dynamicSubtitle}
                 </div>
                 {nextLesson ? (
                   <div className="flex items-center gap-1 mt-2">
-                    <Zap className="w-3 h-3" style={{ color: '#F59E0B' }} />
-                    <span className="font-pixel text-[6px]" style={{ color: '#F59E0B' }}>
+                    <Zap className="w-3 h-3" style={{ color: D ? '#C8960C' : '#F59E0B' }} />
+                    <span style={{ color: D ? '#C8960C' : '#F59E0B', fontFamily: D ? '"Nunito", sans-serif' : '"Press Start 2P", monospace', fontWeight: D ? 800 : undefined, fontSize: D ? 11 : 6 }}>
                       +{nextLesson.xpReward} XP
                     </span>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-1 mt-2 text-[#10B981] font-pixel text-[6px]">
-                    ★ 20/20 MODULES COMPLETED
+                  <div style={{ color: D ? '#5FCC5F' : '#10B981', fontFamily: D ? '"Nunito", sans-serif' : '"Press Start 2P", monospace', fontWeight: D ? 800 : undefined, fontSize: D ? 11 : 6 }}
+                       className="flex items-center gap-1 mt-2"
+                  >
+                    ✅ {completedLessons}/{totalLessons} MODULES COMPLETED
                   </div>
                 )}
               </div>
-              <ChevronRight className="w-5 h-5 text-white/30 flex-shrink-0" />
+              <ChevronRight className="w-5 h-5 flex-shrink-0" style={{ color: D ? '#C4B5FD' : 'rgba(255,255,255,0.3)' }} />
             </motion.div>
           );
         })()}
       </div>
 
-      {/* ── Module Grid ── */}
+      {/* ── Module Grid ───────────────────────────────────────────────────────── */}
       <div className="px-5 mt-6">
-        <h2 className="font-pixel text-[8px] text-white flex items-center gap-2 mb-3 tracking-wide">
-          <Swords className="w-4 h-4" style={{ color: '#7C3AED' }} />
-          PLAY MODULES
-        </h2>
+        <div className="flex items-center justify-between mb-3">
+          {D ? (
+            <SectionLabel icon="🎮" text="Play Modules" />
+          ) : (
+            <h2 className="font-pixel text-[8px] text-white flex items-center gap-2 tracking-wide">
+              <Swords className="w-4 h-4" style={{ color: '#7C3AED' }} />
+              PLAY MODULES
+            </h2>
+          )}
+        </div>
         <div className="grid grid-cols-2 gap-3">
           {filteredCards.map((mod, i) => {
             const isDone = isPlayModuleDone(mod.path);
-            const cardIndexInPlay = filteredPlay.findIndex(m => {
-              return m.path === mod.path || m.path.split('?')[0] === mod.path.split('?')[0];
-            });
+            const cardIndexInPlay = filteredPlay.findIndex(m =>
+              m.path === mod.path || m.path.split('?')[0] === mod.path.split('?')[0]
+            );
             const isLocked = !isDone && activePlayIndex !== -1 && cardIndexInPlay !== -1 && cardIndexInPlay > activePlayIndex;
+            const duoAccent = DUO_MODULE_COLORS[mod.path] || '#5FCC5F';
 
             return (
               <motion.div
@@ -526,19 +702,20 @@ export default function Home() {
                 whileHover={!isDone && !isLocked ? { scale: 1.03, y: -2 } : {}}
                 whileTap={!isDone && !isLocked ? { scale: 0.96 } : {}}
                 onClick={() => {
-                  if (isLocked) {
-                    if (activePlayMod) {
-                      navigate(activePlayMod.path);
-                    }
-                  } else {
-                    navigate(mod.path);
-                  }
+                  if (isLocked) { if (activePlayMod) navigate(activePlayMod.path); }
+                  else navigate(mod.path);
                 }}
                 className={`p-4 cursor-pointer relative overflow-hidden transition-all ${
-                  isDone ? 'opacity-40 grayscale saturate-50' : 
-                  isLocked ? 'opacity-35 grayscale saturate-50' : ''
+                  isDone ? 'opacity-50' :
+                  isLocked ? 'opacity-40' : ''
                 }`}
-                style={{
+                style={D ? {
+                  background: '#FFFFFF',
+                  border: isLocked ? '1.5px solid #E0E0E0' : `1.5px solid ${duoAccent}40`,
+                  borderRadius: 14,
+                  boxShadow: isDone || isLocked ? 'none' : `0 2px 10px ${duoAccent}18`,
+                  filter: isDone ? 'grayscale(0.5)' : isLocked ? 'grayscale(0.6)' : 'none',
+                } : {
                   background: '#1E1B4B',
                   border: isLocked ? '3px solid #374151' : '3px solid #000000',
                   boxShadow: isDone || isLocked ? '2px 2px 0px 0px #000000' : '4px 4px 0px 0px #000000',
@@ -546,42 +723,65 @@ export default function Home() {
               >
                 {isDone && (
                   <div className="completed-ribbon-container">
-                    <div className="completed-ribbon">DONE</div>
+                    <div className="completed-ribbon" style={D ? { background: '#5FCC5F', color: '#000', fontFamily: '"Nunito", sans-serif', fontWeight: 800 } : {}}>DONE</div>
                   </div>
                 )}
                 {isLocked && (
                   <div className="completed-ribbon-container">
-                    <div className="completed-ribbon bg-gray-600" style={{ background: '#374151' }}>LOCKED</div>
+                    <div className="completed-ribbon" style={{ background: D ? '#9CA3AF' : '#374151', color: D ? '#fff' : '#fff', fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 800 : undefined }}>LOCKED</div>
                   </div>
                 )}
                 <div
                   className="w-10 h-10 flex items-center justify-center text-xl mb-3"
-                  style={{
+                  style={D ? {
+                    background: isLocked ? '#F5F5F5' : `${duoAccent}18`,
+                    border: `1.5px solid ${isLocked ? '#E0E0E0' : duoAccent + '40'}`,
+                    borderRadius: 10,
+                  } : {
                     background: isLocked ? '#374151' : mod.gradFrom,
                     border: isLocked ? '2px solid #4B5563' : '2px solid #000000',
-                    boxShadow: isLocked ? '2px 2px 0px #374151' : '2px 2px 0px #000000'
+                    boxShadow: isLocked ? '2px 2px 0px #374151' : '2px 2px 0px #000000',
                   }}
                 >
                   {isLocked ? '🔒' : mod.emoji}
                 </div>
-                <div className="font-game text-sm text-white leading-tight">{mod.title}</div>
-                <div className="text-white/45 font-body text-[11px] mt-1">{mod.desc}</div>
+                <div style={{ color: ts.textPrimary, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 800 : undefined, fontSize: D ? 13 : undefined }}
+                     className={D ? '' : 'font-game text-sm text-white leading-tight'}
+                >
+                  {mod.title}
+                </div>
+                <div style={{ color: ts.textSecondary, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontSize: D ? 11 : undefined }}
+                     className={D ? '' : 'text-white/45 font-body text-[11px] mt-1'}
+                >
+                  {mod.desc}
+                </div>
               </motion.div>
             );
           })}
         </div>
       </div>
 
-      {/* ── Badges Earned ── */}
+      {/* ── Badges Earned ─────────────────────────────────────────────────────── */}
       {badges.length > 0 && (
         <div className="px-5 mt-6">
-          <h2 className="font-pixel text-[8px] text-white flex items-center gap-2 mb-3 tracking-wide">
-            <Trophy className="w-4 h-4" style={{ color: '#F59E0B' }} />
-            YOUR BADGES
-          </h2>
+          <div className="flex items-center justify-between mb-3">
+            {D ? (
+              <SectionLabel icon="🏆" text="Your Badges" />
+            ) : (
+              <h2 className="font-pixel text-[8px] text-white flex items-center gap-2 tracking-wide">
+                <Trophy className="w-4 h-4" style={{ color: '#F59E0B' }} />
+                YOUR BADGES
+              </h2>
+            )}
+          </div>
           <div
             className="p-4"
-            style={{
+            style={D ? {
+              background: '#FFFFFF',
+              border: '1.5px solid #E0E0E0',
+              borderRadius: 16,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+            } : {
               background: '#1E1B4B',
               border: '3px solid #000000',
               boxShadow: '4px 4px 0px 0px #000000',
@@ -592,7 +792,12 @@ export default function Home() {
                 <motion.div key={b.id} whileHover={{ scale: 1.1 }} className="flex-shrink-0 flex flex-col items-center gap-1.5">
                   <div
                     className="w-14 h-14 flex items-center justify-center text-2xl"
-                    style={{
+                    style={D ? {
+                      background: '#F0FFF4',
+                      border: '2px solid #5FCC5F',
+                      borderRadius: '50%',
+                      boxShadow: '0 2px 8px rgba(95,204,95,0.2)',
+                    } : {
                       background: '#7C3AED',
                       border: '3px solid #000000',
                       boxShadow: '3px 3px 0px 0px #000000',
@@ -600,7 +805,11 @@ export default function Home() {
                   >
                     {b.emoji}
                   </div>
-                  <span className="text-white/60 font-pixel text-[5px] text-center max-w-[56px] leading-relaxed">{b.name}</span>
+                  <span style={{ color: ts.textSecondary, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 700 : undefined, fontSize: D ? 10 : undefined, textAlign: 'center', maxWidth: 56 }}
+                        className={D ? '' : 'text-white/60 font-pixel text-[5px] text-center max-w-[56px] leading-relaxed'}
+                  >
+                    {b.name}
+                  </span>
                 </motion.div>
               ))}
             </div>
@@ -608,44 +817,56 @@ export default function Home() {
         </div>
       )}
 
-      {/* ── Leaderboard Teaser ── */}
+      {/* ── Leaderboard Teaser ────────────────────────────────────────────────── */}
       <div className="px-5 mt-6 mb-8">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-pixel text-[8px] text-white flex items-center gap-2 tracking-wide">
-            <Users className="w-4 h-4" style={{ color: '#10B981' }} />
-            LEADERBOARD
-          </h2>
+          {D ? (
+            <SectionLabel icon="🏅" text="Leaderboard" />
+          ) : (
+            <h2 className="font-pixel text-[8px] text-white flex items-center gap-2 tracking-wide">
+              <Users className="w-4 h-4" style={{ color: '#10B981' }} />
+              LEADERBOARD
+            </h2>
+          )}
           <button
             onClick={() => navigate('/leaderboard')}
+            style={{ color: D ? '#5FCC5F' : '#6EE7B7', fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 700 : undefined }}
             className="font-body text-xs flex items-center gap-1 hover:opacity-80 transition-opacity"
-            style={{ color: '#6EE7B7' }}
           >
             Full board <ChevronRight className="w-3 h-3" />
           </button>
         </div>
         <div
           className="overflow-hidden"
-          style={{
+          style={D ? {
+            background: '#FFFFFF',
+            border: '1.5px solid #E0E0E0',
+            borderRadius: 16,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+          } : {
             background: '#1E1B4B',
             border: '3px solid #000000',
             boxShadow: '4px 4px 0px 0px #000000',
           }}
         >
           {[
-            { rank: '🥇', name: 'SuperCoder99', xp: '1,250 XP', gradFrom: '#F59E0B', gradTo: '#FCD34D' },
-            { rank: '🥈', name: 'AIWizard', xp: '980 XP', gradFrom: '#C0C0D0', gradTo: '#9090A0' },
-            { rank: '🥉', name: 'PixelHero', xp: '820 XP', gradFrom: '#EF4444', gradTo: '#F59E0B' },
+            { rank: '🥇', name: 'SuperCoder99', xp: '1,250 XP', color: '#F59E0B' },
+            { rank: '🥈', name: 'AIWizard', xp: '980 XP', color: D ? '#555555' : '#C0C0D0' },
+            { rank: '🥉', name: 'PixelHero', xp: '820 XP', color: '#EF4444' },
           ].map((row, i) => (
             <div
               key={i}
               className="flex items-center gap-3 px-4 py-3 border-b last:border-0"
-              style={{ borderColor: 'rgba(255,255,255,0.08)' }}
+              style={{ borderColor: ts.listRowBorder }}
             >
               <span className="text-xl">{row.rank}</span>
-              <span className="font-body text-white/80 text-sm flex-1">{row.name}</span>
-              <span
-                className="font-game text-xs"
-                style={{ color: row.gradFrom }}
+              <span style={{ color: ts.textPrimary, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 600 : undefined, fontSize: D ? 14 : undefined }}
+                    className={D ? '' : 'font-body text-white/80 text-sm flex-1'}
+              >
+                {row.name}
+              </span>
+              <span style={{ color: row.color, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 800 : undefined, fontSize: D ? 13 : undefined }}
+                    className={D ? '' : 'font-game text-xs'}
               >
                 {row.xp}
               </span>
@@ -654,32 +875,81 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ── QuestBot AI Companion Chat ── */}
+      {/* ── QuestBot AI Companion ─────────────────────────────────────────────── */}
       <div className="px-5 mt-6 mb-8">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-pixel text-[8px] text-white flex items-center gap-2 tracking-wide">
-            <Sparkles className="w-4 h-4" style={{ color: '#7C3AED' }} />
-            QUESTBOT COMPANION
-          </h2>
+          {D ? (
+            <SectionLabel icon="🤖" text="QuestBot AI" />
+          ) : (
+            <h2 className="font-pixel text-[8px] text-white flex items-center gap-2 tracking-wide">
+              <Sparkles className="w-4 h-4" style={{ color: '#7C3AED' }} />
+              QUESTBOT COMPANION
+            </h2>
+          )}
         </div>
         <div
           className="p-4 space-y-4"
-          style={{
+          style={D ? {
+            background: '#FFFFFF',
+            border: '1.5px solid #E0E0E0',
+            borderRadius: 16,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+          } : {
             background: '#1E1B4B',
             border: '3px solid #000000',
             boxShadow: '4px 4px 0px 0px #000000',
           }}
         >
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-[#7C3AED] border-2 border-black flex items-center justify-center text-lg">🤖</div>
+            <div style={D ? {
+              width: 36, height: 36,
+              background: '#F0FAF0',
+              border: '1.5px solid #5FCC5F',
+              borderRadius: 10,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 20,
+            } : {
+              width: 32, height: 32,
+              background: '#7C3AED',
+              border: '2px solid black',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 18,
+            }}>
+              {D ? '🦉' : '🤖'}
+            </div>
             <div>
-              <div className="font-game text-xs text-white">QuestBot AI</div>
-              <div className="text-white/40 font-body text-[10px]">Ask me anything about Artificial Intelligence!</div>
+              <div style={{ color: ts.textPrimary, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 800 : undefined, fontSize: D ? 14 : undefined }}
+                   className={D ? '' : 'font-game text-xs text-white'}
+              >
+                QuestBot AI
+              </div>
+              <div style={{ color: ts.textMuted, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontSize: D ? 11 : undefined }}
+                   className={D ? '' : 'text-white/40 font-body text-[10px]'}
+              >
+                Ask me anything about Artificial Intelligence!
+              </div>
             </div>
           </div>
 
           {questBotAnswer && (
-            <div className="bg-black/30 border-l-4 border-[#7C3AED] p-3 text-xs font-body leading-relaxed text-white/90">
+            <div style={D ? {
+              background: '#F8FFF8',
+              border: '1.5px solid #BBF7D0',
+              borderLeft: '4px solid #5FCC5F',
+              borderRadius: 10,
+              padding: '10px 14px',
+              color: '#333333',
+              fontFamily: '"Nunito", sans-serif',
+              fontSize: 13,
+              fontWeight: 600,
+              lineHeight: 1.6,
+            } : {
+              background: 'rgba(0,0,0,0.3)',
+              borderLeft: '4px solid #7C3AED',
+              padding: '12px',
+            }}
+              className={D ? '' : 'text-xs font-body leading-relaxed text-white/90'}
+            >
               {questBotAnswer}
             </div>
           )}
@@ -691,7 +961,8 @@ export default function Home() {
               onChange={(e) => setQuestBotInput(e.target.value)}
               placeholder="e.g. What is a neural network?"
               onKeyDown={(e) => e.key === 'Enter' && handleAskQuestBot()}
-              className="flex-1 pixel-input text-xs text-white placeholder-white/35"
+              className="flex-1 pixel-input text-xs"
+              style={D ? { color: '#000000' } : { color: 'white' }}
               disabled={askingQuestBot}
             />
             <button
@@ -706,7 +977,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* 📬 Mailbox Modal */}
+      {/* ── Mailbox Modal ─────────────────────────────────────────────────────── */}
       <AnimatePresence>
         {showMailboxModal && unreadEndorsement && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-[2px]">
@@ -714,31 +985,70 @@ export default function Home() {
               initial={{ scale: 0.9, y: 20, opacity: 0 }}
               animate={{ scale: 1, y: 0, opacity: 1 }}
               exit={{ scale: 0.9, y: 20, opacity: 0 }}
-              className="w-full max-w-sm p-6 space-y-5 text-center relative"
-              style={{ background: '#1E1B4B', border: '4px solid #000000', boxShadow: '8px 8px 0px 0px #000000' }}
+              className="w-full max-w-sm space-y-5 text-center relative"
+              style={ts.modal}
             >
               <div className="text-3xl">📬</div>
-              
+
               <div className="space-y-1">
-                <h3 className="font-game text-xs text-warning uppercase tracking-wide">Parent Stamp of Approval!</h3>
-                <p className="text-white/40 font-body text-[10px]">Verified: {unreadEndorsement.title}</p>
+                <h3 style={{ color: ts.textPrimary, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 800 : undefined, fontSize: D ? 16 : undefined }}
+                    className={D ? '' : 'font-game text-xs text-warning uppercase tracking-wide'}
+                >
+                  Parent Stamp of Approval!
+                </h3>
+                <p style={{ color: ts.textMuted, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontSize: D ? 12 : undefined }}
+                   className={D ? '' : 'text-white/40 font-body text-[10px]'}
+                >
+                  Verified: {unreadEndorsement.title}
+                </p>
               </div>
 
-              {/* Large Seal */}
               <div className="flex flex-col items-center gap-1.5 py-2">
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: [0, 1.2, 1] }}
                   transition={{ delay: 0.2, duration: 0.5 }}
-                  className="w-20 h-20 rounded-full bg-warning border-4 border-black flex items-center justify-center text-4xl shadow-[4px_4px_0px_#000]"
+                  className="w-20 h-20 flex items-center justify-center text-4xl"
+                  style={D ? {
+                    background: '#F0FFF4',
+                    border: '2px solid #5FCC5F',
+                    borderRadius: '50%',
+                    boxShadow: '0 4px 16px rgba(95,204,95,0.25)',
+                  } : {
+                    borderRadius: '50%',
+                    background: '#FFD60A',
+                    border: '4px solid #000',
+                    boxShadow: '4px 4px 0px #000',
+                  }}
                 >
                   {unreadEndorsement.sticker}
                 </motion.div>
-                <span className="text-[#FFD60A] font-game text-[10px] mt-1">{unreadEndorsement.stickerLabel}</span>
+                <span style={{ color: D ? '#5FCC5F' : '#FFD60A', fontFamily: D ? '"Nunito", sans-serif' : '"Press Start 2P", monospace', fontWeight: D ? 800 : undefined, fontSize: D ? 12 : 10, marginTop: 4 }}>
+                  {unreadEndorsement.stickerLabel}
+                </span>
               </div>
 
-              {/* Message box */}
-              <div className="p-4 bg-[#16103A] border-2 border-black text-white/95 font-body text-xs italic leading-relaxed text-left">
+              <div style={D ? {
+                background: '#F8FFF8',
+                border: '1.5px solid #BBF7D0',
+                borderRadius: 12,
+                padding: '14px',
+                color: '#333333',
+                fontFamily: '"Nunito", sans-serif',
+                fontStyle: 'italic',
+                fontSize: 13,
+                lineHeight: 1.6,
+                textAlign: 'left',
+              } : {
+                padding: '16px',
+                background: '#16103A',
+                border: '2px solid black',
+                color: 'rgba(255,255,255,0.95)',
+                fontStyle: 'italic',
+                fontSize: 12,
+                lineHeight: 1.6,
+                textAlign: 'left',
+              }}>
                 "{unreadEndorsement.message}"
               </div>
 
@@ -746,14 +1056,32 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={handleClaimEndorsement}
-                  className="w-full bg-[#FFD60A] text-black font-game text-xs py-3 border-4 border-black shadow-[4px_4px_0px_#000] cursor-pointer hover:bg-amber-300 transition-colors uppercase font-bold flex items-center justify-center gap-1"
+                  style={D ? {
+                    width: '100%',
+                    background: '#5FCC5F',
+                    color: '#000',
+                    border: 'none',
+                    borderRadius: 12,
+                    padding: '14px',
+                    fontFamily: '"Nunito", sans-serif',
+                    fontWeight: 800,
+                    fontSize: 14,
+                    boxShadow: '0 4px 0px rgba(0,0,0,0.15)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 4,
+                  } : {}}
+                  className={D ? '' : 'w-full bg-[#FFD60A] text-black font-game text-xs py-3 border-4 border-black shadow-[4px_4px_0px_#000] cursor-pointer hover:bg-amber-300 transition-colors uppercase font-bold flex items-center justify-center gap-1'}
                 >
-                  Claim +50 Coins 🪙
+                  🪙 Claim +50 Coins
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowMailboxModal(false)}
-                  className="w-full text-center text-white/45 font-body text-xs hover:text-white/70 transition-colors cursor-pointer"
+                  style={{ color: ts.textMuted, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontSize: D ? 13 : undefined }}
+                  className="w-full text-center font-body text-xs hover:opacity-70 transition-colors cursor-pointer"
                 >
                   Read later
                 </button>

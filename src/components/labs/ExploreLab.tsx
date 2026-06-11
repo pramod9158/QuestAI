@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { HelpCircle, Star, Sparkles, Check, CheckCircle2, Award, ChevronRight } from 'lucide-react';
 import { AICompanion } from '../ui/AICompanion';
+import { useThemeStyles } from '@/lib/useThemeStyles';
 
 interface ExploreLabProps {
   onComplete: () => void;
@@ -10,6 +11,8 @@ interface ExploreLabProps {
 type TabType = 'labeling' | 'recommendation' | 'tree' | 'pattern';
 
 export default function ExploreLab({ onComplete }: ExploreLabProps) {
+  const ts = useThemeStyles();
+  const D = ts.duo;
   const [activeTab, setActiveTab] = useState<TabType>('labeling');
   const [completedSims, setCompletedSims] = useState<string[]>([]);
 
@@ -136,7 +139,12 @@ export default function ExploreLab({ onComplete }: ExploreLabProps) {
       {/* Simulation Selector Tab */}
       <div 
         className="p-3"
-        style={{
+        style={D ? {
+          background: '#FFFFFF',
+          border: '1.5px solid #E0E0E0',
+          borderRadius: 14,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+        } : {
           background: 'linear-gradient(135deg, #1E1B4B 0%, #150E36 100%)',
           border: '3px solid #3B82F6',
           boxShadow: '4px 4px 0px #000',
@@ -152,7 +160,9 @@ export default function ExploreLab({ onComplete }: ExploreLabProps) {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5">
           <button
             onClick={() => setActiveTab('labeling')}
-            className={`py-1.5 font-game text-[10px] border-2 border-black flex justify-center items-center gap-1 cursor-pointer transition-all ${
+            className={D ? `py-1.5 font-game text-[10px] flex justify-center items-center gap-1 cursor-pointer transition-all rounded-xl ${
+              activeTab === 'labeling' ? 'bg-[#B366FF] text-white shadow-sm' : 'bg-[#F5F5F5] text-[#999999]'
+            }` : `py-1.5 font-game text-[10px] border-2 border-black flex justify-center items-center gap-1 cursor-pointer transition-all ${
               activeTab === 'labeling' ? 'bg-[#3B82F6] text-white' : 'bg-black/20 text-white/50'
             }`}
           >
@@ -160,7 +170,9 @@ export default function ExploreLab({ onComplete }: ExploreLabProps) {
           </button>
           <button
             onClick={() => setActiveTab('recommendation')}
-            className={`py-1.5 font-game text-[10px] border-2 border-black flex justify-center items-center gap-1 cursor-pointer transition-all ${
+            className={D ? `py-1.5 font-game text-[10px] flex justify-center items-center gap-1 cursor-pointer transition-all rounded-xl ${
+              activeTab === 'recommendation' ? 'bg-[#B366FF] text-white shadow-sm' : 'bg-[#F5F5F5] text-[#999999]'
+            }` : `py-1.5 font-game text-[10px] border-2 border-black flex justify-center items-center gap-1 cursor-pointer transition-all ${
               activeTab === 'recommendation' ? 'bg-[#3B82F6] text-white' : 'bg-black/20 text-white/50'
             }`}
           >
@@ -168,7 +180,9 @@ export default function ExploreLab({ onComplete }: ExploreLabProps) {
           </button>
           <button
             onClick={() => setActiveTab('tree')}
-            className={`py-1.5 font-game text-[10px] border-2 border-black flex justify-center items-center gap-1 cursor-pointer transition-all ${
+            className={D ? `py-1.5 font-game text-[10px] flex justify-center items-center gap-1 cursor-pointer transition-all rounded-xl ${
+              activeTab === 'tree' ? 'bg-[#B366FF] text-white shadow-sm' : 'bg-[#F5F5F5] text-[#999999]'
+            }` : `py-1.5 font-game text-[10px] border-2 border-black flex justify-center items-center gap-1 cursor-pointer transition-all ${
               activeTab === 'tree' ? 'bg-[#3B82F6] text-white' : 'bg-black/20 text-white/50'
             }`}
           >
@@ -176,7 +190,9 @@ export default function ExploreLab({ onComplete }: ExploreLabProps) {
           </button>
           <button
             onClick={() => setActiveTab('pattern')}
-            className={`py-1.5 font-game text-[10px] border-2 border-black flex justify-center items-center gap-1 cursor-pointer transition-all ${
+            className={D ? `py-1.5 font-game text-[10px] flex justify-center items-center gap-1 cursor-pointer transition-all rounded-xl ${
+              activeTab === 'pattern' ? 'bg-[#B366FF] text-white shadow-sm' : 'bg-[#F5F5F5] text-[#999999]'
+            }` : `py-1.5 font-game text-[10px] border-2 border-black flex justify-center items-center gap-1 cursor-pointer transition-all ${
               activeTab === 'pattern' ? 'bg-[#3B82F6] text-white' : 'bg-black/20 text-white/50'
             }`}
           >
@@ -188,7 +204,12 @@ export default function ExploreLab({ onComplete }: ExploreLabProps) {
       {/* Main Simulation Area */}
       <div 
         className="p-4"
-        style={{
+        style={D ? {
+          background: '#FFFFFF',
+          border: '1.5px solid #E0E0E0',
+          borderRadius: 14,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+        } : {
           background: '#1E1B4B',
           border: '3px solid #000',
           boxShadow: '4px 4px 0px #000',

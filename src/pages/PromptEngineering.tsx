@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth, useCurrentProfile } from '@/contexts/AuthContext';
@@ -17,8 +17,11 @@ import {
   Lock,
   Play,
   CheckCircle,
-  BookOpen
+  BookOpen,
+  Music
 } from 'lucide-react';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useThemeStyles } from '@/lib/useThemeStyles';
 
 // ==========================================
 // DATA CONFIGURATION
@@ -147,8 +150,11 @@ export default function PromptEngineering() {
   const navigate = useNavigate();
   const profile = useCurrentProfile();
   const { updateProfile } = useAuth();
+  const { isDuolingo } = useTheme();
+  const D = isDuolingo;
+  const ts = useThemeStyles();
   
-  const [activeTab, setActiveTab] = useState<'lessons' | 'playground'>('lessons');
+  const [activeTab, setActiveTab] = useState<'lessons' | 'playground' | 'music'>('lessons');
   const completedIds = profile?.completed_lessons || [];
 
   // Custom profile override for testing/swapping modes easily
@@ -390,7 +396,9 @@ Respond ONLY with a JSON object:
           className={`flex-1 py-2.5 font-game text-[10px] uppercase border-3 border-black shadow-[2.5px_2.5px_0px_#000] cursor-pointer transition-all flex items-center justify-center gap-1.5 ${
             activeTab === 'lessons'
               ? 'bg-[#7C3AED] text-white border-purple-400'
-              : 'bg-[#1E1B4B]/80 text-white/50 hover:bg-[#1E1B4B] hover:text-white'
+              : D
+                ? 'bg-[#FFFFFF] text-[#777777] hover:bg-[#F7F7F7] hover:text-black border-black'
+                : 'bg-[#1E1B4B]/80 text-white/50 hover:bg-[#1E1B4B] hover:text-white border-black'
           }`}
         >
           <BookOpen className="w-3.5 h-3.5" />
@@ -401,21 +409,53 @@ Respond ONLY with a JSON object:
           className={`flex-1 py-2.5 font-game text-[10px] uppercase border-3 border-black shadow-[2.5px_2.5px_0px_#000] cursor-pointer transition-all flex items-center justify-center gap-1.5 ${
             activeTab === 'playground'
               ? 'bg-[#7C3AED] text-white border-purple-400'
-              : 'bg-[#1E1B4B]/80 text-white/50 hover:bg-[#1E1B4B] hover:text-white'
+              : D
+                ? 'bg-[#FFFFFF] text-[#777777] hover:bg-[#F7F7F7] hover:text-black border-black'
+                : 'bg-[#1E1B4B]/80 text-white/50 hover:bg-[#1E1B4B] hover:text-white border-black'
           }`}
         >
           <Sparkles className="w-3.5 h-3.5" />
           🧪 Prompt Alchemy
+        </button>
+        <button
+          onClick={() => setActiveTab('music')}
+          className={`flex-1 py-2.5 font-game text-[10px] uppercase border-3 border-black shadow-[2.5px_2.5px_0px_#000] cursor-pointer transition-all flex items-center justify-center gap-1.5 ${
+            activeTab === 'music'
+              ? 'bg-[#7C3AED] text-white border-purple-400'
+              : D
+                ? 'bg-[#FFFFFF] text-[#777777] hover:bg-[#F7F7F7] hover:text-black border-black'
+                : 'bg-[#1E1B4B]/80 text-white/50 hover:bg-[#1E1B4B] hover:text-white border-black'
+          }`}
+        >
+          <Music className="w-3.5 h-3.5" />
+          🎵 AI Music
         </button>
       </div>
 
       {/* ─── LESSONS TAB ─── */}
       {activeTab === 'lessons' && (
         <div className="space-y-6">
-          <div className="p-4 bg-black/20 border-2 border-dashed border-white/10 text-center rounded">
+          <div 
+            className="p-4 text-center rounded transition-all duration-300"
+            style={D ? {
+              background: '#FFFFFF',
+              border: '2px dashed #CBD5E1',
+            } : {
+              background: 'rgba(0, 0, 0, 0.2)',
+              border: '2px dashed rgba(255, 255, 255, 0.1)',
+            }}
+          >
             <span className="text-3xl">📖</span>
-            <h3 className="font-game text-sm text-white uppercase tracking-wider mt-2">Prompt Engineering Journey</h3>
-            <p className="font-body text-[10px] text-white/60 mt-1 max-w-sm mx-auto leading-relaxed">
+            <h3 
+              className="font-game text-sm uppercase tracking-wider mt-2"
+              style={{ color: D ? '#3C3C3C' : '#FFFFFF' }}
+            >
+              Prompt Engineering Journey
+            </h3>
+            <p 
+              className="font-body text-[10px] mt-1 max-w-sm mx-auto leading-relaxed"
+              style={{ color: D ? '#777777' : 'rgba(255, 255, 255, 0.6)' }}
+            >
               Complete these 2 foundational modules to master the art of talking to AI, generating art, and writing magical scripts!
             </p>
           </div>
@@ -441,59 +481,152 @@ Respond ONLY with a JSON object:
                       navigate(`/learn/${lesson.id}`);
                     }
                   }}
-                  className={`relative p-4 border-3 border-black transition-all flex flex-col justify-between cursor-pointer rounded ${
-                    isDone ? 'bg-[#1E1B4B]/60 opacity-75' :
-                    !isLocked ? 'bg-gradient-to-br from-[#1E1B4B] to-[#251E5C] border-[#FFD60A] shadow-[4px_4px_0px_#000]' :
-                    'bg-[#151036] opacity-50 cursor-not-allowed'
+                  className={`relative p-4 border-3 transition-all flex flex-col justify-between cursor-pointer rounded ${
+                    D ? (
+                      isDone ? 'bg-[#F1F5F9] border-[#CBD5E1] opacity-75' :
+                      !isLocked ? 'bg-[#FFFFFF] border-black' :
+                      'bg-[#F7F7F7] border-[#E0E0E0] opacity-60 cursor-not-allowed'
+                    ) : (
+                      isDone ? 'bg-[#1E1B4B]/60 border-black opacity-75' :
+                      !isLocked ? 'bg-gradient-to-br from-[#1E1B4B] to-[#251E5C] border-[#FFD60A]' :
+                      'bg-[#151036] border-black opacity-50 cursor-not-allowed'
+                    )
                   }`}
                   style={{
-                    boxShadow: !isLocked && !isDone ? '3px 3px 0px #FFD60A' : '3px 3px 0px #000',
+                    boxShadow: !isLocked && !isDone 
+                      ? (D ? '3px 3px 0px #7C3AED' : '3px 3px 0px #FFD60A') 
+                      : '3px 3px 0px #000',
                   }}
                 >
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="font-pixel text-[5px] text-[#A78BFA] uppercase">
+                      <span 
+                        className="font-pixel text-[5px] uppercase"
+                        style={{ color: D ? '#7C3AED' : '#A78BFA' }}
+                      >
                         Phase {lesson.phase} • Module {lesson.phase === 3 ? '3' : '8'}
                       </span>
                       {isDone ? (
-                        <span className="font-pixel text-[5px] text-[#10B981] bg-[#10B981]/15 px-2 py-0.5 border border-[#10B981]/30">CRUSHED</span>
+                        <span 
+                          className="font-pixel text-[5px] px-2 py-0.5 border"
+                          style={D ? {
+                            color: '#2E7D32',
+                            backgroundColor: '#E8F5E9',
+                            borderColor: '#C8E6C9',
+                          } : {
+                            color: '#10B981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                            borderColor: 'rgba(16, 185, 129, 0.3)',
+                          }}
+                        >
+                          CRUSHED
+                        </span>
                       ) : isLocked ? (
-                        <span className="font-pixel text-[5px] text-red-400 bg-red-950/20 border border-red-900/30 px-1.5 py-0.5 flex items-center gap-1">
+                        <span 
+                          className="font-pixel text-[5px] px-1.5 py-0.5 flex items-center gap-1 border"
+                          style={D ? {
+                            color: '#D32F2F',
+                            backgroundColor: '#FFEBEE',
+                            borderColor: '#FFCDD2',
+                          } : {
+                            color: '#F87171',
+                            backgroundColor: 'rgba(127, 29, 29, 0.2)',
+                            borderColor: 'rgba(127, 29, 29, 0.3)',
+                          }}
+                        >
                           <Lock className="w-2 h-2" /> LOCKED
                         </span>
                       ) : (
-                        <span className="font-pixel text-[5px] text-yellow-400 bg-yellow-950/20 border border-yellow-900/30 px-1.5 py-0.5 animate-pulse">ACTIVE</span>
+                        <span 
+                          className="font-pixel text-[5px] px-1.5 py-0.5 animate-pulse border"
+                          style={D ? {
+                            color: '#7C3AED',
+                            backgroundColor: '#F3E8FF',
+                            borderColor: '#E9D5FF',
+                          } : {
+                            color: '#FBBF24',
+                            backgroundColor: 'rgba(120, 53, 4, 0.2)',
+                            borderColor: 'rgba(120, 53, 4, 0.3)',
+                          }}
+                        >
+                          ACTIVE
+                        </span>
                       )}
                     </div>
 
                     <div className="flex items-center gap-2">
                       <span className="text-2xl">{lesson.missionEmoji || lesson.emoji}</span>
-                      <h3 className="font-game text-xs text-white leading-snug uppercase tracking-wide">
+                      <h3 
+                        className="font-game text-xs leading-snug uppercase tracking-wide"
+                        style={{ color: D ? '#3C3C3C' : '#FFFFFF' }}
+                      >
                         {lesson.missionTitle || lesson.title}
                       </h3>
                     </div>
-                    <p className="font-body text-[10px] text-purple-300 italic mt-2 leading-relaxed">
+                    <p 
+                      className="font-body text-[10px] italic mt-2 leading-relaxed"
+                      style={{ color: D ? '#777777' : '#C084FC' }}
+                    >
                       "{lesson.curiosityHook || lesson.description}"
                     </p>
                   </div>
 
-                  <div className="mt-4 pt-3 border-t border-white/5 space-y-3">
+                  <div 
+                    className="mt-4 pt-3 border-t space-y-3"
+                    style={{ borderColor: D ? '#E2E8F0' : 'rgba(255, 255, 255, 0.05)' }}
+                  >
                     {/* Step Progress Indicators */}
                     {!isLocked && (
                       <div className="grid grid-cols-3 gap-1 text-center text-[7px] font-pixel">
-                        <div className={`py-1 border ${watchDone || isDone ? 'bg-[#10B981]/15 text-[#10B981] border-[#10B981]/20' : 'bg-black/20 text-white/30 border-white/5'}`}>
+                        <div 
+                          className="py-1 border"
+                          style={D ? {
+                            backgroundColor: watchDone || isDone ? '#E8F5E9' : '#F5F5F5',
+                            color: watchDone || isDone ? '#2E7D32' : '#9E9E9E',
+                            borderColor: watchDone || isDone ? '#C8E6C9' : '#E0E0E0',
+                          } : {
+                            backgroundColor: watchDone || isDone ? 'rgba(16, 185, 129, 0.15)' : 'rgba(0, 0, 0, 0.2)',
+                            color: watchDone || isDone ? '#10B981' : 'rgba(255, 255, 255, 0.3)',
+                            borderColor: watchDone || isDone ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                          }}
+                        >
                           🎥 Watch {(watchDone || isDone) && '✓'}
                         </div>
-                        <div className={`py-1 border ${labDone || isDone ? 'bg-[#10B981]/15 text-[#10B981] border-[#10B981]/20' : 'bg-black/20 text-white/30 border-white/5'}`}>
+                        <div 
+                          className="py-1 border"
+                          style={D ? {
+                            backgroundColor: labDone || isDone ? '#E8F5E9' : '#F5F5F5',
+                            color: labDone || isDone ? '#2E7D32' : '#9E9E9E',
+                            borderColor: labDone || isDone ? '#C8E6C9' : '#E0E0E0',
+                          } : {
+                            backgroundColor: labDone || isDone ? 'rgba(16, 185, 129, 0.15)' : 'rgba(0, 0, 0, 0.2)',
+                            color: labDone || isDone ? '#10B981' : 'rgba(255, 255, 255, 0.3)',
+                            borderColor: labDone || isDone ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                          }}
+                        >
                           🧪 Lab {(labDone || isDone) && '✓'}
                         </div>
-                        <div className={`py-1 border ${projectDone || isDone ? 'bg-[#10B981]/15 text-[#10B981] border-[#10B981]/20' : 'bg-black/20 text-white/30 border-white/5'}`}>
+                        <div 
+                          className="py-1 border"
+                          style={D ? {
+                            backgroundColor: projectDone || isDone ? '#E8F5E9' : '#F5F5F5',
+                            color: projectDone || isDone ? '#2E7D32' : '#9E9E9E',
+                            borderColor: projectDone || isDone ? '#C8E6C9' : '#E0E0E0',
+                          } : {
+                            backgroundColor: projectDone || isDone ? 'rgba(16, 185, 129, 0.15)' : 'rgba(0, 0, 0, 0.2)',
+                            color: projectDone || isDone ? '#10B981' : 'rgba(255, 255, 255, 0.3)',
+                            borderColor: projectDone || isDone ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                          }}
+                        >
                           🛠️ Create {(projectDone || isDone) && '✓'}
                         </div>
                       </div>
                     )}
 
-                    <div className="flex items-center justify-between text-white/50 font-pixel text-[5px]">
+                    <div 
+                      className="flex items-center justify-between font-pixel text-[5px]"
+                      style={{ color: D ? '#777777' : 'rgba(255, 255, 255, 0.5)' }}
+                    >
                       <span className="flex items-center gap-1">
                         ⏱️ {duration} min
                       </span>
@@ -503,7 +636,16 @@ Respond ONLY with a JSON object:
                     </div>
 
                     {isLocked ? (
-                      <div className="w-full py-2 bg-slate-800 text-white/30 font-game text-[9px] uppercase border-2 border-black text-center flex items-center justify-center gap-1.5 cursor-not-allowed">
+                      <div 
+                        className="w-full py-2 font-game text-[9px] uppercase border-2 border-black text-center flex items-center justify-center gap-1.5 cursor-not-allowed"
+                        style={D ? {
+                          backgroundColor: '#E0E0E0',
+                          color: '#9E9E9E',
+                        } : {
+                          backgroundColor: '#1E293B',
+                          color: 'rgba(255, 255, 255, 0.3)',
+                        }}
+                      >
                         <Lock className="w-3 h-3" /> Complete previous module to unlock
                       </div>
                     ) : (
@@ -513,7 +655,11 @@ Respond ONLY with a JSON object:
                           navigate(`/learn/${lesson.id}`);
                         }}
                         className={`w-full py-2 font-game text-[9px] uppercase border-2 border-black text-center flex items-center justify-center gap-1.5 shadow-[2px_2px_0px_#000] cursor-pointer transition-colors ${
-                          isDone ? 'bg-[#1E1B4B] text-white/80 hover:bg-black/20' : 'bg-[#FFD60A] text-black font-semibold'
+                          D ? (
+                            isDone ? 'bg-[#F3E8FF] text-[#7C3AED] hover:bg-[#E9D5FF]' : 'bg-[#FFD60A] text-black font-semibold hover:bg-yellow-500'
+                          ) : (
+                            isDone ? 'bg-[#1E1B4B] text-white/80 hover:bg-black/20' : 'bg-[#FFD60A] text-black font-semibold hover:bg-yellow-500'
+                          )
                         }`}
                       >
                         <Play className="w-2.5 h-2.5 fill-current" />
@@ -531,10 +677,16 @@ Respond ONLY with a JSON object:
       {/* ─── PLAYGROUND TAB ─── */}
       {activeTab === 'playground' && (
         <div 
-          className="p-4 transition-all duration-300 rounded"
-          style={{
+          className="p-4 transition-all duration-300"
+          style={D ? {
+            background: '#FFFFFF',
+            border: '1.5px solid #E0E0E0',
+            borderRadius: 16,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+          } : {
             background: activeZone === 'junior' ? '#1E1B4B' : '#0B0F19',
             border: '3px solid #000',
+            borderRadius: 4,
             boxShadow: '4px 4px 0px #000',
           }}
         >
@@ -544,120 +696,204 @@ Respond ONLY with a JSON object:
               
               {/* 1. Persona Select */}
               <div>
-                <span className="text-pink-400 font-pixel text-[5.5px] block mb-2 uppercase tracking-wide">
+                <span 
+                  className="font-pixel text-[5.5px] block mb-2 uppercase tracking-wide"
+                  style={{ color: D ? '#7C3AED' : '#EC4899' }}
+                >
                   1. Pick Your Spell Companion (Persona)
                 </span>
                 <div className="grid grid-cols-2 gap-2">
-                  {Object.entries(JUNIOR_PERSONAS).map(([key, value]) => (
-                    <button
-                      key={key}
-                      onClick={() => setJPersona(key)}
-                      className={`p-2 border-2 border-black text-left flex items-start gap-1.5 rounded transition-all cursor-pointer shadow-[2px_2px_0px_#000] ${
-                        jPersona === key 
-                          ? 'bg-purple-600 text-white border-white scale-[1.01]' 
-                          : 'bg-black/20 text-white/60 hover:bg-black/35'
-                      }`}
-                    >
-                      <span className="text-xl mt-0.5 flex-shrink-0">{value.emoji}</span>
-                      <div className="min-w-0">
-                        <div className="font-game text-[9.5px] leading-tight truncate">{value.name}</div>
-                        <div className="font-body text-[7.5px] text-white/45 leading-normal truncate mt-0.5">{value.desc}</div>
-                      </div>
-                    </button>
-                  ))}
+                  {Object.entries(JUNIOR_PERSONAS).map(([key, value]) => {
+                    const isSelected = jPersona === key;
+                    return (
+                      <button
+                        key={key}
+                        onClick={() => setJPersona(key)}
+                        className="p-2 text-left flex items-start gap-1.5 transition-all cursor-pointer"
+                        style={D ? {
+                          background: isSelected ? '#F3E8FF' : '#F7F7F7',
+                          border: isSelected ? '2px solid #7C3AED' : '1.5px solid #E0E0E0',
+                          borderRadius: 12,
+                          color: isSelected ? '#7C3AED' : '#333333',
+                        } : {
+                          background: isSelected ? '#9333EA' : 'rgba(0, 0, 0, 0.2)',
+                          border: isSelected ? '2px solid #FFFFFF' : '2px solid #000000',
+                          borderRadius: 4,
+                          boxShadow: '2px 2px 0px #000',
+                          color: isSelected ? '#FFFFFF' : 'rgba(255, 255, 255, 0.6)',
+                        }}
+                      >
+                        <span className="text-xl mt-0.5 flex-shrink-0">{value.emoji}</span>
+                        <div className="min-w-0">
+                          <div className="font-game text-[9.5px] leading-tight truncate">{value.name}</div>
+                          <div 
+                            className="font-body text-[7.5px] leading-normal truncate mt-0.5"
+                            style={{ color: D ? (isSelected ? '#7C3AED' : '#666666') : (isSelected ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.45)') }}
+                          >
+                            {value.desc}
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
               {/* 2. Topic Select */}
               <div>
-                <span className="text-pink-400 font-pixel text-[5.5px] block mb-2 uppercase tracking-wide">
+                <span 
+                  className="font-pixel text-[5.5px] block mb-2 uppercase tracking-wide"
+                  style={{ color: D ? '#7C3AED' : '#EC4899' }}
+                >
                   2. Select What to Explain
                 </span>
                 <div className="grid grid-cols-3 gap-2">
-                  {Object.entries(JUNIOR_TOPICS).map(([key, value]) => (
-                    <button
-                      key={key}
-                      onClick={() => setJTopic(key)}
-                      className={`p-1 text-[8.5px] font-game border-2 border-black text-center shadow-[1.5px_1.5px_0px_#000] cursor-pointer rounded flex items-center justify-center min-h-[48px] leading-tight transition-all ${
-                        jTopic === key 
-                          ? 'bg-purple-600 text-white border-white' 
-                          : 'bg-black/20 text-white/50 hover:bg-black/35'
-                      }`}
-                    >
-                      {value.label}
-                    </button>
-                  ))}
+                  {Object.entries(JUNIOR_TOPICS).map(([key, value]) => {
+                    const isSelected = jTopic === key;
+                    return (
+                      <button
+                        key={key}
+                        onClick={() => setJTopic(key)}
+                        className="p-1 text-[8.5px] font-game text-center flex items-center justify-center min-h-[48px] leading-tight transition-all cursor-pointer"
+                        style={D ? {
+                          background: isSelected ? '#F3E8FF' : '#F7F7F7',
+                          border: isSelected ? '2px solid #7C3AED' : '1.5px solid #E0E0E0',
+                          borderRadius: 12,
+                          color: isSelected ? '#7C3AED' : '#333333',
+                        } : {
+                          background: isSelected ? '#9333EA' : 'rgba(0, 0, 0, 0.2)',
+                          border: isSelected ? '2px solid #FFFFFF' : '2px solid #000000',
+                          borderRadius: 4,
+                          boxShadow: '1.5px 1.5px 0px #000',
+                          color: isSelected ? '#FFFFFF' : 'rgba(255, 255, 255, 0.5)',
+                        }}
+                      >
+                        {value.label}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
               {/* 3. Style / Tone Select */}
               <div>
-                <span className="text-pink-400 font-pixel text-[5.5px] block mb-2 uppercase tracking-wide">
+                <span 
+                  className="font-pixel text-[5.5px] block mb-2 uppercase tracking-wide"
+                  style={{ color: D ? '#7C3AED' : '#EC4899' }}
+                >
                   3. Select Style Mode
                 </span>
                 <div className="grid grid-cols-3 gap-2">
-                  {Object.entries(JUNIOR_TONES).map(([key, label]) => (
-                    <button
-                      key={key}
-                      onClick={() => setJTone(key)}
-                      className={`p-1 text-[8.5px] font-game border-2 border-black text-center rounded min-h-[38px] leading-tight cursor-pointer shadow-[1.5px_1.5px_0px_#000] transition-all ${
-                        jTone === key 
-                          ? 'bg-purple-600 text-white border-white' 
-                          : 'bg-black/20 text-white/50 hover:bg-black/35'
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  ))}
+                  {Object.entries(JUNIOR_TONES).map(([key, label]) => {
+                    const isSelected = jTone === key;
+                    return (
+                      <button
+                        key={key}
+                        onClick={() => setJTone(key)}
+                        className="p-1 text-[8.5px] font-game text-center min-h-[38px] leading-tight cursor-pointer transition-all"
+                        style={D ? {
+                          background: isSelected ? '#F3E8FF' : '#F7F7F7',
+                          border: isSelected ? '2px solid #7C3AED' : '1.5px solid #E0E0E0',
+                          borderRadius: 12,
+                          color: isSelected ? '#7C3AED' : '#333333',
+                        } : {
+                          background: isSelected ? '#9333EA' : 'rgba(0, 0, 0, 0.2)',
+                          border: isSelected ? '2px solid #FFFFFF' : '2px solid #000000',
+                          borderRadius: 4,
+                          boxShadow: '1.5px 1.5px 0px #000',
+                          color: isSelected ? '#FFFFFF' : 'rgba(255, 255, 255, 0.5)',
+                        }}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
               {/* 4. Secret Word Select */}
               <div>
-                <span className="text-pink-400 font-pixel text-[5.5px] block mb-2 uppercase tracking-wide">
+                <span 
+                  className="font-pixel text-[5.5px] block mb-2 uppercase tracking-wide"
+                  style={{ color: D ? '#7C3AED' : '#EC4899' }}
+                >
                   4. Pick a Secret Word 🤫
                 </span>
                 <div className="grid grid-cols-4 gap-1.5">
-                  {JUNIOR_SECRET_WORDS.map(word => (
-                    <button
-                      key={word}
-                      onClick={() => setJSecretWord(word)}
-                      className={`py-1 text-[8.5px] font-pixel uppercase border-2 border-black rounded cursor-pointer transition-all ${
-                        jSecretWord === word 
-                          ? 'bg-yellow-500 text-black border-white shadow-[1px_1px_0px_#000]' 
-                          : 'bg-black/30 text-white/55 hover:bg-black/45'
-                      }`}
-                    >
-                      {word}
-                    </button>
-                  ))}
+                  {JUNIOR_SECRET_WORDS.map(word => {
+                    const isSelected = jSecretWord === word;
+                    return (
+                      <button
+                        key={word}
+                        onClick={() => setJSecretWord(word)}
+                        className="py-1 text-[8.5px] font-pixel uppercase cursor-pointer transition-all"
+                        style={D ? {
+                          background: isSelected ? '#FFD60A' : '#F7F7F7',
+                          border: isSelected ? '2px solid #FFB84D' : '1.5px solid #E0E0E0',
+                          borderRadius: 8,
+                          color: '#000000',
+                        } : {
+                          background: isSelected ? '#EAB308' : 'rgba(0, 0, 0, 0.3)',
+                          border: isSelected ? '2px solid #FFFFFF' : '2px solid #000000',
+                          borderRadius: 4,
+                          boxShadow: isSelected ? '1px 1px 0px #000' : 'none',
+                          color: isSelected ? '#000000' : 'rgba(255, 255, 255, 0.55)',
+                        }}
+                      >
+                        {word}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
               {/* 5. Chaos Level */}
               <div>
                 <div className="flex justify-between items-center mb-1.5">
-                  <span className="text-pink-400 font-pixel text-[5.5px] uppercase tracking-wide">
+                  <span 
+                    className="font-pixel text-[5.5px] uppercase tracking-wide"
+                    style={{ color: D ? '#7C3AED' : '#EC4899' }}
+                  >
                     5. AI Chaos Level (Creativity)
                   </span>
-                  <span className="font-game text-[9px]" style={{ color: jChaos === 'wild' ? '#EC4899' : '#10B981' }}>
+                  <span className="font-game text-[9px]" style={{ color: jChaos === 'wild' ? '#EC4899' : (D ? '#1EBC6B' : '#10B981') }}>
                     {jChaos === 'wild' ? 'Wild (Wacky & Creative) 🤪' : 'Calm (Smart & Predictable) 🎯'}
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={() => setJChaos('focused')}
-                    className={`py-2 font-game text-[9.5px] border-2 border-black flex justify-center items-center gap-1 cursor-pointer transition-all ${
-                      jChaos === 'focused' ? 'bg-[#10B981] text-white border-white shadow-[1.5px_1.5px_0px_#000]' : 'bg-black/20 text-white/40'
-                    }`}
+                    className="py-2 font-game text-[9.5px] flex justify-center items-center gap-1 cursor-pointer transition-all"
+                    style={D ? {
+                      background: jChaos === 'focused' ? '#5FCC5F' : '#F7F7F7',
+                      border: jChaos === 'focused' ? '2px solid #5FCC5F' : '1.5px solid #E0E0E0',
+                      borderRadius: 12,
+                      color: jChaos === 'focused' ? '#FFFFFF' : '#666666',
+                    } : {
+                      background: jChaos === 'focused' ? '#10B981' : 'rgba(0, 0, 0, 0.2)',
+                      border: jChaos === 'focused' ? '2px solid #FFFFFF' : '2px solid #000000',
+                      borderRadius: 4,
+                      boxShadow: jChaos === 'focused' ? '1.5px 1.5px 0px #000' : 'none',
+                      color: jChaos === 'focused' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.4)',
+                    }}
                   >
                     🎯 Calm & Focused
                   </button>
                   <button
                     onClick={() => setJChaos('wild')}
-                    className={`py-2 font-game text-[9.5px] border-2 border-black flex justify-center items-center gap-1 cursor-pointer transition-all ${
-                      jChaos === 'wild' ? 'bg-[#EC4899] text-white border-white shadow-[1.5px_1.5px_0px_#000]' : 'bg-black/20 text-white/40'
-                    }`}
+                    className="py-2 font-game text-[9.5px] flex justify-center items-center gap-1 cursor-pointer transition-all"
+                    style={D ? {
+                      background: jChaos === 'wild' ? '#EC4899' : '#F7F7F7',
+                      border: jChaos === 'wild' ? '2px solid #EC4899' : '1.5px solid #E0E0E0',
+                      borderRadius: 12,
+                      color: jChaos === 'wild' ? '#FFFFFF' : '#666666',
+                    } : {
+                      background: jChaos === 'wild' ? '#EC4899' : 'rgba(0, 0, 0, 0.2)',
+                      border: jChaos === 'wild' ? '2px solid #FFFFFF' : '2px solid #000000',
+                      borderRadius: 4,
+                      boxShadow: jChaos === 'wild' ? '1.5px 1.5px 0px #000' : 'none',
+                      color: jChaos === 'wild' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.4)',
+                    }}
                   >
                     🤪 Wild & Wacky
                   </button>
@@ -666,7 +902,10 @@ Respond ONLY with a JSON object:
 
               {/* 6. Custom Modifier */}
               <div>
-                <span className="text-pink-400 font-pixel text-[5.5px] block mb-1.5 uppercase tracking-wide">
+                <span 
+                  className="font-pixel text-[5.5px] block mb-1.5 uppercase tracking-wide"
+                  style={{ color: D ? '#7C3AED' : '#EC4899' }}
+                >
                   6. Custom Magical Instruction (Optional)
                 </span>
                 <input
@@ -683,83 +922,130 @@ Respond ONLY with a JSON object:
 
           {/* INNOVATOR COMPONENT PANELS */}
           {activeZone === 'innovator' && (
-            <div className="space-y-4 text-cyan-400">
+            <div className="space-y-4">
               
               {/* 1. System Persona */}
               <div>
-                <span className="text-cyan-400 font-pixel text-[5.5px] block mb-2 uppercase tracking-wide">
+                <span 
+                  className="font-pixel text-[5.5px] block mb-2 uppercase tracking-wide"
+                  style={{ color: D ? '#0891B2' : '#22D3EE' }}
+                >
                   1. Configure System Role (Persona)
                 </span>
                 <div className="grid grid-cols-2 gap-2">
-                  {Object.entries(INNOVATOR_PERSONAS).map(([key, value]) => (
-                    <button
-                      key={key}
-                      onClick={() => setIPersona(key)}
-                      className={`p-2 border-2 text-left flex items-start gap-1.5 rounded transition-all cursor-pointer shadow-[2px_2px_0px_#000] ${
-                        iPersona === key 
-                          ? 'bg-cyan-950 text-cyan-300 border-cyan-400 scale-[1.01]' 
-                          : 'bg-black/30 text-white/50 border-black/50 hover:bg-black/50'
-                      }`}
-                    >
-                      <span className="text-xl mt-0.5 flex-shrink-0">{value.emoji}</span>
-                      <div className="min-w-0">
-                        <div className="font-game text-[9.5px] leading-tight truncate">{value.name}</div>
-                        <div className="font-body text-[7.5px] leading-normal truncate mt-0.5 text-white/40">{value.desc}</div>
-                      </div>
-                    </button>
-                  ))}
+                  {Object.entries(INNOVATOR_PERSONAS).map(([key, value]) => {
+                    const isSelected = iPersona === key;
+                    return (
+                      <button
+                        key={key}
+                        onClick={() => setIPersona(key)}
+                        className="p-2 border-2 text-left flex items-start gap-1.5 rounded transition-all cursor-pointer"
+                        style={D ? {
+                          background: isSelected ? '#ECFEFF' : '#F7F7F7',
+                          border: isSelected ? '2px solid #0891B2' : '1.5px solid #E0E0E0',
+                          borderRadius: 12,
+                          color: isSelected ? '#0891B2' : '#333333',
+                        } : {
+                          background: isSelected ? '#083344' : 'rgba(0, 0, 0, 0.3)',
+                          border: isSelected ? '2px solid #22D3EE' : '2px solid rgba(0,0,0,0.5)',
+                          borderRadius: 4,
+                          boxShadow: '2px 2px 0px #000',
+                          color: isSelected ? '#22D3EE' : 'rgba(255, 255, 255, 0.5)',
+                        }}
+                      >
+                        <span className="text-xl mt-0.5 flex-shrink-0">{value.emoji}</span>
+                        <div className="min-w-0">
+                          <div className="font-game text-[9.5px] leading-tight truncate">{value.name}</div>
+                          <div 
+                            className="font-body text-[7.5px] leading-normal truncate mt-0.5"
+                            style={{ color: D ? (isSelected ? '#0891B2' : '#666666') : (isSelected ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.4)') }}
+                          >
+                            {value.desc}
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
               {/* 2. Topic Select */}
               <div>
-                <span className="text-cyan-400 font-pixel text-[5.5px] block mb-2 uppercase tracking-wide">
+                <span 
+                  className="font-pixel text-[5.5px] block mb-2 uppercase tracking-wide"
+                  style={{ color: D ? '#0891B2' : '#22D3EE' }}
+                >
                   2. Define Topic Payload
                 </span>
                 <div className="grid grid-cols-3 gap-2">
-                  {Object.entries(INNOVATOR_TOPICS).map(([key, value]) => (
-                    <button
-                      key={key}
-                      onClick={() => setITopic(key)}
-                      className={`p-1 text-[8.5px] font-game border-2 text-center shadow-[1.5px_1.5px_0px_#000] cursor-pointer rounded flex items-center justify-center h-12 leading-tight transition-all ${
-                        iTopic === key 
-                          ? 'bg-cyan-950 text-cyan-300 border-cyan-400' 
-                          : 'bg-black/30 text-white/50 border-black/50 hover:bg-black/50'
-                      }`}
-                    >
-                      {value.label}
-                    </button>
-                  ))}
+                  {Object.entries(INNOVATOR_TOPICS).map(([key, value]) => {
+                    const isSelected = iTopic === key;
+                    return (
+                      <button
+                        key={key}
+                        onClick={() => setITopic(key)}
+                        className="p-1 text-[8.5px] font-game text-center flex items-center justify-center h-12 leading-tight transition-all cursor-pointer"
+                        style={D ? {
+                          background: isSelected ? '#ECFEFF' : '#F7F7F7',
+                          border: isSelected ? '2px solid #0891B2' : '1.5px solid #E0E0E0',
+                          borderRadius: 12,
+                          color: isSelected ? '#0891B2' : '#333333',
+                        } : {
+                          background: isSelected ? '#083344' : 'rgba(0, 0, 0, 0.3)',
+                          border: isSelected ? '2px solid #22D3EE' : '2px solid rgba(0,0,0,0.5)',
+                          borderRadius: 4,
+                          boxShadow: '1.5px 1.5px 0px #000',
+                          color: isSelected ? '#22D3EE' : 'rgba(255, 255, 255, 0.5)',
+                        }}
+                      >
+                        {value.label}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
               {/* 3. Formatting constraints */}
               <div>
-                <span className="text-cyan-400 font-pixel text-[5.5px] block mb-2 uppercase tracking-wide">
+                <span 
+                  className="font-pixel text-[5.5px] block mb-2 uppercase tracking-wide"
+                  style={{ color: D ? '#0891B2' : '#22D3EE' }}
+                >
                   3. Apply Output Formatting Constraint
                 </span>
                 <div className="grid grid-cols-3 gap-2">
-                  {Object.entries(INNOVATOR_CONSTRAINTS).map(([key, value]) => (
-                    <button
-                      key={key}
-                      onClick={() => setIConstraint(key)}
-                      className={`p-1 text-[8.5px] font-game border-2 text-center rounded min-h-[38px] leading-tight cursor-pointer transition-all shadow-[1.5px_1.5px_0px_#000] ${
-                        iConstraint === key 
-                          ? 'bg-cyan-950 border-cyan-400 text-cyan-300 font-bold' 
-                          : 'bg-black/30 border-black/50 text-white/50 hover:bg-black/50'
-                      }`}
-                    >
-                      {value.label}
-                    </button>
-                  ))}
+                  {Object.entries(INNOVATOR_CONSTRAINTS).map(([key, value]) => {
+                    const isSelected = iConstraint === key;
+                    return (
+                      <button
+                        key={key}
+                        onClick={() => setIConstraint(key)}
+                        className="p-1 text-[8.5px] font-game text-center min-h-[38px] leading-tight cursor-pointer transition-all"
+                        style={D ? {
+                          background: isSelected ? '#ECFEFF' : '#F7F7F7',
+                          border: isSelected ? '2px solid #0891B2' : '1.5px solid #E0E0E0',
+                          borderRadius: 12,
+                          color: isSelected ? '#0891B2' : '#333333',
+                        } : {
+                          background: isSelected ? '#083344' : 'rgba(0, 0, 0, 0.3)',
+                          border: isSelected ? '2px solid #22D3EE' : '2px solid rgba(0,0,0,0.5)',
+                          borderRadius: 4,
+                          boxShadow: '1.5px 1.5px 0px #000',
+                          color: isSelected ? '#22D3EE' : 'rgba(255, 255, 255, 0.5)',
+                        }}
+                      >
+                        {value.label}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
               {/* 4. Temperature Slider */}
               <div>
                 <div className="flex justify-between items-center font-pixel text-[5.5px] mb-1.5">
-                  <span>4. AI Temperature Parameter</span>
-                  <span className="text-cyan-400 font-bold">{iTemp.toFixed(2)} ({iTemp > 0.7 ? 'Creative/Wild' : iTemp < 0.35 ? 'Deterministic/Strict' : 'Balanced'})</span>
+                  <span style={{ color: D ? '#0891B2' : '#22D3EE' }}>4. AI Temperature Parameter</span>
+                  <span style={{ color: D ? '#0891B2' : '#22D3EE' }} className="font-bold">{iTemp.toFixed(2)} ({iTemp > 0.7 ? 'Creative/Wild' : iTemp < 0.35 ? 'Deterministic/Strict' : 'Balanced'})</span>
                 </div>
                 <input
                   type="range"
@@ -770,14 +1056,20 @@ Respond ONLY with a JSON object:
                   onChange={e => setITemp(parseFloat(e.target.value))}
                   className="w-full h-2 bg-black border border-cyan-500/20 rounded cursor-pointer accent-cyan-400"
                 />
-                <p className="text-[7.5px] font-body text-white/40 mt-1 leading-normal">
+                <p 
+                  className="text-[7.5px] font-body mt-1 leading-normal"
+                  style={{ color: D ? '#555555' : 'rgba(255,255,255,0.4)' }}
+                >
                   Low temperature ensures strict adherence to structural constraints (like JSON). High temperature yields more diverse and creative language.
                 </p>
               </div>
 
               {/* 5. Custom Overrides */}
               <div>
-                <span className="text-cyan-400 font-pixel text-[5.5px] block mb-1.5 uppercase">
+                <span 
+                  className="font-pixel text-[5.5px] block mb-1.5 uppercase"
+                  style={{ color: D ? '#0891B2' : '#22D3EE' }}
+                >
                   5. System Constraint Override (Custom Text)
                 </span>
                 <textarea
@@ -792,11 +1084,37 @@ Respond ONLY with a JSON object:
           )}
 
           {/* 6. Live Compiled Prompt Box */}
-          <div className="mt-5 border-2 border-black bg-black/60 p-3.5 relative shadow-[inner_2px_2px_0px_#000]">
-            <span className="absolute -top-3 left-4 px-2 py-0.5 bg-black font-pixel text-[5px] text-white/50 border border-white/10 uppercase">
+          <div 
+            className="mt-5 p-3.5 relative"
+            style={D ? {
+              background: '#F9F9F9',
+              border: '1.5px solid #E0E0E0',
+              borderRadius: 12,
+            } : {
+              background: 'rgba(0, 0, 0, 0.6)',
+              border: '2px solid #000000',
+              boxShadow: 'inset 2px 2px 0px #000',
+            }}
+          >
+            <span 
+              className="absolute -top-3 left-4 px-2 py-0.5 font-pixel text-[5px] uppercase"
+              style={D ? {
+                background: '#FFFFFF',
+                color: '#888888',
+                border: '1.5px solid #E0E0E0',
+                borderRadius: 4,
+              } : {
+                background: '#000000',
+                color: 'rgba(255,255,255,0.5)',
+                border: '1px solid rgba(255,255,255,0.1)',
+              }}
+            >
               🧪 Prompt Formula Preview
             </span>
-            <p className="font-body text-xs italic text-yellow-300 mt-1 select-none leading-relaxed">
+            <p 
+              className="font-body text-xs italic mt-1 select-none leading-relaxed"
+              style={{ color: D ? '#7C3AED' : '#FFD60A' }}
+            >
               "{compiledPrompt}"
             </p>
           </div>
@@ -805,11 +1123,17 @@ Respond ONLY with a JSON object:
           <button
             onClick={handleCastSpell}
             disabled={loading}
-            className={`w-full mt-4 py-3 text-white border-3 border-black font-game text-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 active:translate-y-1 active:shadow-[1px_1px_0px_#000] shadow-[3px_3px_0px_#000] transition-colors ${
-              activeZone === 'junior' 
-                ? 'bg-[#7C3AED] hover:bg-[#6D28D9]' 
-                : 'bg-cyan-600 hover:bg-cyan-700'
-            }`}
+            className="w-full mt-4 py-3 font-game text-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 transition-all text-white font-semibold"
+            style={D ? {
+              background: activeZone === 'junior' ? '#7C3AED' : '#0891B2',
+              borderRadius: 12,
+              boxShadow: '0 4px 0px rgba(0,0,0,0.15)',
+              border: 'none',
+            } : {
+              background: activeZone === 'junior' ? '#7C3AED' : '#0891B2',
+              border: '3px solid #000000',
+              boxShadow: '3px 3px 0px #000000',
+            }}
           >
             {loading ? (
               <>
@@ -838,7 +1162,10 @@ Respond ONLY with a JSON object:
               >
                 🧪
               </motion.div>
-              <span className="font-pixel text-[6px] text-white/40 animate-pulse">
+              <span 
+                className="font-pixel text-[6px] animate-pulse"
+                style={{ color: D ? '#888888' : 'rgba(255,255,255,0.4)' }}
+              >
                 {activeZone === 'junior' ? 'CHATTING WITH COMPANION...' : 'DETERMINISTIC RUNTIME ACTIVE...'}
               </span>
             </motion.div>
@@ -855,12 +1182,34 @@ Respond ONLY with a JSON object:
               >
                 {/* Output Response */}
                 <div 
-                  className="border-3 border-black bg-black/40 p-4 relative shadow-[3px_3px_0px_#000] rounded"
+                  className="p-4 relative rounded"
+                  style={D ? {
+                    background: '#FFFFFF',
+                    border: '1.5px solid #E0E0E0',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                  } : {
+                    background: 'rgba(0, 0, 0, 0.4)',
+                    border: '3px solid #000000',
+                    boxShadow: '3px 3px 0px #000',
+                  }}
                 >
-                  <span className="absolute -top-3 left-4 bg-purple-700 font-pixel text-[5px] text-white px-2 py-0.5 border-2 border-black">
+                  <span 
+                    className="absolute -top-3 left-4 font-pixel text-[5px] text-white px-2 py-0.5"
+                    style={D ? {
+                      background: '#7C3AED',
+                      borderRadius: 4,
+                      border: '1px solid #7C3AED',
+                    } : {
+                      background: '#7C3AED',
+                      border: '2px solid #000000',
+                    }}
+                  >
                     🤖 Generated Response
                   </span>
-                  <p className="text-white font-body text-xs leading-relaxed italic mt-1 font-semibold whitespace-pre-wrap">
+                  <p 
+                    className="font-body text-xs leading-relaxed italic mt-1 font-semibold whitespace-pre-wrap"
+                    style={{ color: D ? '#333333' : '#FFFFFF' }}
+                  >
                     {aiOutput}
                   </p>
                 </div>
@@ -868,39 +1217,67 @@ Respond ONLY with a JSON object:
                 {/* Evaluation Panel */}
                 {evaluation && (
                   <div
-                    className="p-3.5 border-3 border-black relative rounded"
-                    style={{
+                    className="p-3.5 relative rounded"
+                    style={D ? {
+                      background: evaluation.score >= 80 ? '#F0FDF4' : '#FEF2F2',
+                      border: evaluation.score >= 80 ? '1.5px solid #5FCC5F' : '1.5px solid #EF4444',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                    } : {
                       background: evaluation.score >= 80 ? 'linear-gradient(135deg, #064E3B 0%, #022C22 100%)' : '#2C1212',
                       border: evaluation.score >= 80 ? '3px solid #10B981' : '3px solid #EF4444',
                       boxShadow: '4px 4px 0px #000',
                     }}
                   >
                     <span 
-                      className="absolute -top-3 left-4 font-pixel text-[5px] text-white px-2 py-0.5 border-2 border-black"
-                      style={{ background: evaluation.score >= 80 ? '#10B981' : '#EF4444' }}
+                      className="absolute -top-3 left-4 font-pixel text-[5px] text-white px-2 py-0.5"
+                      style={D ? {
+                        background: evaluation.score >= 80 ? '#5FCC5F' : '#EF4444',
+                        borderRadius: 4,
+                        border: evaluation.score >= 80 ? '1px solid #5FCC5F' : '1px solid #EF4444',
+                      } : {
+                        background: evaluation.score >= 80 ? '#10B981' : '#EF4444',
+                        border: '2px solid #000000',
+                      }}
                     >
                       🎓 ALCHEMY COMPILER REPORT
                     </span>
 
-                    <div className="flex flex-col gap-3 mt-1 text-white">
+                    <div 
+                      className="flex flex-col gap-3 mt-1"
+                      style={{ color: D ? '#333333' : '#FFFFFF' }}
+                    >
                       <div className="flex items-center gap-4">
                         {/* Score Widget */}
-                        <div className="text-center bg-black/35 p-2 border border-white/10 min-w-[90px] rounded">
-                          <p className="font-pixel text-[4px] text-white/50 uppercase">PROMPT SCORE</p>
-                          <p className="font-game text-xl text-yellow-400 font-bold">{evaluation.score}</p>
-                          <p className="font-pixel text-[4px] text-white/30">out of 100</p>
+                        <div 
+                          className="text-center p-2 min-w-[90px] rounded"
+                          style={D ? {
+                            background: '#FFFFFF',
+                            border: '1.5px solid #E0E0E0',
+                          } : {
+                            background: 'rgba(0,0,0,0.35)',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                          }}
+                        >
+                          <p className="font-pixel text-[4px] text-gray-500 uppercase">PROMPT SCORE</p>
+                          <p 
+                            className="font-game text-xl font-bold"
+                            style={{ color: D ? '#C8960C' : '#FFD60A' }}
+                          >
+                            {evaluation.score}
+                          </p>
+                          <p className="font-pixel text-[4px] text-gray-400">out of 100</p>
                         </div>
 
                         <div className="flex-1 space-y-1">
                           <div className="flex items-center gap-1.5 font-pixel text-[5px]">
                             <span>Persona Match:</span>
-                            <span className={evaluation.personaMatch ? 'text-green-400 font-bold' : 'text-red-400'}>
+                            <span className={evaluation.personaMatch ? 'text-green-600 font-bold' : 'text-red-600'}>
                               {evaluation.personaMatch ? '✓ PASSED' : 'x FAILED'}
                             </span>
                           </div>
                           <div className="flex items-center gap-1.5 font-pixel text-[5px]">
                             <span>Constraint Match:</span>
-                            <span className={evaluation.constraintMatch ? 'text-green-400 font-bold' : 'text-red-400'}>
+                            <span className={evaluation.constraintMatch ? 'text-green-600 font-bold' : 'text-red-600'}>
                               {evaluation.constraintMatch ? '✓ PASSED' : 'x FAILED'}
                             </span>
                           </div>
@@ -908,27 +1285,46 @@ Respond ONLY with a JSON object:
                       </div>
 
                       {/* Educational Insight explaining prompt engineering */}
-                      <div className="border-t border-white/5 pt-2.5 space-y-2 text-xs">
+                      <div className="border-t border-gray-200/50 pt-2.5 space-y-2 text-xs">
                         <div>
-                          <span className="font-pixel text-[5.5px] text-yellow-400 block mb-0.5">🎓 WHY DID IT GENERATE THIS?</span>
-                          <p className="font-body text-white/90 leading-relaxed italic">
+                          <span 
+                            className="font-pixel text-[5.5px] block mb-0.5"
+                            style={{ color: D ? '#C8960C' : '#FFD60A' }}
+                          >
+                            🎓 WHY DID IT GENERATE THIS?
+                          </span>
+                          <p className="font-body leading-relaxed italic" style={{ color: D ? '#444444' : '#E2E8F0' }}>
                             "{evaluation.feedback}"
                           </p>
                         </div>
 
-                        <div className="bg-black/25 p-2.5 border border-white/5 rounded">
-                          <span className="font-pixel text-[5px] text-cyan-400 block mb-1">🧪 VARIABLE DYNAMICS SUMMARY:</span>
-                          <p className="font-body text-[10px] text-white/80 leading-relaxed">
+                        <div 
+                          className="p-2.5 rounded"
+                          style={D ? {
+                            background: '#FFFFFF',
+                            border: '1.5px solid #E0E0E0',
+                          } : {
+                            background: 'rgba(0,0,0,0.25)',
+                            border: '1px solid rgba(255,255,255,0.05)',
+                          }}
+                        >
+                          <span 
+                            className="font-pixel text-[5px] block mb-1"
+                            style={{ color: D ? '#0891B2' : '#22D3EE' }}
+                          >
+                            🧪 VARIABLE DYNAMICS SUMMARY:
+                          </span>
+                          <p className="font-body text-[10px] leading-relaxed" style={{ color: D ? '#555555' : 'rgba(255,255,255,0.8)' }}>
                             {evaluation.chaosInsight}
                           </p>
                         </div>
                         
                         {evaluation.score >= 80 ? (
-                          <p className="font-pixel text-[5px] text-green-400 font-bold animate-pulse uppercase">
+                          <p className="font-pixel text-[5px] text-green-600 font-bold animate-pulse uppercase">
                             🎉 GREAT PROMPT! You mastered this alchemy recipe! (+50 XP, +10 Coins)
                           </p>
                         ) : (
-                          <p className="font-pixel text-[5px] text-red-300 font-bold">
+                          <p className="font-pixel text-[5px] text-red-500 font-bold">
                             Tip: Try adjusting your overrides or check if the exact constraints were fully followed.
                           </p>
                         )}
@@ -942,6 +1338,9 @@ Respond ONLY with a JSON object:
         </div>
       )}
 
+      {/* ─── MUSIC TAB ─── */}
+      {activeTab === 'music' && <PromptsMusicStudio D={D} ts={ts} />}
+
       {/* Gamification popup */}
       <CelebrationOverlay
         show={showVictory}
@@ -952,5 +1351,390 @@ Respond ONLY with a JSON object:
         onDone={() => setShowVictory(false)}
       />
     </div>
+  );
+}
+
+// ─── Prompts Music Studio (embedded in the Prompts section) ─────────────────
+function PromptsMusicStudio({ D, ts }: { D: boolean; ts: any }) {
+  const genres = ['Cyber Synthwave 🌌', '8-Bit Retro 👾', 'Lo-Fi Chill ☕'];
+  const tempos = ['Relaxed (80 BPM) 🐢', 'Groovy (115 BPM) 🦊', 'Fast (140 BPM) ⚡'];
+  const leads = ['Retro Synthesizer 🎹', 'Electric Lead Guitar 🎸', 'Square Wave Chip ⚡'];
+  const drums = ['LinnDrum Classic 🥁', 'Acoustic Punchy 🥁', 'No Beats (Ambient) 🔇'];
+
+  const [genre, setGenre] = useState('');
+  const [tempo, setTempo] = useState('');
+  const [lead, setLead] = useState('');
+  const [drum, setDrum] = useState('');
+
+  const [generating, setGenerating] = useState(false);
+  const [composedTrack, setComposedTrack] = useState<string | null>(null);
+  const [generationSteps] = useState<string[]>([
+    'Setting tempo grid...',
+    'Loading generative MIDI model...',
+    'Composing synth melodies...',
+    'Mixing drum backing pattern...',
+    'Applying final EQ & rendering...',
+  ]);
+  const [activeStep, setActiveStep] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [trackTitle, setTrackTitle] = useState('');
+
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const schedulerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const activeNodesRef = useRef<AudioNode[]>([]);
+
+  const stopPlayback = () => {
+    if (schedulerRef.current) {
+      clearInterval(schedulerRef.current);
+      schedulerRef.current = null;
+    }
+    activeNodesRef.current.forEach(n => {
+      try { (n as OscillatorNode).stop?.(); } catch (_) {}
+      try { n.disconnect(); } catch (_) {}
+    });
+    activeNodesRef.current = [];
+    if (audioCtxRef.current) {
+      audioCtxRef.current.close();
+      audioCtxRef.current = null;
+    }
+    setIsPlaying(false);
+  };
+
+  useEffect(() => () => { stopPlayback(); }, []);
+
+  const playTrack = () => {
+    stopPlayback();
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    audioCtxRef.current = ctx;
+
+    const bpm = tempo.includes('80') ? 80 : tempo.includes('115') ? 115 : 140;
+    const beatDur = 60 / bpm;
+    const isRetro = genre.includes('8-Bit');
+    const isChill = genre.includes('Lo-Fi');
+
+    const waveType: OscillatorType = lead.includes('Square') ? 'square' : lead.includes('Guitar') ? 'sawtooth' : 'sine';
+    const melodyPatterns = {
+      synth:  [261.6, 329.6, 392.0, 493.9, 392.0, 329.6, 261.6, 220.0],
+      retro:  [261.6, 261.6, 329.6, 0,     392.0, 0,     329.6, 261.6],
+      chill:  [196.0, 220.0, 261.6, 293.7, 261.6, 220.0, 196.0, 164.8],
+    };
+    const melody = isChill ? melodyPatterns.chill : isRetro ? melodyPatterns.retro : melodyPatterns.synth;
+    const chordNotes = isChill ? [[130.8, 164.8, 196.0], [146.8, 185.0, 220.0]] : [[130.8, 164.8, 196.0, 246.9], [110.0, 138.6, 164.8, 207.7]];
+
+    const createReverb = () => {
+      const conv = ctx.createConvolver();
+      const len = ctx.sampleRate * 1.5;
+      const buf = ctx.createBuffer(2, len, ctx.sampleRate);
+      for (let ch = 0; ch < 2; ch++) {
+        const data = buf.getChannelData(ch);
+        for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.5);
+      }
+      conv.buffer = buf;
+      return conv;
+    };
+
+    const master = ctx.createGain();
+    master.gain.value = 0.35;
+    master.connect(ctx.destination);
+    activeNodesRef.current.push(master);
+
+    let effectNode: AudioNode = master;
+    if (isChill) {
+      const rev = createReverb();
+      const dry = ctx.createGain(); dry.gain.value = 0.6;
+      const wet = ctx.createGain(); wet.gain.value = 0.4;
+      dry.connect(master); rev.connect(wet); wet.connect(master);
+      const mid = ctx.createGain(); mid.gain.value = 1; mid.connect(dry); mid.connect(rev);
+      const lpf = ctx.createBiquadFilter(); lpf.type = 'lowpass'; lpf.frequency.value = 2200;
+      const preLpf = ctx.createGain(); preLpf.gain.value = 1; preLpf.connect(lpf); lpf.connect(mid);
+      effectNode = preLpf;
+      activeNodesRef.current.push(rev, dry, wet, mid, lpf, preLpf);
+    }
+
+    let beatIndex = 0;
+    const scheduleNote = () => {
+      const now = ctx.currentTime;
+      const noteFreq = melody[beatIndex % melody.length];
+      const step = beatIndex % 16;
+      if (noteFreq > 0) {
+        const osc = ctx.createOscillator(); const env = ctx.createGain();
+        osc.type = isRetro ? 'square' : waveType; osc.frequency.value = isRetro ? noteFreq * 2 : noteFreq;
+        env.gain.setValueAtTime(0, now); env.gain.linearRampToValueAtTime(0.6, now + 0.01); env.gain.exponentialRampToValueAtTime(0.001, now + beatDur * 0.8);
+        osc.connect(env); env.connect(effectNode as AudioNode); osc.start(now); osc.stop(now + beatDur);
+        activeNodesRef.current.push(osc, env);
+      }
+      if (step % 4 === 0) {
+        const chord = chordNotes[(step / 4) % chordNotes.length];
+        chord.forEach(freq => {
+          const co = ctx.createOscillator(); const ce = ctx.createGain();
+          co.type = isChill ? 'sine' : 'sawtooth'; co.frequency.value = freq;
+          ce.gain.setValueAtTime(0, now); ce.gain.linearRampToValueAtTime(0.18, now + 0.05); ce.gain.exponentialRampToValueAtTime(0.001, now + beatDur * 3.5);
+          co.connect(ce); ce.connect(effectNode as AudioNode); co.start(now); co.stop(now + beatDur * 4);
+          activeNodesRef.current.push(co, ce);
+        });
+      }
+      if (step % 2 === 0) {
+        const bassFreq = melody[beatIndex % melody.length] / 2;
+        const bo = ctx.createOscillator(); const be = ctx.createGain();
+        bo.type = 'sine'; bo.frequency.value = bassFreq || 65.4;
+        be.gain.setValueAtTime(0, now); be.gain.linearRampToValueAtTime(0.4, now + 0.02); be.gain.exponentialRampToValueAtTime(0.001, now + beatDur * 1.5);
+        bo.connect(be); be.connect(effectNode as AudioNode); bo.start(now); bo.stop(now + beatDur * 2);
+        activeNodesRef.current.push(bo, be);
+      }
+      if (!drum.includes('Ambient')) {
+        const isHard = drum.includes('Acoustic');
+        if (step === 0 || step === 8) {
+          const kick = ctx.createOscillator(); const ke = ctx.createGain();
+          kick.frequency.setValueAtTime(isHard ? 150 : 100, now); kick.frequency.exponentialRampToValueAtTime(0.001, now + 0.3);
+          ke.gain.setValueAtTime(1.0, now); ke.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+          kick.connect(ke); ke.connect(master); kick.start(now); kick.stop(now + 0.35); activeNodesRef.current.push(kick, ke);
+        }
+        if (step === 4 || step === 12) {
+          const snareBuf = ctx.createBuffer(1, ctx.sampleRate * 0.15, ctx.sampleRate);
+          const data = snareBuf.getChannelData(0); for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / data.length, isHard ? 1.5 : 3);
+          const snare = ctx.createBufferSource(); snare.buffer = snareBuf; const se = ctx.createGain(); se.gain.value = isHard ? 0.7 : 0.45;
+          snare.connect(se); se.connect(master); snare.start(now); activeNodesRef.current.push(snare, se);
+        }
+        const hatEvery = isChill ? 2 : 1;
+        if (step % hatEvery === 0) {
+          const hatBuf = ctx.createBuffer(1, ctx.sampleRate * 0.04, ctx.sampleRate);
+          const hd = hatBuf.getChannelData(0); for (let i = 0; i < hd.length; i++) hd[i] = Math.random() * 2 - 1;
+          const hat = ctx.createBufferSource(); hat.buffer = hatBuf; const hpf = ctx.createBiquadFilter(); hpf.type = 'highpass'; hpf.frequency.value = 8000;
+          const he = ctx.createGain(); he.gain.value = 0.2; hat.connect(hpf); hpf.connect(he); he.connect(master); hat.start(now); activeNodesRef.current.push(hat, hpf, he);
+        }
+      }
+      beatIndex++;
+    };
+    scheduleNote(); schedulerRef.current = setInterval(scheduleNote, beatDur * 1000); setIsPlaying(true);
+  };
+
+  const startComposition = () => {
+    if (!genre || !tempo || !lead || !drum) return;
+    setGenerating(true); setComposedTrack(null); setActiveStep(0); stopPlayback();
+    let step = 0;
+    const interval = setInterval(() => {
+      step++;
+      if (step >= 5) {
+        clearInterval(interval); setGenerating(false);
+        const titles = ['Neon Spark Explorer', 'Cyber Forest Groove', '8-Bit Quest Beats', 'Pixel Sunset Loop', 'Lofi AI Cozy Corner'];
+        const title = titles[Math.floor(Math.random() * titles.length)];
+        setTrackTitle(title); setComposedTrack(`✨ '${title}'`);
+      } else setActiveStep(step);
+    }, 800);
+  };
+
+  const buttonStyle = (active: boolean, color: string) => ({
+    fontFamily: D ? '"Nunito", sans-serif' : '"Press Start 2P", monospace',
+    fontWeight: active ? 900 : 700,
+    fontSize: D ? 11 : 5.5,
+    background: active 
+      ? (D ? color + '15' : color + '33') 
+      : (D ? '#F8FAFC' : 'rgba(0, 0, 0, 0.25)'),
+    border: `1.5px solid ${active ? color : (D ? '#E2E8F0' : 'rgba(255, 255, 255, 0.1)')}`,
+    borderRadius: D ? 10 : 0,
+    padding: '8px 4px',
+    color: active ? color : (D ? '#64748B' : 'rgba(255, 255, 255, 0.5)'),
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+  });
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+      {/* Introduction Card */}
+      <div style={D ? {
+        background: 'linear-gradient(135deg, #FFF0FA, #F5F3FF)',
+        border: '1.5px solid #EC4899',
+        borderRadius: 14,
+        padding: 16,
+      } : {
+        background: '#1E1B4B',
+        border: '3px solid #000',
+        padding: 12,
+        boxShadow: '4px 4px 0px #000',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 28 }}>🎵</span>
+          <div>
+            <div style={D ? { fontFamily: '"Nunito", sans-serif', fontWeight: 900, fontSize: 16, color: '#EC4899' } : { fontFamily: '"Press Start 2P", monospace', fontSize: 7, color: '#EC4899' }}>AI Music Studio</div>
+            <div style={D ? { fontFamily: '"Nunito", sans-serif', fontSize: 12, color: '#64748B', marginTop: 2 } : { fontFamily: '"Fredoka One", cursive', fontSize: 5.5, color: 'rgba(255, 255, 255, 0.6)', marginTop: 2 }}>Pick prompt parameters → compose & play real music!</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Editor & Control Panel */}
+      {!composedTrack && !generating && (
+        <div style={D ? {
+          background: '#FFFFFF',
+          border: '1.5px solid #E2E8F0',
+          borderRadius: 14,
+          padding: 16,
+        } : {
+          background: '#120E30',
+          border: '2px solid #000',
+          padding: 12,
+        }} className="space-y-4">
+          {[
+            { label: '1. Genre Mood (AI Persona)', items: genres, val: genre, set: setGenre, color: '#EC4899' },
+            { label: '2. Tempo Speed', items: tempos, val: tempo, set: setTempo, color: '#8B5CF6' },
+            { label: '3. Lead Instrument', items: leads, val: lead, set: setLead, color: '#3B82F6' },
+            { label: '4. Backing Beats', items: drums, val: drum, set: setDrum, color: '#10B981' },
+          ].map(({ label, items, val, set, color }) => (
+            <div key={label}>
+              <div style={D ? { fontFamily: '"Nunito", sans-serif', fontWeight: 800, fontSize: 12, color, marginBottom: 6 } : { fontFamily: '"Press Start 2P", monospace', fontSize: 5, color, marginBottom: 4 }}>{label}</div>
+              <div style={{ display: 'grid', gridTemplateColumns: `repeat(${items.length}, 1fr)`, gap: 6 }}>
+                {items.map(item => (
+                  <button key={item} onClick={() => set(item)} style={buttonStyle(val === item, color)}>
+                    {item}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+
+          {genre && tempo && lead && drum && (
+            <button
+              onClick={startComposition}
+              style={{
+                width: '100%',
+                padding: '12px 0',
+                background: D ? '#EC4899' : 'linear-gradient(90deg, #EC4899, #8B5CF6)',
+                color: '#fff',
+                border: 'none',
+                borderRadius: D ? 12 : 0,
+                fontFamily: D ? '"Nunito", sans-serif' : '"Press Start 2P", monospace',
+                fontWeight: 900,
+                fontSize: D ? 13 : 5.5,
+                cursor: 'pointer',
+                boxShadow: D ? '0 4px 0px rgba(236, 72, 153, 0.3)' : '3px 3px 0px #000',
+                marginTop: 8,
+              }}
+            >
+              🎹 Generate AI Music Track!
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Generating composition */}
+      {generating && (
+        <div style={D ? {
+          background: '#FFF0FA',
+          border: '1.5px solid #EC4899',
+          borderRadius: 14,
+          padding: 20,
+          textAlign: 'center',
+        } : {
+          background: '#1E1B4B',
+          border: '2px solid #EC4899',
+          padding: 20,
+          textAlign: 'center',
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end', gap: 4, height: 48, marginBottom: 12 }}>
+            {[...Array(6)].map((_, i) => (
+              <motion.div key={i} animate={{ height: [12, 48, 12] }} transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.1 }} style={{ width: 6, background: '#EC4899', borderRadius: 3 }} />
+            ))}
+          </div>
+          <div style={D ? { fontFamily: '"Nunito", sans-serif', fontWeight: 800, fontSize: 13, color: '#EC4899' } : { fontFamily: '"Press Start 2P", monospace', fontSize: 5.5, color: '#EC4899' }}>
+            🤖 {generationSteps[activeStep]}
+          </div>
+        </div>
+      )}
+
+      {/* Composition Result Ready */}
+      {composedTrack && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          style={D ? {
+            background: '#F0FFF9',
+            border: '2px solid #10B981',
+            borderRadius: 14,
+            padding: 16,
+            textAlign: 'center',
+          } : {
+            background: '#0A2E1B',
+            border: '2px solid #10B981',
+            padding: 16,
+            textAlign: 'center',
+          }}
+        >
+          <div style={{ fontSize: 32, marginBottom: 8 }}>🎵</div>
+          <div style={D ? { fontFamily: '"Nunito", sans-serif', fontWeight: 900, fontSize: 13, color: '#10B981' } : { fontFamily: '"Press Start 2P", monospace', fontSize: 5.5, color: '#10B981' }}>AI TRACK READY — HIT PLAY</div>
+          <div style={D ? { fontFamily: '"Nunito", sans-serif', fontSize: 13, color: '#475569', marginTop: 4 } : { fontFamily: '"Fredoka One", cursive', fontSize: 12, color: 'rgba(255, 255, 255, 0.8)', marginTop: 4 }}>{composedTrack}</div>
+          
+          {/* Visualizer bars */}
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end', gap: 3, height: 32, margin: '12px 0' }}>
+            {[...Array(12)].map((_, i) => (
+              isPlaying ? (
+                <motion.div key={i} animate={{ height: [4, 20 + (i % 3) * 6, 4] }} transition={{ duration: 0.35 + (i % 4) * 0.1, repeat: Infinity, delay: i * 0.06 }} style={{ width: 4, background: '#EC4899', borderRadius: 2 }} />
+              ) : (
+                <div key={i} style={{ width: 4, height: 6, background: '#10B981', opacity: 0.4, borderRadius: 2 }} />
+              )
+            ))}
+          </div>
+
+          {isPlaying && (
+            <div style={D ? { fontFamily: '"Nunito", sans-serif', fontSize: 11, color: '#EC4899', fontWeight: 800, marginBottom: 8 } : { fontFamily: '"Press Start 2P", monospace', fontSize: 5, color: '#EC4899', marginBottom: 8 }}>
+              ▶ NOW PLAYING: {trackTitle.toUpperCase()}
+            </div>
+          )}
+
+          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+            <button
+              onClick={isPlaying ? stopPlayback : playTrack}
+              style={{
+                flex: 1,
+                padding: '10px 0',
+                background: isPlaying ? '#EF4444' : '#EC4899',
+                color: '#fff',
+                border: 'none',
+                borderRadius: D ? 10 : 0,
+                fontFamily: D ? '"Nunito", sans-serif' : '"Press Start 2P", monospace',
+                fontWeight: 900,
+                fontSize: D ? 13 : 5.5,
+                cursor: 'pointer',
+              }}
+            >
+              {isPlaying ? '⏸ STOP' : '▶ PLAY TRACK'}
+            </button>
+            <button
+              onClick={() => { stopPlayback(); setComposedTrack(null); setGenre(''); setTempo(''); setLead(''); setDrum(''); }}
+              style={{
+                padding: '10px 14px',
+                background: D ? '#F1F5F9' : 'rgba(255, 255, 255, 0.1)',
+                color: D ? '#475569' : 'rgba(255, 255, 255, 0.6)',
+                border: D ? '1.5px solid #E2E8F0' : '1.5px solid rgba(255, 255, 255, 0.15)',
+                borderRadius: D ? 10 : 0,
+                fontFamily: D ? '"Nunito", sans-serif' : '"Press Start 2P", monospace',
+                fontWeight: 700,
+                fontSize: D ? 12 : 5.5,
+                cursor: 'pointer',
+              }}
+            >
+              🔄 Remix
+            </button>
+          </div>
+        </motion.div>
+      )}
+
+      {/* How this teaches section */}
+      <div style={D ? {
+        background: '#FFFBEB',
+        border: '1.5px solid #FCD34D',
+        borderRadius: 12,
+        padding: '10px 14px',
+      } : {
+        background: '#1A1500',
+        border: '1.5px solid #FFB84D',
+        padding: '8px 12px',
+      }}>
+        <div style={D ? { fontFamily: '"Nunito", sans-serif', fontWeight: 800, fontSize: 12, color: '#B45309' } : { fontFamily: '"Press Start 2P", monospace', fontSize: 5, color: '#FFD60A' }}>
+          💡 HOW THIS TEACHES PROMPT ENGINEERING
+        </div>
+        <div style={D ? { fontFamily: '"Nunito", sans-serif', fontSize: 11, color: '#475569', marginTop: 4, lineHeight: 1.5 } : { fontFamily: '"Fredoka One", cursive', fontSize: 5.5, color: 'rgba(255, 255, 255, 0.7)', marginTop: 4, lineHeight: 1.5 }}>
+          Each selection is a <strong>parameter in your prompt</strong>. Genre = AI personality, Tempo = rhythm, Instrument = output voice — just like system prompts control AI behavior!
+        </div>
+      </div>
+    </motion.div>
   );
 }

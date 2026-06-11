@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/Button';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Download } from 'lucide-react';
 import jsPDF from 'jspdf';
+import { useThemeStyles } from '@/lib/useThemeStyles';
 
 const PANEL_PROMPTS = [
   { id: 1, title: 'The Hero\'s World 🌍', prompt: 'Where does our story take place?', keywords: ['City', 'Village', 'School', 'Farm', 'Forest', 'Space', 'Ocean', 'Hospital'] },
@@ -23,6 +24,8 @@ const PANEL_EMOJIS: Record<string, string> = {
 
 export default function ComicCreator() {
   const navigate = useNavigate();
+  const ts = useThemeStyles();
+  const D = ts.duo;
   const [panelChoices, setPanelChoices] = useState<string[]>(Array(6).fill(''));
   const [currentPanel, setCurrentPanel] = useState(0);
   const [generating, setGenerating] = useState(false);
@@ -87,13 +90,20 @@ export default function ComicCreator() {
   };
 
   return (
-    <div className="min-h-full pb-6">
-      <div className="p-5" style={{ background: '#16103A' }}>
-        <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-white/55 hover:text-white mb-3 font-body text-sm">
-          <ArrowLeft className="w-4 h-4" /> Back
+    <div
+      className={D ? '' : 'min-h-full pb-6'}
+      style={ts.page}
+    >
+      <div className="p-5" style={D ? { background: '#FFFFFF', borderBottom: '1px solid #E0E0E0' } : { background: '#16103A' }}>
+        <button
+          onClick={() => navigate(-1)}
+          className={D ? 'flex items-center gap-2 mb-4 font-body text-sm font-bold transition-colors cursor-pointer w-fit' : 'flex items-center gap-2 text-white/55 hover:text-white mb-3 font-body text-sm w-fit transition-colors'}
+          style={D ? { color: '#8B5CF6' } : {}}
+        >
+          <ArrowLeft className="w-4 h-4" /> {D ? 'Back' : 'Back'}
         </button>
-        <h1 className="font-pixel text-[10px] text-white flex items-center gap-2 tracking-wide">📚 COMIC CREATOR</h1>
-        <p className="text-white/55 font-body text-sm mt-1">Build your own 6-panel AI adventure comic!</p>
+        <h1 style={{ color: ts.textPrimary, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 950 : undefined, fontSize: D ? 20 : undefined }} className={D ? '' : 'font-pixel text-[10px] text-white flex items-center gap-2 tracking-wide'}>📚 COMIC CREATOR</h1>
+        <p style={{ color: ts.textSecondary, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontSize: D ? 12 : undefined }} className={D ? 'mt-1' : 'text-white/55 font-body text-sm mt-1'}>Build your own 6-panel AI adventure comic!</p>
       </div>
 
       <div className="px-4 pt-4">
@@ -105,24 +115,39 @@ export default function ComicCreator() {
                 <motion.div
                   key={i}
                   onClick={() => setCurrentPanel(i)}
-                  className="flex-1 h-8 cursor-pointer flex items-center justify-center font-pixel text-[7px] transition-all"
+                  className={D ? 'flex-1 h-8 cursor-pointer flex items-center justify-center text-xs font-bold transition-all' : 'flex-1 h-8 cursor-pointer flex items-center justify-center font-pixel text-[7px] transition-all'}
                   style={
-                    i < currentPanel ? {
+                    i < currentPanel ? (D ? {
+                      background: '#F0FAF0',
+                      color: '#5FCC5F',
+                      border: '1.5px solid #BBF7D0',
+                      borderRadius: 8,
+                    } : {
                       background: '#10B981',
                       color: 'white',
                       border: '2px solid #000000',
                       boxShadow: '2px 2px 0px #000000',
-                    } : i === currentPanel ? {
+                    }) : i === currentPanel ? (D ? {
+                      background: '#F5F3FF',
+                      color: '#8B5CF6',
+                      border: '1.5px solid #C4B5FD',
+                      borderRadius: 8,
+                    } : {
                       background: '#7C3AED',
                       color: 'white',
                       border: '2px solid #000000',
                       boxShadow: '2px 2px 0px #000000',
                       animation: 'pixelFlash 0.3s steps(2) infinite',
+                    }) : (D ? {
+                      background: '#FFFFFF',
+                      color: '#999999',
+                      border: '1.5px solid #E0E0E0',
+                      borderRadius: 8,
                     } : {
                       background: '#16103A',
                       color: 'rgba(255,255,255,0.35)',
                       border: '2px solid #000000',
-                    }
+                    })
                   }
                 >
                   {panelChoices[i] ? '✓' : i + 1}
@@ -135,21 +160,21 @@ export default function ComicCreator() {
               <motion.div key={currentPanel} initial={{ x: 60, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -60, opacity: 0 }}>
                 <div
                   className="p-5 mb-4"
-                  style={{
-                    background: '#1E1B4B',
-                    border: '4px solid #000000',
-                    boxShadow: '6px 6px 0px 0px #000000',
-                  }}
+                  style={ts.card}
                 >
                   <div className="text-3xl text-center mb-3">{['🌍', '😟', '🤖', '⚡', '💡', '🏆'][currentPanel]}</div>
-                  <h2 className="text-white font-game text-base text-center">{PANEL_PROMPTS[currentPanel].title}</h2>
-                  <p className="text-white/55 font-body text-sm text-center mt-1">{PANEL_PROMPTS[currentPanel].prompt}</p>
+                  <h2 style={{ color: ts.textPrimary, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 800 : undefined, fontSize: D ? 15 : undefined }} className={D ? 'text-center' : 'text-white font-game text-base text-center'}>{PANEL_PROMPTS[currentPanel].title}</h2>
+                  <p style={{ color: ts.textSecondary, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontSize: D ? 12 : undefined }} className={D ? 'text-center mt-1' : 'text-white/55 font-body text-sm text-center mt-1'}>{PANEL_PROMPTS[currentPanel].prompt}</p>
                   {panelChoices[currentPanel] && (
                     <div
                       className="mt-3 p-2 text-center"
-                      style={{ background: 'rgba(16,185,129,0.15)', border: '2px solid #000000', boxShadow: '2px 2px 0px #000000' }}
+                      style={D ? {
+                        background: '#F0FAF0',
+                        border: '1.5px solid #BBF7D0',
+                        borderRadius: 10,
+                      } : { background: 'rgba(16,185,129,0.15)', border: '2px solid #000000', boxShadow: '2px 2px 0px #000000' }}
                     >
-                      <span className="text-white font-game text-sm">{PANEL_EMOJIS[panelChoices[currentPanel]]} {panelChoices[currentPanel]}</span>
+                      <span style={{ color: D ? '#5FCC5F' : undefined, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 800 : undefined }} className={D ? '' : 'text-white font-game text-sm'}>{PANEL_EMOJIS[panelChoices[currentPanel]]} {panelChoices[currentPanel]}</span>
                     </div>
                   )}
                 </div>
@@ -160,18 +185,30 @@ export default function ComicCreator() {
                       key={kw}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => handleKeyword(kw)}
-                      className="p-3 text-center font-body text-sm transition-all"
-                      style={panelChoices[currentPanel] === kw ? {
+                      className={D ? 'p-3 text-center font-bold font-body text-xs cursor-pointer transition-all' : 'p-3 text-center font-body text-sm cursor-pointer transition-all'}
+                      style={panelChoices[currentPanel] === kw ? (D ? {
+                        background: '#F5F3FF',
+                        color: '#8B5CF6',
+                        border: '1.5px solid #8B5CF6',
+                        borderRadius: 14,
+                        boxShadow: '0 4px 12px rgba(139,92,246,0.1)',
+                      } : {
                         background: '#7C3AED',
                         color: 'white',
                         border: '3px solid #000000',
                         boxShadow: '4px 4px 0px #000000',
+                      }) : (D ? {
+                        background: '#FFFFFF',
+                        color: '#555555',
+                        border: '1.5px solid #E0E0E0',
+                        borderRadius: 14,
+                        boxShadow: '0 2px 6px rgba(0,0,0,0.03)',
                       } : {
                         background: '#1E1B4B',
                         color: 'rgba(255,255,255,0.75)',
                         border: '3px solid #000000',
                         boxShadow: '3px 3px 0px #000000',
-                      }}
+                      })}
                     >
                       <span className="text-xl block mb-1">{PANEL_EMOJIS[kw] || '⭐'}</span>
                       {kw}
@@ -194,14 +231,10 @@ export default function ComicCreator() {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
             <div
               className="text-center p-5"
-              style={{
-                background: '#1E1B4B',
-                border: '4px solid #000000',
-                boxShadow: '6px 6px 0px 0px #000000',
-              }}
+              style={ts.card}
             >
               <div className="text-5xl mb-2">🎉</div>
-              <h2 className="text-white font-game text-lg">Your Comic is Ready!</h2>
+              <h2 style={{ color: ts.textPrimary, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 900 : undefined, fontSize: D ? 16 : undefined }} className={D ? '' : 'text-white font-game text-lg'}>Your Comic is Ready!</h2>
             </div>
 
             {/* Comic Grid Preview */}
@@ -210,15 +243,20 @@ export default function ComicCreator() {
                 <div
                   key={i}
                   className="p-3 aspect-square flex flex-col items-center justify-center gap-2"
-                  style={{
+                  style={D ? {
+                    background: '#FFFFFF',
+                    border: '1.5px solid #E0E0E0',
+                    borderRadius: 16,
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
+                  } : {
                     background: '#1E1B4B',
                     border: '3px solid #000000',
                     boxShadow: '3px 3px 0px #000000',
                   }}
                 >
                   <div className="text-4xl">{PANEL_EMOJIS[panelChoices[i]] || '⭐'}</div>
-                  <div className="text-white font-pixel text-[6px] text-center leading-relaxed tracking-wide">{panel.title}</div>
-                  <div className="text-white/55 font-body text-[9px] text-center">{panelChoices[i]}</div>
+                  <div style={{ color: ts.textPrimary, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 800 : undefined, fontSize: D ? 11 : undefined }} className={D ? 'text-center leading-relaxed truncate w-full' : 'text-white font-pixel text-[6px] text-center leading-relaxed tracking-wide'}>{panel.title}</div>
+                  <div style={{ color: ts.textSecondary, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontSize: D ? 11 : undefined, fontWeight: D ? 600 : undefined }} className={D ? 'text-center mt-0.5' : 'text-white/55 font-body text-[9px] text-center'}>{panelChoices[i]}</div>
                 </div>
               ))}
             </div>
