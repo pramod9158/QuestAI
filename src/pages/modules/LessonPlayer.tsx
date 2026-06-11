@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CURRICULUM, type Lesson } from '@/data/curriculum';
+import { CURRICULUM, PHASES, type Lesson } from '@/data/curriculum';
 import { SpeakButton } from '@/components/ui/GameUI';
 import { XPToast } from '@/components/ui/GameUI';
 import { Button } from '@/components/ui/Button';
@@ -30,8 +30,24 @@ export default function LessonPlayer() {
   
   const userZone = profile?.zone || 'junior';
   const completedIds = profile?.completed_lessons || [];
-  const filtered = CURRICULUM.filter(l => l.zone === userZone || l.zone === 'both');
+  // Exclude prompt engineering phases 3 & 8 and removed phase 2
+  const filtered = CURRICULUM.filter(l => (l.zone === userZone || l.zone === 'both') && l.phase !== 3 && l.phase !== 8 && l.phase !== 2);
   const activeIndex = filtered.findIndex(l => !completedIds.includes(l.id));
+
+  // Determine active visible phases dynamically to match outside module numbering
+  const visiblePhases = PHASES.filter(p => filtered.some(l => l.phase === p.id));
+  const getDynamicSubtitle = () => {
+    if (!lesson) return '';
+    if (lesson.phase === 3 || lesson.phase === 8) {
+      return lesson.subtitle;
+    }
+    const phaseIdx = visiblePhases.findIndex(p => p.id === lesson.phase);
+    if (phaseIdx !== -1) {
+      return `Phase ${phaseIdx + 1}: ${visiblePhases[phaseIdx].title}`;
+    }
+    return lesson.subtitle;
+  };
+  const dynamicSubtitle = getDynamicSubtitle();
 
   // Step state: 1: Briefing/Hook, 2: Watch/Checkpoints, 3: Lab, 4: Project
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
@@ -90,13 +106,16 @@ export default function LessonPlayer() {
   // Gating check
   useEffect(() => {
     if (lesson) {
+      if (lesson.phase === 3 || lesson.phase === 8) {
+        return;
+      }
       const lessonIndex = filtered.findIndex(l => l.id === lesson.id);
       if (lessonIndex === -1) {
         navigate('/learn', { replace: true });
         return;
       }
       if (activeIndex !== -1 && lessonIndex > activeIndex) {
-        navigate(`/learn/${filtered[activeIndex].id}`, { replace: true });
+        navigate(`/learn?locked=true&target=${lesson.id}&active=${filtered[activeIndex].id}`, { replace: true });
       }
     }
   }, [lesson, activeIndex, filtered, navigate]);
@@ -343,6 +362,10 @@ export default function LessonPlayer() {
   // Continue back to Learn page / next lesson
   const handleFinalContinue = () => {
     setShowCompleteOverlay(false);
+    if (lesson.phase === 3 || lesson.phase === 8) {
+      navigate('/prompts', { replace: true });
+      return;
+    }
     const nextIncomplete = filtered.find(l => !completedIds.includes(l.id) && l.id !== lesson.id);
     if (nextIncomplete) {
       navigate(`/learn/${nextIncomplete.id}`, { replace: true });
@@ -355,7 +378,7 @@ export default function LessonPlayer() {
     if (!tutorInput.trim() || askingTutor) return;
     setAskingTutor(true);
     try {
-      const ans = await askLessonTutor(lesson.title, lesson.subtitle, tutorInput);
+      const ans = await askLessonTutor(lesson.title, dynamicSubtitle, tutorInput);
       setTutorAnswer(ans);
       setTutorInput('');
     } catch (err) {
@@ -583,12 +606,12 @@ export default function LessonPlayer() {
         className="px-4 py-3 flex items-center gap-3 relative z-10"
         style={{ background: '#1E1B4B', borderBottom: '3px solid #000', boxShadow: '0 3px 0px #000' }}
       >
-        <button onClick={() => navigate('/learn')} className="touch-target text-white/50 hover:text-white transition-colors cursor-pointer">
+        <button onClick={() => navigate((lesson.phase === 3 || lesson.phase === 8) ? '/prompts' : '/learn')} className="touch-target text-white/50 hover:text-white transition-colors cursor-pointer">
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div className="flex-1 min-w-0">
           <div className="font-game text-xs text-white uppercase tracking-wide truncate">{lesson.missionTitle || lesson.title}</div>
-          <div className="text-white/45 font-pixel text-[6px] uppercase tracking-wider">{lesson.subtitle}</div>
+          <div className="text-white/45 font-pixel text-[6px] uppercase tracking-wider">{dynamicSubtitle}</div>
         </div>
         <SpeakButton text={lesson.ttsIntro} />
       </div>

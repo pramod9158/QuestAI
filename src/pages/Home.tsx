@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCurrentProfile, useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { CURRICULUM, STORY_QUESTS, WEEKLY_MISSIONS_DATA, PLAY_MODULES_DATA } from '@/data/curriculum';
+import { CURRICULUM, PHASES, STORY_QUESTS, WEEKLY_MISSIONS_DATA, PLAY_MODULES_DATA } from '@/data/curriculum';
 import { getLevel, getXPForNextLevel, getEarnedBadges, getPlatformProgress } from '@/lib/gamification';
 import { ProgressRing, XPToast, CoinToast } from '@/components/ui/GameUI';
 import { Zap, BookOpen, Swords, Target, Trophy, Users, ChevronRight, Flame, Sparkles } from 'lucide-react';
@@ -447,8 +447,14 @@ export default function Home() {
           </button>
         </div>
         {(() => {
-          const zoneCurriculum = CURRICULUM.filter(l => l.zone === userZone || l.zone === 'both');
+          const zoneCurriculum = CURRICULUM.filter(l => (l.zone === userZone || l.zone === 'both') && l.phase !== 3 && l.phase !== 8 && l.phase !== 2);
           const nextLesson = zoneCurriculum[completedLessons];
+          let dynamicSubtitle = 'Amazing job, you are an AI expert!';
+          if (nextLesson) {
+            const visiblePhases = PHASES.filter(p => zoneCurriculum.some(l => l.phase === p.id));
+            const phaseIdx = visiblePhases.findIndex(p => p.id === nextLesson.phase);
+            dynamicSubtitle = phaseIdx !== -1 ? `Phase ${phaseIdx + 1}: ${visiblePhases[phaseIdx].title}` : nextLesson.subtitle;
+          }
           return (
             <motion.div
               whileHover={{ scale: 1.01 }}
@@ -476,7 +482,7 @@ export default function Home() {
                   {nextLesson ? nextLesson.title : 'Curriculum Completed!'}
                 </div>
                 <div className="text-white/45 font-body text-xs mt-0.5 truncate">
-                  {nextLesson ? nextLesson.subtitle : 'Amazing job, you are an AI expert!'}
+                  {dynamicSubtitle}
                 </div>
                 {nextLesson ? (
                   <div className="flex items-center gap-1 mt-2">

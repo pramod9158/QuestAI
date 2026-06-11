@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { testPromptPlayground, modifySvgWithInstruction, evaluateSvgDrawing } from '@/lib/ai';
 import { BookOpen, MessageSquare, Paintbrush, Send, RefreshCw, Sparkles, Award } from 'lucide-react';
 import { AICompanion } from '../ui/AICompanion';
+import { useCurrentProfile } from '@/contexts/AuthContext';
 
 interface CreateLabProps {
   onComplete: () => void;
@@ -21,98 +22,86 @@ export interface ArtChallenge {
   referenceSvg: string;
 }
 
-export const ART_CHALLENGES: ArtChallenge[] = [
+export const JUNIOR_ART_CHALLENGES: ArtChallenge[] = [
   {
-    id: 'house',
-    name: 'House',
-    emoji: '🏠',
+    id: 'triangle_in_circle',
+    name: 'Triangle within Circle',
+    emoji: '🎯',
     difficulty: 'Simple',
+    minPrompts: 2,
+    maxPrompts: 5,
+    description: 'Draw a triangle inside a circle. Do not fill them with any color (only use outlines/strokes!).',
+    referenceSvg: `<svg viewBox="0 0 100 100" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="50" cy="50" r="35" fill="none" stroke="black" stroke-width="2"/>
+      <polygon points="50,23 28,65 72,65" fill="none" stroke="black" stroke-width="2"/>
+    </svg>`
+  },
+  {
+    id: 'three_colored_shapes',
+    name: 'Three Colored Shapes',
+    emoji: '🔺',
+    difficulty: 'Medium',
     minPrompts: 3,
     maxPrompts: 6,
-    description: 'Draw a house base, a triangular roof, and a door.',
+    description: 'Draw a triangle, a circle, and a square side-by-side, filled with three different colors.',
     referenceSvg: `<svg viewBox="0 0 100 100" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-      <rect x="25" y="45" width="50" height="40" fill="#3B82F6" stroke="black" stroke-width="2"/>
-      <polygon points="20,45 50,20 80,45" fill="#EF4444" stroke="black" stroke-width="2"/>
-      <rect x="42" y="55" width="16" height="30" fill="#FFD60A" stroke="black" stroke-width="2"/>
-    </svg>`
-  },
-  {
-    id: 'rocket',
-    name: 'Rocket',
-    emoji: '🚀',
-    difficulty: 'Medium',
-    minPrompts: 4,
-    maxPrompts: 8,
-    description: 'Draw a tall body, a triangle nose cone, side fins, and a window.',
-    referenceSvg: `<svg viewBox="0 0 100 100" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-      <rect x="35" y="30" width="30" height="50" fill="#EF4444" stroke="black" stroke-width="2"/>
-      <polygon points="35,30 50,10 65,30" fill="#FFD60A" stroke="black" stroke-width="2"/>
-      <polygon points="20,80 35,65 35,80" fill="#3B82F6" stroke="black" stroke-width="2"/>
-      <polygon points="65,65 80,80 65,80" fill="#3B82F6" stroke="black" stroke-width="2"/>
-      <circle cx="50" cy="45" r="7" fill="white" stroke="black" stroke-width="2"/>
-    </svg>`
-  },
-  {
-    id: 'robot',
-    name: 'Robot',
-    emoji: '🤖',
-    difficulty: 'Medium',
-    minPrompts: 5,
-    maxPrompts: 10,
-    description: 'Draw a head, a large body, circle eyes, and antennas/legs.',
-    referenceSvg: `<svg viewBox="0 0 100 100" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-      <rect x="35" y="15" width="30" height="25" rx="3" fill="#6B7280" stroke="black" stroke-width="2"/>
-      <rect x="25" y="45" width="50" height="35" rx="5" fill="#3B82F6" stroke="black" stroke-width="2"/>
-      <circle cx="43" cy="27" r="4" fill="#10B981" stroke="black" stroke-width="1.5"/>
-      <circle cx="57" cy="27" r="4" fill="#10B981" stroke="black" stroke-width="1.5"/>
-      <line x1="50" y1="40" x2="50" y2="45" stroke="black" stroke-width="3"/>
-      <line x1="35" y1="80" x2="35" y2="95" stroke="black" stroke-width="3"/>
-      <line x1="65" y1="80" x2="65" y2="95" stroke="black" stroke-width="3"/>
-    </svg>`
-  },
-  {
-    id: 'dog',
-    name: 'Dog',
-    emoji: '🐶',
-    difficulty: 'Advanced',
-    minPrompts: 6,
-    maxPrompts: 12,
-    description: 'Draw a body, head, triangle ears, nose, eyes, and a tail.',
-    referenceSvg: `<svg viewBox="0 0 100 100" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-      <rect x="20" y="40" width="50" height="35" fill="#78350F" stroke="black" stroke-width="2"/>
-      <rect x="55" y="20" width="25" height="25" fill="#78350F" stroke="black" stroke-width="2"/>
-      <polygon points="55,20 62,5 65,20" fill="#EF4444" stroke="black" stroke-width="1.5"/>
-      <polygon points="75,20 78,5 80,20" fill="#EF4444" stroke="black" stroke-width="1.5"/>
-      <circle cx="63" cy="30" r="3" fill="white" stroke="black" stroke-width="1"/>
-      <circle cx="73" cy="30" r="3" fill="white" stroke="black" stroke-width="1"/>
-      <circle cx="68" cy="37" r="2.5" fill="black"/>
-      <line x1="20" y1="50" x2="10" y2="35" stroke="#78350F" stroke-width="3" stroke-linecap="round"/>
-    </svg>`
-  },
-  {
-    id: 'cat',
-    name: 'Cat',
-    emoji: '🐱',
-    difficulty: 'Advanced',
-    minPrompts: 6,
-    maxPrompts: 12,
-    description: 'Draw a round body, head, triangle ears, whiskers, and eyes.',
-    referenceSvg: `<svg viewBox="0 0 100 100" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="50" cy="65" r="24" fill="#6B7280" stroke="black" stroke-width="2"/>
-      <circle cx="50" cy="35" r="16" fill="#6B7280" stroke="black" stroke-width="2"/>
-      <polygon points="36,25 32,5 44,20" fill="#EC4899" stroke="black" stroke-width="1.5"/>
-      <polygon points="64,25 68,5 56,20" fill="#EC4899" stroke="black" stroke-width="1.5"/>
-      <circle cx="44" cy="32" r="3.5" fill="white" stroke="black" stroke-width="1"/>
-      <circle cx="56" cy="32" r="3.5" fill="white" stroke="black" stroke-width="1"/>
-      <circle cx="44" cy="32" r="1.5" fill="black"/>
-      <circle cx="56" cy="32" r="1.5" fill="black"/>
-      <line x1="25" y1="35" x2="35" y2="35" stroke="black" stroke-width="1.5"/>
-      <line x1="65" y1="35" x2="75" y2="35" stroke="black" stroke-width="1.5"/>
+      <polygon points="10,65 25,35 40,65" fill="#EF4444" stroke="black" stroke-width="2"/>
+      <circle cx="55" cy="50" r="15" fill="#FFD60A" stroke="black" stroke-width="2"/>
+      <rect x="75" y="35" width="20" height="20" fill="#3B82F6" stroke="black" stroke-width="2"/>
     </svg>`
   }
 ];
 
+export const INNOVATOR_ART_CHALLENGES: ArtChallenge[] = [
+  {
+    id: 'triangle_in_circle',
+    name: 'Triangle within Circle',
+    emoji: '🎯',
+    difficulty: 'Simple',
+    minPrompts: 2,
+    maxPrompts: 5,
+    description: 'Draw a triangle inside a circle. Do not fill them with any color (only use outlines/strokes!).',
+    referenceSvg: `<svg viewBox="0 0 100 100" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="50" cy="50" r="35" fill="none" stroke="black" stroke-width="2"/>
+      <polygon points="50,23 28,65 72,65" fill="none" stroke="black" stroke-width="2"/>
+    </svg>`
+  },
+  {
+    id: 'three_colored_shapes',
+    name: 'Three Colored Shapes',
+    emoji: '🔺',
+    difficulty: 'Medium',
+    minPrompts: 3,
+    maxPrompts: 6,
+    description: 'Draw a triangle, a circle, and a square side-by-side, filled with three different colors.',
+    referenceSvg: `<svg viewBox="0 0 100 100" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="10,65 25,35 40,65" fill="#EF4444" stroke="black" stroke-width="2"/>
+      <circle cx="55" cy="50" r="15" fill="#FFD60A" stroke="black" stroke-width="2"/>
+      <rect x="75" y="35" width="20" height="20" fill="#3B82F6" stroke="black" stroke-width="2"/>
+    </svg>`
+  },
+  {
+    id: 'split_color_square',
+    name: 'Split Color Square',
+    emoji: '🟥',
+    difficulty: 'Advanced',
+    minPrompts: 2,
+    maxPrompts: 5,
+    description: 'Draw a square filled half with one color (Red) and the other half with another color (Blue).',
+    referenceSvg: `<svg viewBox="0 0 100 100" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <rect x="25" y="25" width="25" height="50" fill="#EF4444" stroke="black" stroke-width="2"/>
+      <rect x="50" y="25" width="25" height="50" fill="#3B82F6" stroke="black" stroke-width="2"/>
+    </svg>`
+  }
+];
+
+export const ART_CHALLENGES: ArtChallenge[] = [...JUNIOR_ART_CHALLENGES, ...INNOVATOR_ART_CHALLENGES];
+
 export default function CreateLab({ onComplete }: CreateLabProps) {
+  const profile = useCurrentProfile();
+  const zone = profile?.zone || 'junior';
+  const activeChallenges = zone === 'innovator' ? INNOVATOR_ART_CHALLENGES : JUNIOR_ART_CHALLENGES;
+
   const [activeMode, setActiveMode] = useState<Mode>('story');
   const [loading, setLoading] = useState(false);
 
@@ -493,7 +482,8 @@ export default function CreateLab({ onComplete }: CreateLabProps) {
                 </div>
                 
                 {['Simple', 'Medium', 'Advanced'].map(diff => {
-                  const filtered = ART_CHALLENGES.filter(c => c.difficulty === diff);
+                  const filtered = activeChallenges.filter(c => c.difficulty === diff);
+                  if (filtered.length === 0) return null;
                   return (
                     <div key={diff} className="space-y-2">
                       <h4 className="font-game text-[10px] uppercase tracking-wider text-pink-500 border-b border-white/5 pb-1">

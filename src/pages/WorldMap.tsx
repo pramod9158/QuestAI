@@ -13,7 +13,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useCurrentProfile } from '@/contexts/AuthContext';
-import { CURRICULUM } from '@/data/curriculum';
+import { CURRICULUM, PHASES } from '@/data/curriculum';
 import { ArrowLeft, Lock, Star, Zap, ChevronRight, Trophy } from 'lucide-react';
 import { CelebrationOverlay } from '@/components/ui/CelebrationOverlay';
 
@@ -128,9 +128,13 @@ const WORLDS: World[] = [
   },
 ];
 
-function getWorldProgress(world: World, completedLessons: string[]) {
-  const total = world.lessons.length;
-  const done = world.lessons.filter(id => completedLessons.includes(id)).length;
+function getWorldProgress(world: World, completedLessons: string[], userZone: 'junior' | 'innovator') {
+  const activeLessons = world.lessons.map(id =>
+    CURRICULUM.find(l => l.id === id)
+  ).filter((l): l is typeof CURRICULUM[0] => !!l && (l.zone === userZone || l.zone === 'both') && l.phase !== 3 && l.phase !== 8 && l.phase !== 2);
+
+  const total = activeLessons.length;
+  const done = activeLessons.filter(l => completedLessons.includes(l.id)).length;
   return { done, total, percent: total > 0 ? Math.round((done / total) * 100) : 0 };
 }
 
@@ -334,15 +338,16 @@ export default function WorldMap() {
   } | null>(null);
 
   const completedLessons = profile?.completed_lessons || [];
+  const userZone = profile?.zone || 'junior';
 
   // Calculate world unlock state
   const worldStates = WORLDS.map((world, i) => {
-    const progress = getWorldProgress(world, completedLessons);
+    const progress = getWorldProgress(world, completedLessons, userZone);
     const prevWorld = i > 0 ? WORLDS[i - 1] : null;
-    const prevProgress = prevWorld ? getWorldProgress(prevWorld, completedLessons) : null;
+    const prevProgress = prevWorld ? getWorldProgress(prevWorld, completedLessons, userZone) : null;
     const isUnlocked = i === 0 || (prevProgress?.percent ?? 0) >= 50;
     const isCurrent = isUnlocked && progress.percent < 100 &&
-      (i === 0 || (WORLDS[i - 1] && getWorldProgress(WORLDS[i - 1], completedLessons).percent >= 50));
+      (i === 0 || (WORLDS[i - 1] && getWorldProgress(WORLDS[i - 1], completedLessons, userZone).percent >= 50));
     return { world, progress, isUnlocked, isCurrent };
   });
 
@@ -459,9 +464,11 @@ export default function WorldMap() {
       <AnimatePresence>
         {selectedWorld && (() => {
           const ws = worldStates.find(w => w.world.id === selectedWorld.id);
+          const zoneCurriculum = CURRICULUM.filter(l => (l.zone === userZone || l.zone === 'both') && l.phase !== 3 && l.phase !== 8 && l.phase !== 2);
+          const visiblePhases = PHASES.filter(p => zoneCurriculum.some(l => l.phase === p.id));
           const worldLessons = selectedWorld.lessons.map(id =>
             CURRICULUM.find(l => l.id === id)
-          ).filter(Boolean);
+          ).filter((l): l is typeof CURRICULUM[0] => !!l && (l.zone === userZone || l.zone === 'both') && l.phase !== 3 && l.phase !== 8 && l.phase !== 2);
 
           return (
             <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/75 backdrop-blur-sm">
@@ -529,7 +536,13 @@ export default function WorldMap() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="font-game text-xs text-white truncate">{lesson.title}</div>
-                          <div className="text-white/40 font-body text-[10px] truncate">{lesson.subtitle}</div>
+                          {(() => {
+                            const phaseIdx = visiblePhases.findIndex(p => p.id === lesson.phase);
+                            const dynamicSubtitle = phaseIdx !== -1 ? `Phase ${phaseIdx + 1}: ${visiblePhases[phaseIdx].title}` : lesson.subtitle;
+                            return (
+                              <div className="text-white/40 font-body text-[10px] truncate">{dynamicSubtitle}</div>
+                            );
+                          })()}
                           <div className="flex items-center gap-2 mt-1">
                             <span className="font-pixel text-[5px] text-yellow-300">
                               +{lesson.xpReward} XP

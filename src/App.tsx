@@ -73,7 +73,7 @@ function PlayZoneGuard({ children }: { children: React.ReactNode }) {
   const currentPath = location.pathname + location.search;
 
   if (location.pathname === '/play') {
-    return <Navigate to={activeMod.path} replace />;
+    return <>{children}</>;
   }
 
   const matchedIndex = filtered.findIndex(mod => {
@@ -81,7 +81,7 @@ function PlayZoneGuard({ children }: { children: React.ReactNode }) {
   });
 
   if (matchedIndex !== -1 && matchedIndex > activePlayIndex) {
-    return <Navigate to={activeMod.path} replace />;
+    return <Navigate to={`/play?locked=true&target=${encodeURIComponent(filtered[matchedIndex].path)}&active=${encodeURIComponent(activeMod.path)}`} replace />;
   }
 
   return <>{children}</>;

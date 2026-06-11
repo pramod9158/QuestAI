@@ -52,7 +52,7 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
     // 2. Find first incomplete lesson
     const userZone = profile.zone || 'junior';
     const completedIds: string[] = profile.completed_lessons || [];
-    const filtered = CURRICULUM.filter(l => l.zone === userZone || l.zone === 'both');
+    const filtered = CURRICULUM.filter(l => (l.zone === userZone || l.zone === 'both') && l.phase !== 3 && l.phase !== 8 && l.phase !== 2);
     
     const nextIncompleteIdx = filtered.findIndex(l => !completedIds.includes(l.id));
     if (nextIncompleteIdx !== -1) {

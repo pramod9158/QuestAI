@@ -173,7 +173,7 @@ export function getPlatformProgress(profile: any): ProgressStats {
   
   // 1. Lessons Progress
   const completedLessonsList = profile?.completed_lessons || [];
-  const filteredLessons = CURRICULUM.filter(l => l.zone === userZone || l.zone === 'both');
+  const filteredLessons = CURRICULUM.filter(l => (l.zone === userZone || l.zone === 'both') && l.phase !== 3 && l.phase !== 8 && l.phase !== 2);
   const totalLessons = filteredLessons.length;
   
   let lessonSum = 0;
