@@ -258,24 +258,26 @@ export function useAuth() {
 // Convenience hook to get current profile (works for both auth and guest)
 export function useCurrentProfile() {
   const { profile, guestProfile, isGuest } = useAuth();
-  if (isGuest && guestProfile) {
-    return {
-      username: guestProfile.username,
-      zone: guestProfile.zone,
-      xp: guestProfile.xp,
-      coins: guestProfile.coins,
-      current_streak: guestProfile.current_streak,
-      completed_lessons: guestProfile.completed_lessons || [],
-      completed_quests: (guestProfile as any).completed_quests || [],
-    };
-  }
-  return profile ? {
-    username: profile.username,
-    zone: profile.zone,
-    xp: profile.xp,
-    coins: profile.coins,
-    current_streak: profile.current_streak,
-    completed_lessons: profile.completed_lessons || [],
-    completed_quests: profile.completed_quests || [],
-  } : null;
+  return React.useMemo(() => {
+    if (isGuest && guestProfile) {
+      return {
+        username: guestProfile.username,
+        zone: guestProfile.zone,
+        xp: guestProfile.xp,
+        coins: guestProfile.coins,
+        current_streak: guestProfile.current_streak,
+        completed_lessons: guestProfile.completed_lessons || [],
+        completed_quests: (guestProfile as any).completed_quests || [],
+      };
+    }
+    return profile ? {
+      username: profile.username,
+      zone: profile.zone,
+      xp: profile.xp,
+      coins: profile.coins,
+      current_streak: profile.current_streak,
+      completed_lessons: profile.completed_lessons || [],
+      completed_quests: profile.completed_quests || [],
+    } : null;
+  }, [profile, guestProfile, isGuest]);
 }
