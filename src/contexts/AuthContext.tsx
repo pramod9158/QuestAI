@@ -41,7 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const isGuest = !user && !!guestProfile;
 
-  const fetchProfile = useCallback(async (userId: string, email?: string, metaZone?: 'junior' | 'innovator') => {
+  const fetchProfile = useCallback(async (userId: string, email?: string, metaZone?: 'junior' | 'innovator', metaUsername?: string) => {
     try {
       const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
       
@@ -62,7 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await updateStreak(userId);
       } else {
         // Fallback profile creation if none exists in the DB
-        const defaultUsername = email ? email.split('@')[0] : `Explorer_${Math.floor(Math.random() * 10000)}`;
+        const defaultUsername = metaUsername || (email ? email.split('@')[0] : `Explorer_${Math.floor(Math.random() * 10000)}`);
         const fallbackZone = resolvedMetaZone || 'junior';
         const newProfile = {
           id: userId,
@@ -91,23 +91,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let active = true;
 
+    // Safety timeout: force isLoading to false after 4 seconds to prevent getting stuck
+    const safetyTimeout = setTimeout(() => {
+      if (active) {
+        console.warn("Auth initialization timed out. Forcing isLoading to false.");
+        setIsLoading(false);
+      }
+    }, 4000);
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!active) return;
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchProfile(session.user.id, session.user.email, session.user.user_metadata?.zone)
+        fetchProfile(session.user.id, session.user.email, session.user.user_metadata?.zone, session.user.user_metadata?.username)
           .finally(() => {
-            if (active) setIsLoading(false);
+            if (active) {
+              setIsLoading(false);
+              clearTimeout(safetyTimeout);
+            }
           });
       } else {
         setProfile(null);
         setIsLoading(false);
+        clearTimeout(safetyTimeout);
       }
     });
 
     return () => {
       active = false;
+      clearTimeout(safetyTimeout);
       subscription.unsubscribe();
     };
   }, [fetchProfile]);
@@ -168,7 +181,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           completed_lessons: [],
           completed_quests: [],
         });
-        await fetchProfile(data.user.id, email);
+        await fetchProfile(data.user.id, email, zone, username);
       } catch (err) {
         console.warn("Profile pre-creation failed (will be created on login):", err);
       }
@@ -215,7 +228,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const refreshProfile = async () => {
-    if (user) await fetchProfile(user.id, user.email, user.user_metadata?.zone);
+    if (user) await fetchProfile(user.id, user.email, user.user_metadata?.zone, user.user_metadata?.username);
     else {
       const gp = getGuestProfile();
       if (gp) setGuestProfileState(gp);
