@@ -5,6 +5,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useThemeStyles } from '@/lib/useThemeStyles';
 import { Mascot } from '@/components/ui/Mascot';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
+
 
 const ZONES = [
   {
@@ -54,6 +56,11 @@ export default function Onboarding() {
       className={D ? 'min-h-screen flex items-center justify-center p-5 relative overflow-hidden' : 'min-h-screen flex items-center justify-center p-5 relative overflow-hidden bg-game'}
       style={D ? ts.page : {}}
     >
+      {/* Floating Theme Toggle top-right */}
+      <div className="absolute top-5 right-5 z-50">
+        <ThemeToggle />
+      </div>
+
       <div className="w-full max-w-sm relative z-10">
         <AnimatePresence mode="wait">
           <motion.div

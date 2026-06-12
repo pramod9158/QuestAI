@@ -6,6 +6,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Mail, Lock, User, ArrowLeft } from 'lucide-react';
 import { useThemeStyles } from '@/lib/useThemeStyles';
 import { Mascot } from '@/components/ui/Mascot';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
+
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -62,6 +64,11 @@ export default function Auth() {
       className={D ? 'min-h-screen flex items-center justify-center p-5 relative overflow-hidden' : 'min-h-screen flex items-center justify-center p-5 relative overflow-hidden bg-game'}
       style={D ? ts.page : {}}
     >
+      {/* Floating Theme Toggle top-right */}
+      <div className="absolute top-5 right-5 z-50">
+        <ThemeToggle />
+      </div>
+
       <div className="w-full max-w-sm relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
