@@ -52,17 +52,7 @@ export default function Home() {
 
   const { pointTo, dailyQuests } = useLearningCompanion();
 
-  useEffect(() => {
-    if (profile) {
-      const timer = setTimeout(() => {
-        pointTo('#daily-quests-widget', `Welcome back, ${profile.username}! Let's complete today's daily quests to get bonus XP! ⚡`, {
-          mood: 'excited',
-          side: 'left',
-        });
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [profile]);
+
 
   const [xpToastInfo, setXpToastInfo] = useState<{ amount: number; reason: string } | null>(null);
   const [timeOfDay, setTimeOfDay] = useState('');
@@ -475,9 +465,9 @@ export default function Home() {
         >
           <div className="flex items-center justify-between">
             {D ? (
-              <span style={{ fontFamily: '"Nunito", sans-serif', fontWeight: 900, fontSize: 14, color: '#10B981' }}>⚡ Sparky's Daily Quests</span>
+              <span style={{ fontFamily: '"Nunito", sans-serif', fontWeight: 900, fontSize: 14, color: '#10B981' }}>⚡ Rio's Daily Quests</span>
             ) : (
-              <h3 className="font-game text-xs text-success uppercase">⚡ Sparky's Daily Quests</h3>
+              <h3 className="font-game text-xs text-success uppercase">⚡ Rio's Daily Quests</h3>
             )}
             <span className="text-[9px] opacity-60 font-mono tracking-widest text-emerald-400">TODAY</span>
           </div>

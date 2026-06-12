@@ -111,7 +111,7 @@ async function callGeminiFallback(
   for (let i = 0; i < keys.length; i++) {
     try {
       const genAI = new GoogleGenerativeAI(keys[i]);
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
       const fullPrompt = systemInstruction 
         ? `${systemInstruction}\n\nUser Input: ${userPrompt}` 
         : userPrompt;

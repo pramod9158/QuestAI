@@ -23,7 +23,7 @@ import {
 import { useTheme } from '@/contexts/ThemeContext';
 import { useThemeStyles } from '@/lib/useThemeStyles';
 import { ActivityHelpModal } from '@/components/ui/ActivityHelpModal';
-import { useLearningCompanion } from '@/contexts/LearningCompanionContext';
+
 
 // ==========================================
 // DATA CONFIGURATION
@@ -156,18 +156,7 @@ export default function PromptEngineering() {
   const D = isDuolingo;
   const ts = useThemeStyles();
 
-  const { speak, setOutfit } = useLearningCompanion();
-  
-  useEffect(() => {
-    setOutfit('prompt-master');
-    speak("Welcome to the Prompt Kingdom! I am Sparky, the Prompt Master. Let's write some magical AI spells! 🪄", {
-      mood: 'excited',
-      pose: 'dance',
-      outfit: 'prompt-master',
-      priority: 'high',
-    });
-    return () => setOutfit('default');
-  }, [setOutfit]);
+
   
   const [activeTab, setActiveTab] = useState<'lessons' | 'playground' | 'music'>('lessons');
   const completedIds = profile?.completed_lessons || [];

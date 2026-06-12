@@ -80,7 +80,7 @@ export default function Learn() {
   };
 
   const getSparkyMessage = () => {
-    if (doneCount === 0) return `Welcome to QuestAI, Agent! 🚀 I'm Sparky, your AI guide. Accept your first mission below to begin our tech adventure!`;
+    if (doneCount === 0) return `Welcome to QuestAI, Agent! 🚀 I'm Rio, your AI guide. Accept your first mission below to begin our tech adventure!`;
     if (doneCount === totalCount) return `BZZZ! UNBELIEVABLE! 🎓 You have completed all ${totalCount} missions! You are officially an AI Master! Try the weekly challenges next!`;
     const currentLesson = filtered[activeIndex] || filtered[0];
     return `Welcome back, Agent! We've solved ${doneCount} missions together. Ready to tackle "${currentLesson.missionTitle || currentLesson.title}" next? Let's go!`;
@@ -172,30 +172,6 @@ export default function Learn() {
         </div>
       </div>
 
-      {/* SPARKY / OWL COMPANION BANNER */}
-      <div className="px-4 pt-4">
-        <div
-          className="p-3 mb-4 flex items-center gap-3 relative overflow-hidden"
-          style={D ? {
-            background: '#FFFFFF',
-            border: '1.5px solid #C4B5FD',
-            borderRadius: 14,
-            boxShadow: '0 2px 10px rgba(139,92,246,0.1)',
-          } : {
-            background: 'linear-gradient(135deg, #1E1B4B 0%, #110B30 100%)',
-            border: '2.5px solid #7C3AED',
-            boxShadow: '3px 3px 0px #000',
-          }}
-        >
-          <AICompanion
-            state={doneCount === totalCount ? 'celebrating' : doneCount === 0 ? 'welcome' : 'idle'}
-            message={getSparkyMessage()}
-            name="SPARKY"
-            size="sm"
-            showBubble={true}
-          />
-        </div>
-      </div>
 
       <div className="px-4">
         {/* Empty state */}

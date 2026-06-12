@@ -15,12 +15,12 @@ interface AICompanionProps {
 }
 
 const STATE_CONFIG: Record<CompanionState, { emoji: string; bgGrad: string; glowColor: string; label: string }> = {
-  welcome:      { emoji: '🤖', bgGrad: 'linear-gradient(135deg, #7C3AED, #3B82F6)', glowColor: 'rgba(124,58,237,0.4)', label: 'SPARKY' },
+  welcome:      { emoji: '🤖', bgGrad: 'linear-gradient(135deg, #7C3AED, #3B82F6)', glowColor: 'rgba(124,58,237,0.4)', label: 'RIO' },
   teaching:     { emoji: '📖', bgGrad: 'linear-gradient(135deg, #3B82F6, #06B6D4)', glowColor: 'rgba(59,130,246,0.4)', label: 'TEACHING' },
   celebrating:  { emoji: '🎉', bgGrad: 'linear-gradient(135deg, #F59E0B, #EF4444)', glowColor: 'rgba(245,158,11,0.5)', label: 'AWESOME!' },
   encouraging:  { emoji: '💪', bgGrad: 'linear-gradient(135deg, #10B981, #3B82F6)', glowColor: 'rgba(16,185,129,0.4)', label: 'GO FOR IT!' },
   hinting:      { emoji: '💡', bgGrad: 'linear-gradient(135deg, #F59E0B, #FCD34D)', glowColor: 'rgba(245,158,11,0.4)', label: 'HINT' },
-  idle:         { emoji: '🤖', bgGrad: 'linear-gradient(135deg, #4B5563, #6B7280)', glowColor: 'rgba(75,85,99,0.3)', label: 'SPARKY' },
+  idle:         { emoji: '🤖', bgGrad: 'linear-gradient(135deg, #4B5563, #6B7280)', glowColor: 'rgba(75,85,99,0.3)', label: 'RIO' },
   thinking:     { emoji: '🧠', bgGrad: 'linear-gradient(135deg, #8B5CF6, #EC4899)', glowColor: 'rgba(139,92,246,0.4)', label: 'THINKING...' },
 };
 
@@ -133,7 +133,7 @@ export function AICompanion({ state = 'idle', message, name, size = 'md', onDism
               {/* Header with name & state */}
               <div className="flex items-center justify-between mb-1">
                 <span className="font-pixel text-[6px] tracking-wider" style={{ color: D ? '#B366FF' : '#7C3AED', fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 800 : undefined, fontSize: D ? 8 : undefined }}>
-                  {name || 'SPARKY'} • {config.label}
+                  {name || 'RIO'} • {config.label}
                 </span>
                 {onDismiss && (
                   <button

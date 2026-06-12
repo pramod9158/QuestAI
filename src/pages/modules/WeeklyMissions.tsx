@@ -12,7 +12,6 @@ import { getPlatformProgress } from '@/lib/gamification';
 import { useThemeStyles } from '@/lib/useThemeStyles';
 import { ActivityHelpModal } from '@/components/ui/ActivityHelpModal';
 import { useFeedbackEngine } from '@/contexts/FeedbackEngineContext';
-import { useLearningCompanion } from '@/contexts/LearningCompanionContext';
 
 interface Submission { 
   missionId: number; 
@@ -76,19 +75,6 @@ export default function WeeklyMissions() {
   const { showSuccessCelebration, showFailureMotivation, showMissionCompletionCelebration } = useFeedbackEngine();
   const userZone = currentProfile?.zone || 'junior';
   const navigate = useNavigate();
-
-  const { speak, setOutfit } = useLearningCompanion();
-  
-  useEffect(() => {
-    setOutfit('mission-guide');
-    speak("Missions help us explore AI in the real world! Pick a mission, complete the task, and submit it for epic badges! 🗺️", {
-      mood: 'excited',
-      pose: 'walk',
-      outfit: 'mission-guide',
-      priority: 'high',
-    });
-    return () => setOutfit('default');
-  }, [setOutfit]);
 
   const stats = getPlatformProgress(currentProfile);
   const completedMissionsCount = stats.completedMissions;
@@ -893,7 +879,7 @@ export default function WeeklyMissions() {
                     </div>
                     {s.feedback && (
                       <div className={D ? "mt-2 font-body text-[10px] bg-purple-50/30 border-l-4 border-[#B366FF] p-2 text-gray-700 rounded-r-lg" : "mt-2 font-body text-[10px] bg-black/40 border-l-4 border-[#7C3AED] p-2 text-white/70"}>
-                        <strong className={D ? "text-purple-600 font-game text-[9px] block mb-0.5 font-bold" : "text-purple-400 font-game text-[8px] block mb-0.5"}>🤖 SPARKY ASSESSMENT:</strong>
+                        <strong className={D ? "text-purple-600 font-game text-[9px] block mb-0.5 font-bold" : "text-purple-400 font-game text-[8px] block mb-0.5"}>🤖 RIO ASSESSMENT:</strong>
                         {s.feedback}
                       </div>
                     )}
@@ -980,7 +966,7 @@ export default function WeeklyMissions() {
                       className="mt-2 text-[#7C3AED] hover:text-purple-400 font-game text-[8px] bg-purple-950/20 px-2 py-1 border border-purple-900/30 flex items-center gap-1 cursor-pointer"
                     >
                       <Sparkles className="w-2.5 h-2.5 animate-pulse" />
-                      {loadingSuggestions ? 'Asking Sparky...' : '💡 Get Suggestions from Sparky'}
+                      {loadingSuggestions ? 'Asking Rio...' : '💡 Get Suggestions from Rio'}
                     </button>
                   </div>
 

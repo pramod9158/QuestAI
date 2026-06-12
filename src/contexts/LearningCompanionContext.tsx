@@ -4,6 +4,11 @@ import { useLocation } from 'react-router-dom';
 import { useCurrentProfile } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Mascot } from '@/components/ui/Mascot';
+import { transcribeAudio, playSpeech, createSpeechRecognizer } from '@/lib/voice';
+import { getSparkyResponse, LearningContext, SparkyMessage } from '@/lib/sparkyService';
+import { getLevel } from '@/lib/gamification';
+import { CURRICULUM } from '@/data/curriculum';
+import { SparkyChatPanel } from '@/components/ui/SparkyChatPanel';
 
 // ============================================================================
 // TYPES & SCHEMAS
@@ -12,13 +17,14 @@ import { Mascot } from '@/components/ui/Mascot';
 export interface CompanionState {
   visible: boolean;
   mood: 'guiding' | 'encouraging' | 'celebrating' | 'thinking' | 'curious' | 'proud' | 'excited';
-  pose: 'idle' | 'wave' | 'walk' | 'run' | 'fly' | 'jump' | 'dance' | 'point-left' | 'point-right' | 'thinking';
+  pose: 'idle' | 'wave' | 'walk' | 'run' | 'fly' | 'jump' | 'dance' | 'point-left' | 'point-right' | 'thinking' | 'speaking';
   outfit: 'default' | 'scientist' | 'prompt-master' | 'mission-guide';
   message: string;
   currentModule: string;
   progressPercentage: number;
   currentXP: number;
   streakDays: number;
+  isWakeWordListening?: boolean;
 }
 
 export interface DailyQuest {
@@ -66,6 +72,21 @@ interface LearningCompanionContextType {
   isMuted: boolean;
   dailyQuests: DailyQuest[];
   completeQuest: (id: string) => void;
+  chatOpen: boolean;
+  toggleChat: () => void;
+  setChatOpen: (open: boolean) => void;
+  messages: SparkyMessage[];
+  isRecording: boolean;
+  isGenerating: boolean;
+  isSpeaking: boolean;
+  realtimeTranscript: string;
+  startVoiceInput: () => void;
+  stopVoiceInput: () => void;
+  sendMessage: (text: string) => Promise<void>;
+  clearHistory: () => void;
+  triggerSparkyAction: (actionType: 'explain' | 'simplify' | 'example' | 'quiz' | 'hint') => Promise<void>;
+  updateLearningContext: (context: Partial<LearningContext>) => void;
+  stopAudioPlayback: () => void;
 }
 
 const LearningCompanionContext = createContext<LearningCompanionContextType | null>(null);
@@ -138,6 +159,569 @@ export function LearningCompanionProvider({ children }: { children: React.ReactN
   const [targetSelector, setTargetSelector] = useState<string | null>(null);
   const [pointingSide, setPointingSide] = useState<'left' | 'right'>('left');
 
+  // Muting & Anti-Spam (Hoisted)
+  const [isMuted, setIsMuted] = useState(false);
+  const [proactiveMessageCount, setProactiveMessageCount] = useState<Record<string, number>>({});
+  const lastProactiveTime = useRef<number>(0);
+  const currentPathRef = useRef(location.pathname);
+
+  // Proactive speak function (Hoisted)
+  const speak = useCallback((
+    msg: string,
+    options?: {
+      mood?: CompanionState['mood'];
+      pose?: CompanionState['pose'];
+      outfit?: CompanionState['outfit'];
+      duration?: number;
+      priority?: 'low' | 'medium' | 'high';
+    }
+  ) => {
+    if (isMuted && options?.priority !== 'high') return;
+
+    // Anti-spam rule: Cooldown period check for proactively triggered (low/medium priority) messages
+    const now = Date.now();
+    const isProactive = !options || options.priority !== 'high';
+    if (isProactive && now - lastProactiveTime.current < 60000) { // 1 minute cooldown
+      return;
+    }
+
+    // Anti-spam rule: limit messages per page session
+    const currentPath = currentPathRef.current;
+    const count = proactiveMessageCount[currentPath] || 0;
+    if (isProactive && count >= 3) {
+      return;
+    }
+
+    if (isProactive) {
+      setProactiveMessageCount(prev => ({ ...prev, [currentPath]: (prev[currentPath] || 0) + 1 }));
+      lastProactiveTime.current = now;
+    }
+
+    setMessage(msg);
+    if (options?.mood) setMoodState(options.mood);
+    if (options?.pose) setPoseState(options.pose);
+    if (options?.outfit) setOutfitState(options.outfit);
+    setVisible(true);
+
+    if (options?.duration) {
+      setTimeout(() => {
+        setVisible(false);
+        setTargetSelector(null);
+      }, options.duration);
+    }
+  }, [isMuted, proactiveMessageCount]);
+
+  // Voice AI & Chat States
+  const [chatOpen, setChatOpen] = useState(false);
+  const [messages, setMessages] = useState<SparkyMessage[]>([
+    { role: 'model', content: "Hi! I'm Rio, your AI learning companion. Ask me anything about what we are exploring today!" }
+  ]);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [realtimeTranscript, setRealtimeTranscript] = useState('');
+  const [learningContext, setLearningContext] = useState<LearningContext>({ ageGroup: '6-8' });
+  const cancelActiveSpeechRef = useRef<(() => void) | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const recognitionRef = useRef<any>(null);
+  const silenceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const realtimeTranscriptRef = useRef('');
+  const chatOpenRef = useRef(false);
+  const startVoiceInputRef = useRef<() => void>(() => {});
+
+  const isGeneratingRef = useRef(false);
+  const isSpeakingRef = useRef(false);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const vadLoopActiveRef = useRef(false);
+
+  useEffect(() => {
+    isGeneratingRef.current = isGenerating;
+  }, [isGenerating]);
+
+  useEffect(() => {
+    isSpeakingRef.current = isSpeaking;
+  }, [isSpeaking]);
+  const sessionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const sleepTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const setChatOpenState = useCallback((open: boolean) => {
+    setChatOpen(open);
+    chatOpenRef.current = open;
+  }, []);
+
+  const resetSleepTimer = useCallback(() => {
+    if (sleepTimeoutRef.current) {
+      clearTimeout(sleepTimeoutRef.current);
+      sleepTimeoutRef.current = null;
+    }
+
+    if (!chatOpenRef.current) return;
+    if (isSpeakingRef.current || isGeneratingRef.current) return;
+
+    console.log("Scheduling auto-sleep in 10 seconds...");
+    sleepTimeoutRef.current = setTimeout(() => {
+      console.log("Auto-sleeping Rio due to 10s inactivity");
+      setChatOpenState(false);
+    }, 10000);
+  }, [setChatOpenState]);
+
+  const toggleChat = useCallback(() => {
+    // If Sparky is showing a proactive tip, copy it into history first
+    if (visible && message && !chatOpen) {
+      const exists = messages.some(m => m.content === message);
+      if (!exists) {
+        setMessages(prev => [...prev, { role: 'model', content: message }]);
+      }
+      setVisible(false); // Hide the tip
+    }
+    setChatOpen(prev => !prev);
+  }, [visible, message, chatOpen, messages]);
+
+  const clearHistory = useCallback(() => {
+    setMessages([
+      { role: 'model', content: "History cleared! Ask me anything about what we are learning." }
+    ]);
+  }, []);
+
+
+  const stopAudioPlayback = useCallback(() => {
+    if (cancelActiveSpeechRef.current) {
+      cancelActiveSpeechRef.current();
+      cancelActiveSpeechRef.current = null;
+    }
+    setIsSpeaking(false);
+    setPoseState('idle');
+  }, []);
+
+  const playResponseSpeech = useCallback(async (text: string) => {
+    if (isMuted) return;
+    
+    stopAudioPlayback();
+    setIsSpeaking(true);
+    setPoseState('speaking');
+    
+    try {
+      const cancelFn = await playSpeech(text, {
+        onStart: () => {
+          setIsSpeaking(true);
+          setPoseState('speaking');
+        },
+        onEnd: () => {
+          setIsSpeaking(false);
+          setPoseState('idle');
+          if (chatOpenRef.current) {
+            setTimeout(() => {
+              if (chatOpenRef.current) {
+                startVoiceInputRef.current();
+              }
+            }, 300);
+          }
+        },
+        onError: () => {
+          setIsSpeaking(false);
+          setPoseState('idle');
+          if (chatOpenRef.current) {
+            setTimeout(() => {
+              if (chatOpenRef.current) {
+                startVoiceInputRef.current();
+              }
+            }, 300);
+          }
+        }
+      });
+      cancelActiveSpeechRef.current = cancelFn;
+    } catch (e) {
+      console.warn("Play speech failed:", e);
+      setIsSpeaking(false);
+      setPoseState('idle');
+    }
+  }, [stopAudioPlayback, isMuted]);
+
+  const startSessionTimeout = useCallback(() => {
+    // Awake as long as user is on the app. No sleep timeout!
+    if (sessionTimeoutRef.current) {
+      clearTimeout(sessionTimeoutRef.current);
+      sessionTimeoutRef.current = null;
+    }
+  }, []);
+
+  const clearSessionTimeout = useCallback(() => {
+    if (sessionTimeoutRef.current) {
+      clearTimeout(sessionTimeoutRef.current);
+      sessionTimeoutRef.current = null;
+    }
+  }, []);
+
+  const sendUserMessage = useCallback(async (text: string) => {
+    if (!text.trim()) return;
+    
+    stopAudioPlayback();
+    
+    const userMsg: SparkyMessage = { role: 'user', content: text };
+    
+    // Clear sleep timer immediately on sending a message
+    if (sleepTimeoutRef.current) {
+      clearTimeout(sleepTimeoutRef.current);
+      sleepTimeoutRef.current = null;
+    }
+
+    setMessages(prev => {
+      const updatedHistory = [...prev, userMsg];
+      
+      setIsGenerating(true);
+      setMoodState('thinking');
+      setPoseState('thinking');
+      
+      getSparkyResponse(prev, text, learningContext)
+        .then(async (responseText) => {
+          setMessages(history => [...history, { role: 'model', content: responseText }]);
+          setIsGenerating(false);
+          setMoodState('guiding');
+          setPoseState('idle');
+          await playResponseSpeech(responseText);
+        })
+        .catch(async (err) => {
+          console.error("Gemini response error:", err);
+          setIsGenerating(false);
+          setMoodState('encouraging');
+          setPoseState('thinking');
+          const errorMsg = "Hmm, I had a little trouble reaching my brain. Let's try that again!";
+          setMessages(history => [...history, { role: 'model', content: errorMsg }]);
+          await playResponseSpeech(errorMsg);
+        });
+
+      return updatedHistory;
+    });
+  }, [learningContext, playResponseSpeech, stopAudioPlayback]);
+
+  const startContinuousVAD = useCallback(async () => {
+    // Prevent duplicate VAD stream initializations
+    if (vadLoopActiveRef.current) return;
+
+    try {
+      console.log("VAD: Initializing raw audio volume analyzer...");
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      localStorage.setItem('mic_permission_granted', 'true');
+      mediaStreamRef.current = stream;
+
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      const audioCtx = new AudioContextClass();
+      audioContextRef.current = audioCtx;
+
+      const source = audioCtx.createMediaStreamSource(stream);
+      const analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 512;
+      source.connect(analyser);
+
+      const bufferLength = analyser.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+
+      let mediaRecorder: MediaRecorder | null = null;
+      let chunks: Blob[] = [];
+      let recordingActive = false;
+      let silenceStart: number | null = null;
+      let userSpeaking = false;
+
+      vadLoopActiveRef.current = true;
+
+      const checkVolume = () => {
+        if (!vadLoopActiveRef.current) return;
+
+        // Skip checking/recording if chat is closed
+        if (!chatOpenRef.current) {
+          if (recordingActive) {
+            try {
+              if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+              }
+            } catch (e) {}
+            recordingActive = false;
+            userSpeaking = false;
+          }
+          requestAnimationFrame(checkVolume);
+          return;
+        }
+
+        // Skip checking/recording if Rio is speaking or generating to prevent audio echo feedback
+        if (isGeneratingRef.current || isSpeakingRef.current) {
+          // If we were recording, stop immediately
+          if (recordingActive) {
+            try {
+              if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+              }
+            } catch (e) {}
+            recordingActive = false;
+            userSpeaking = false;
+          }
+          requestAnimationFrame(checkVolume);
+          return;
+        }
+
+        analyser.getByteFrequencyData(dataArray);
+
+        // Compute average volume level
+        let sum = 0;
+        for (let i = 0; i < bufferLength; i++) {
+          sum += dataArray[i];
+        }
+        const averageVolume = sum / bufferLength;
+
+        // Threshold (0-255). A value of 14 is highly responsive for standard speech while ignoring noise.
+        const threshold = 14;
+
+        if (averageVolume > threshold) {
+          silenceStart = null;
+          
+          if (!userSpeaking) {
+            userSpeaking = true;
+            console.log("VAD: User speech activity started.");
+          }
+
+          // Clear sleep timer immediately when user speaks
+          if (sleepTimeoutRef.current) {
+            clearTimeout(sleepTimeoutRef.current);
+            sleepTimeoutRef.current = null;
+          }
+
+          // Start recording audio slices
+          if (!recordingActive) {
+            try {
+              chunks = [];
+              mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+              mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) chunks.push(e.data);
+              };
+              mediaRecorder.start();
+              recordingActive = true;
+              
+              if (chatOpenRef.current) {
+                setIsRecording(true);
+                setMoodState('curious');
+                setPoseState('idle');
+              }
+            } catch (err) {
+              console.warn("VAD failed to start MediaRecorder slice:", err);
+            }
+          }
+        } else {
+          // User is silent
+          if (recordingActive && userSpeaking) {
+            if (silenceStart === null) {
+              silenceStart = Date.now();
+            } else if (Date.now() - silenceStart > 1200) { // 1.2s silence window
+              console.log("VAD: Silence threshold met. Transcribing audio slice...");
+              
+              userSpeaking = false;
+              recordingActive = false;
+              setIsRecording(false);
+
+              if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.onstop = async () => {
+                  const audioBlob = new Blob(chunks, { type: 'audio/webm' });
+                  
+                  if (chatOpenRef.current) {
+                    setIsGenerating(true);
+                    setMoodState('thinking');
+                    setPoseState('thinking');
+
+                    try {
+                      const transcriptText = await transcribeAudio(audioBlob);
+                      console.log("VAD Active Transcript:", transcriptText);
+                      
+                      if (transcriptText.trim()) {
+                        await sendUserMessage(transcriptText);
+                      } else {
+                        // Silently return to listening
+                        setIsGenerating(false);
+                        setMoodState('guiding');
+                        setPoseState('idle');
+                        startVoiceInput();
+                      }
+                    } catch (err) {
+                      console.warn("VAD active transcription failed:", err);
+                      setIsGenerating(false);
+                      setMoodState('guiding');
+                      setPoseState('idle');
+                      startVoiceInput();
+                    }
+                  }
+                };
+                mediaRecorder.stop();
+              }
+            }
+          }
+        }
+
+        requestAnimationFrame(checkVolume);
+      };
+
+      checkVolume();
+    } catch (err) {
+      console.warn("Failed to request mic access for volume VAD:", err);
+    }
+  }, [sendUserMessage, playResponseSpeech, setChatOpenState]);
+
+  const startVoiceInput = useCallback(() => {
+    setRealtimeTranscript('');
+    realtimeTranscriptRef.current = '';
+    
+    setIsRecording(true);
+    setMoodState('curious');
+    setPoseState('idle');
+
+    // Ensure VAD is running
+    const hasMicPermission = localStorage.getItem('mic_permission_granted') === 'true';
+    if (hasMicPermission) {
+      startContinuousVAD();
+    }
+  }, [startContinuousVAD]);
+
+  const stopVoiceInput = useCallback(() => {
+    setRealtimeTranscript('');
+    realtimeTranscriptRef.current = '';
+    setIsRecording(false);
+  }, []);
+
+  // Sync startVoiceInputRef with startVoiceInput
+  useEffect(() => {
+    startVoiceInputRef.current = startVoiceInput;
+  }, [startVoiceInput]);
+
+  // VAD lifecycle effect (start on mount if permission granted)
+  useEffect(() => {
+    const hasMicPermission = localStorage.getItem('mic_permission_granted') === 'true';
+    if (hasMicPermission) {
+      startContinuousVAD();
+    }
+
+    return () => {
+      // Clean up VAD stream and AudioContext on unmount
+      vadLoopActiveRef.current = false;
+      if (audioContextRef.current) {
+        audioContextRef.current.close().catch(() => {});
+        audioContextRef.current = null;
+      }
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach(track => track.stop());
+        mediaStreamRef.current = null;
+      }
+    };
+  }, [startContinuousVAD]);
+
+
+  const triggerSparkyAction = useCallback(async (actionType: 'explain' | 'simplify' | 'example' | 'quiz' | 'hint') => {
+    let actionPrompt = "";
+    switch (actionType) {
+      case 'explain':
+        actionPrompt = "Can you explain that again, but use a completely different analogy?";
+        break;
+      case 'simplify':
+        actionPrompt = "Can you make that even simpler to understand?";
+        break;
+      case 'example':
+        actionPrompt = "Can you show me a practical, real-world example of this?";
+        break;
+      case 'quiz':
+        actionPrompt = "Ask me a quick, fun question about this topic to test my understanding!";
+        break;
+      case 'hint':
+        actionPrompt = "I'm stuck. Can you give me a hint to guide me to the answer without revealing it?";
+        break;
+    }
+    await sendUserMessage(actionPrompt);
+  }, [sendUserMessage]);
+
+  const updateLearningContext = useCallback((updates: Partial<LearningContext>) => {
+    setLearningContext(prev => ({
+      ...prev,
+      ...updates
+    }));
+  }, []);
+
+  // Sync with Location & Profile changes for Context Awareness
+  useEffect(() => {
+    if (!profile) return;
+    
+    const ageGroup = profile.zone === 'junior' ? '6-8' : '9-12';
+    
+    let module = 'General Learning';
+    let lesson = '';
+    let mission = '';
+    let currentActivity = 'Dashboard';
+    
+    const path = location.pathname;
+    
+    if (path === '/' || path === '/dashboard') {
+      module = 'Dashboard';
+      currentActivity = 'General Browsing';
+    } else if (path === '/learn') {
+      module = 'Curriculum Map';
+      currentActivity = 'Selecting Lessons';
+    } else if (path.startsWith('/learn/')) {
+      const lessonId = path.substring(7);
+      const activeLesson = CURRICULUM.find(l => l.id === lessonId);
+      if (activeLesson) {
+        module = activeLesson.subtitle || 'Lesson Module';
+        lesson = activeLesson.title;
+        mission = activeLesson.missionTitle;
+        currentActivity = 'Lesson Player';
+      }
+    } else if (path === '/play') {
+      module = 'AI Play Zone';
+      currentActivity = 'Browsing games';
+    } else if (path === '/play/quiz') {
+      module = 'Quiz Arena';
+      currentActivity = 'Answering quizzes';
+    } else if (path === '/play/around-me') {
+      module = 'AI Around Me Lab';
+      currentActivity = 'Classifying objects';
+    } else if (path === '/play/story') {
+      module = 'Story Adventures';
+      currentActivity = 'Quest Map';
+    } else if (path === '/play/detective') {
+      module = 'AI Detective Agency';
+      currentActivity = 'Investigating Case';
+    } else if (path === '/play/brainstorm') {
+      module = 'Brainstorm Playground';
+      currentActivity = 'Designing Invention';
+    } else if (path === '/play/idea-generator') {
+      module = 'AI Idea Generator';
+      currentActivity = 'Generating Projects';
+    } else if (path === '/play/cards') {
+      module = 'AI Cards';
+      currentActivity = 'Reviewing Deck';
+    } else if (path === '/play/inventor-hall') {
+      module = 'Inventor Hall';
+      currentActivity = 'Reviewing Inventions';
+    } else if (path === '/missions') {
+      module = 'Weekly Field Missions';
+      currentActivity = 'Field Operations';
+    } else if (path === '/profile') {
+      module = 'User Profile';
+      currentActivity = 'Customizing Avatar';
+    } else if (path === '/prompts') {
+      module = 'Prompt Lab';
+      currentActivity = 'Prompt Engineering';
+    }
+
+    setLearningContext(prev => ({
+      ...prev,
+      ageGroup,
+      module,
+      lesson: lesson || prev.lesson,
+      mission: mission || prev.mission,
+      currentActivity,
+      progress: {
+        xp: profile.xp,
+        level: getLevel(profile.xp),
+        completedCount: profile.completed_lessons?.length || 0
+      }
+    }));
+  }, [location.pathname, profile]);
+
   // Travel Transitions
   const [travelType, setTravelType] = useState<'rocket' | 'portal' | null>(null);
   const [travelingTo, setTravelingTo] = useState('');
@@ -148,11 +732,7 @@ export function LearningCompanionProvider({ children }: { children: React.ReactN
   const [loadFacts, setLoadFacts] = useState<string[]>([]);
   const onLoadDoneRef = useRef<(() => void) | null>(null);
 
-  // Muting & Anti-Spam
-  const [isMuted, setIsMuted] = useState(false);
-  const [proactiveMessageCount, setProactiveMessageCount] = useState<Record<string, number>>({});
-  const lastProactiveTime = useRef<number>(0);
-  const currentPathRef = useRef(location.pathname);
+
 
   // Daily Quests State
   const [dailyQuests, setDailyQuests] = useState<DailyQuest[]>(() => {
@@ -211,50 +791,6 @@ export function LearningCompanionProvider({ children }: { children: React.ReactN
     setTargetSelector(null);
   }, []);
 
-  const speak = useCallback((
-    msg: string,
-    options?: {
-      mood?: CompanionState['mood'];
-      pose?: CompanionState['pose'];
-      outfit?: CompanionState['outfit'];
-      duration?: number;
-      priority?: 'low' | 'medium' | 'high';
-    }
-  ) => {
-    if (isMuted && options?.priority !== 'high') return;
-
-    // Anti-spam rule: Cooldown period check for proactively triggered (low/medium priority) messages
-    const now = Date.now();
-    const isProactive = !options || options.priority !== 'high';
-    if (isProactive && now - lastProactiveTime.current < 60000) { // 1 minute cooldown
-      return;
-    }
-
-    // Anti-spam rule: limit messages per page session
-    const currentPath = currentPathRef.current;
-    const count = proactiveMessageCount[currentPath] || 0;
-    if (isProactive && count >= 3) {
-      return;
-    }
-
-    if (isProactive) {
-      setProactiveMessageCount(prev => ({ ...prev, [currentPath]: (prev[currentPath] || 0) + 1 }));
-      lastProactiveTime.current = now;
-    }
-
-    setMessage(msg);
-    if (options?.mood) setMoodState(options.mood);
-    if (options?.pose) setPoseState(options.pose);
-    if (options?.outfit) setOutfitState(options.outfit);
-    setVisible(true);
-
-    if (options?.duration) {
-      setTimeout(() => {
-        setVisible(false);
-        setTargetSelector(null);
-      }, options.duration);
-    }
-  }, [isMuted, proactiveMessageCount]);
 
   const pointTo = useCallback((
     selector: string,
@@ -419,6 +955,113 @@ export function LearningCompanionProvider({ children }: { children: React.ReactN
     };
   }, [location.pathname, isMuted, visible]);
 
+  // 3. Cleanup silence & recognition timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (silenceTimeoutRef.current) {
+        clearTimeout(silenceTimeoutRef.current);
+      }
+      const rec = recognitionRef.current;
+      if (rec) {
+        try {
+          rec.abort();
+        } catch (e) {}
+      }
+    };
+  }, []);
+
+  // 5. Active Voice Session Coordinator (Auto-sleep, reset active flags)
+  const prevChatOpen = useRef(false);
+  useEffect(() => {
+    chatOpenRef.current = chatOpen;
+
+    if (chatOpen && !prevChatOpen.current) {
+      console.log("Rio active session started!");
+    } else if (!chatOpen && prevChatOpen.current) {
+      console.log("Rio active session ended, cleanup...");
+      stopAudioPlayback();
+      stopVoiceInput();
+      clearSessionTimeout();
+      if (sleepTimeoutRef.current) {
+        clearTimeout(sleepTimeoutRef.current);
+        sleepTimeoutRef.current = null;
+      }
+    }
+    prevChatOpen.current = chatOpen;
+  }, [chatOpen, stopAudioPlayback, stopVoiceInput, clearSessionTimeout]);
+
+  // Effect to reset sleep timer on manual interaction
+  useEffect(() => {
+    if (!chatOpen) {
+      if (sleepTimeoutRef.current) {
+        clearTimeout(sleepTimeoutRef.current);
+        sleepTimeoutRef.current = null;
+      }
+      return;
+    }
+
+    const resetTimer = () => {
+      resetSleepTimer();
+    };
+
+    const events = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
+    events.forEach(evt => document.addEventListener(evt, resetTimer));
+
+    resetTimer();
+
+    return () => {
+      events.forEach(evt => document.removeEventListener(evt, resetTimer));
+      if (sleepTimeoutRef.current) {
+        clearTimeout(sleepTimeoutRef.current);
+        sleepTimeoutRef.current = null;
+      }
+    };
+  }, [chatOpen, isSpeaking, isGenerating, resetSleepTimer]);
+
+  const handleMascotClick = useCallback(() => {
+    // If Rio is showing a proactive tip, copy it into history first
+    if (visible && message && !chatOpen) {
+      const exists = messages.some(m => m.content === message);
+      if (!exists) {
+        setMessages(prev => [...prev, { role: 'model', content: message }]);
+      }
+      hide(); // Hide proactive bubble
+    }
+
+    if (!chatOpen) {
+      // Set mic permission and boot VAD immediately on click gesture!
+      localStorage.setItem('mic_permission_granted', 'true');
+      startContinuousVAD();
+
+      setChatOpenState(true);
+      setMoodState('excited');
+      setPoseState('speaking');
+
+      const greeting = "Hey, let's talk!";
+      setMessages(prev => [...prev, { role: 'model', content: greeting }]);
+      playResponseSpeech(greeting);
+    } else {
+      // If already awake, mascot click acts as an interrupt/restart
+      if (isSpeaking) {
+        stopAudioPlayback();
+        setTimeout(() => {
+          if (chatOpenRef.current) {
+            startVoiceInputRef.current();
+          }
+        }, 100);
+      } else {
+        stopVoiceInput();
+        setTimeout(() => {
+          if (chatOpenRef.current) {
+            startVoiceInputRef.current();
+          }
+        }, 100);
+      }
+    }
+  }, [visible, message, chatOpen, messages, isSpeaking, playResponseSpeech, stopAudioPlayback, stopVoiceInput, hide, setChatOpenState, startContinuousVAD]);
+
+  const isWakeWordListening = false;
+
   // Context State
   const companionState: CompanionState = {
     visible,
@@ -430,6 +1073,7 @@ export function LearningCompanionProvider({ children }: { children: React.ReactN
     progressPercentage: 40, // standard placeholder or computed
     currentXP,
     streakDays,
+    isWakeWordListening,
   };
 
   return (
@@ -452,6 +1096,22 @@ export function LearningCompanionProvider({ children }: { children: React.ReactN
         isMuted,
         dailyQuests,
         completeQuest,
+        
+        chatOpen,
+        toggleChat,
+        setChatOpen,
+        messages,
+        isRecording,
+        isGenerating,
+        isSpeaking,
+        realtimeTranscript,
+        startVoiceInput,
+        stopVoiceInput,
+        sendMessage: sendUserMessage,
+        clearHistory,
+        triggerSparkyAction,
+        updateLearningContext,
+        stopAudioPlayback
       }}
     >
       {children}
@@ -476,7 +1136,8 @@ export function LearningCompanionProvider({ children }: { children: React.ReactN
         )}
       </AnimatePresence>
 
-      {/* Floating Sparky companion */}
+      {/* Floating Sparky companion (Original Guide) */}
+      {/* 
       <FloatingCompanion
         state={companionState}
         targetSelector={targetSelector}
@@ -484,12 +1145,24 @@ export function LearningCompanionProvider({ children }: { children: React.ReactN
         onDismiss={hide}
         isDuolingo={isDuolingo}
       />
+      */}
+
+      {/* Rio Voice-only Mascot (Peaking/Fullscreen) */}
+      <RioFloatingWidget
+        chatOpen={chatOpen}
+        setChatOpen={setChatOpen}
+        messages={messages}
+        isRecording={isRecording}
+        isGenerating={isGenerating}
+        isSpeaking={isSpeaking}
+        onMascotClick={handleMascotClick}
+      />
     </LearningCompanionContext.Provider>
   );
 }
 
 // ============================================================================
-// FLOATING COMPANION COMPONENT
+// FLOATING COMPANION COMPONENT (SPARKY GUIDE)
 // ============================================================================
 
 interface FloatingCompanionProps {
@@ -529,14 +1202,12 @@ function FloatingCompanion({ state, targetSelector, side, onDismiss, isDuolingo 
     if (!state.visible) return;
 
     if (!targetSelector) {
-      // Set to bottom-right fixed positions
       return;
     }
 
     const updatePosition = () => {
       const el = document.querySelector(targetSelector);
       if (!el) {
-        // Fallback if target element disappears
         return;
       }
 
@@ -547,14 +1218,11 @@ function FloatingCompanion({ state, targetSelector, side, onDismiss, isDuolingo 
       let left = 0;
 
       if (side === 'left') {
-        // Sparky floats on the right, pointing left
         left = rect.right + 12;
       } else {
-        // Sparky floats on the left, pointing right
         left = rect.left - mascotSize - 12;
       }
 
-      // Safeguard boundaries
       if (left < 0) left = 8;
       if (left + mascotSize > window.innerWidth) left = window.innerWidth - mascotSize - 8;
 
@@ -569,7 +1237,6 @@ function FloatingCompanion({ state, targetSelector, side, onDismiss, isDuolingo 
     window.addEventListener('scroll', updatePosition, true);
     window.addEventListener('resize', updatePosition);
 
-    // Poll in case DOM changes height or positions asynchronously
     const timer = setInterval(updatePosition, 300);
 
     return () => {
@@ -670,7 +1337,7 @@ function FloatingCompanion({ state, targetSelector, side, onDismiss, isDuolingo 
         )}
       </AnimatePresence>
 
-      {/* Sparky rendering */}
+      {/* Sparky rendering (Mascot component defaults to sparky) */}
       <Mascot
         mood={state.mood}
         pose={state.pose}
@@ -678,6 +1345,202 @@ function FloatingCompanion({ state, targetSelector, side, onDismiss, isDuolingo 
         size={80}
       />
     </motion.div>
+  );
+}
+
+// ============================================================================
+// RIO FLOATING VOICE ASSISTANT COMPONENT
+// ============================================================================
+
+interface RioFloatingWidgetProps {
+  chatOpen: boolean;
+  setChatOpen: (open: boolean) => void;
+  messages: SparkyMessage[];
+  isRecording: boolean;
+  isGenerating: boolean;
+  isSpeaking: boolean;
+  onMascotClick: () => void;
+}
+
+function RioFloatingWidget({
+  chatOpen,
+  setChatOpen,
+  messages,
+  isRecording,
+  isGenerating,
+  isSpeaking,
+  onMascotClick,
+}: RioFloatingWidgetProps) {
+  const { isDuolingo } = useTheme();
+  const [rightOffset, setRightOffset] = useState('24px');
+  const location = useLocation();
+
+  const isAuthOrOnboarding = ['/auth', '/onboarding'].some(p => location.pathname.startsWith(p));
+
+  // Stay inside max-w-md viewport (phone view alignment)
+  useEffect(() => {
+    const updateOffset = () => {
+      if (window.innerWidth > 448) {
+        const right = (window.innerWidth - 448) / 2 + 16;
+        setRightOffset(`${right}px`);
+      } else {
+        setRightOffset('16px');
+      }
+    };
+    updateOffset();
+    window.addEventListener('resize', updateOffset);
+    return () => window.removeEventListener('resize', updateOffset);
+  }, []);
+
+  if (isAuthOrOnboarding) return null;
+
+  return (
+    <>
+      <AnimatePresence>
+        {!chatOpen ? (
+          /* Corner Peaking Mascot */
+          <motion.div
+            key="peaking-rio"
+            initial={{ opacity: 0, scale: 0.8, y: 30 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 30 }}
+            transition={{ type: 'spring', stiffness: 200, damping: 22 }}
+            style={{
+              position: 'fixed',
+              bottom: '90px',
+              right: rightOffset,
+              zIndex: 150,
+            }}
+            className="flex items-center pointer-events-auto cursor-pointer select-none group"
+            onClick={onMascotClick}
+          >
+            {/* Pulsing neon glow behind minimized Rio */}
+            <div className={`absolute inset-0 rounded-full blur-xl animate-pulse pointer-events-none ${isDuolingo ? 'bg-green-400/20' : 'bg-cyan-400/20'}`} />
+
+            <Mascot
+              mascotName="rio"
+              mood="excited"
+              pose="wave"
+              isPeaking={true}
+              size={54}
+            />
+          </motion.div>
+        ) : (
+          /* Fullscreen Blurred Immersive Overlay */
+          <motion.div
+            key="fullscreen-rio"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className={`fixed inset-0 backdrop-blur-xl z-[200] flex flex-col items-center justify-center pointer-events-auto select-none ${
+              isDuolingo ? 'bg-white/95 text-slate-800' : 'bg-[#0B0625]/90 text-white'
+            }`}
+            style={{ fontFamily: isDuolingo ? '"Nunito", sans-serif' : '"Fredoka One", cursive' }}
+          >
+            {/* Pulsing visual aura behind Rio */}
+            <div className={`absolute w-[500px] h-[500px] rounded-full blur-[120px] pointer-events-none animate-pulse ${
+              isDuolingo ? 'bg-green-500/10' : 'bg-indigo-500/10'
+            }`} />
+            <div className={`absolute w-[300px] h-[300px] rounded-full blur-[80px] pointer-events-none ${
+              isDuolingo ? 'bg-emerald-500/10' : 'bg-cyan-500/10'
+            }`} style={{ animationDelay: '1s' }} />
+
+            {/* Top Close Button */}
+            <button
+              onClick={() => setChatOpen(false)}
+              className={`absolute top-6 right-6 text-3xl font-bold transition-all p-2 rounded-full cursor-pointer ${
+                isDuolingo 
+                  ? 'text-slate-500 hover:text-slate-800 hover:bg-slate-100' 
+                  : 'text-white/70 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              ✕
+            </button>
+
+            {/* Inner Content Card */}
+            <motion.div
+              initial={{ scale: 0.8, y: 50, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.8, y: 50, opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 150 }}
+              className="flex flex-col items-center gap-8 text-center max-w-lg px-6"
+            >
+              <Mascot
+                mascotName="rio"
+                mood={isGenerating ? 'thinking' : isSpeaking ? 'excited' : 'guiding'}
+                pose={isGenerating ? 'thinking' : isSpeaking ? 'speaking' : 'idle'}
+                isThinking={isGenerating}
+                isSpeaking={isSpeaking}
+                isListening={isRecording && !isGenerating && !isSpeaking}
+                size={172}
+              />
+
+              {/* Status text & Subtitles */}
+              <div className="flex flex-col items-center gap-4 min-h-[120px]">
+                {isGenerating ? (
+                  <motion.div
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex flex-col items-center gap-2"
+                  >
+                    <span className={`text-2xl font-bold animate-pulse tracking-wide ${
+                      isDuolingo ? 'text-green-600' : 'text-cyan-300 drop-shadow-[0_0_10px_rgba(6,182,212,0.4)]'
+                    }`}>
+                      Please wait, I'm almost there...
+                    </span>
+                    <span className={`text-xs font-mono tracking-widest uppercase ${
+                      isDuolingo ? 'text-slate-500' : 'text-indigo-300'
+                    }`}>Rio is thinking</span>
+                  </motion.div>
+                ) : isSpeaking ? (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className={`p-5 rounded-2xl border backdrop-blur-md shadow-2xl max-w-md ${
+                      isDuolingo 
+                        ? 'bg-slate-100 border-slate-200 text-slate-800 shadow-slate-200/50' 
+                        : 'bg-white/5 border-white/10 text-white'
+                    }`}
+                  >
+                    <p className="text-lg font-medium leading-relaxed">
+                      {messages[messages.length - 1]?.content}
+                    </p>
+                  </motion.div>
+                ) : isRecording ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <span className={`text-2xl font-bold animate-pulse tracking-wide ${
+                      isDuolingo ? 'text-green-600' : 'text-emerald-400'
+                    }`}>
+                      I'm listening...
+                    </span>
+                    <span className={`text-sm opacity-80 max-w-sm px-4 italic font-medium ${
+                      isDuolingo ? 'text-slate-600' : 'text-indigo-200'
+                    }`}>
+                      Speak now, Rio will automatically respond when you stop!
+                    </span>
+                  </div>
+                ) : (
+                  <span className={`text-xl font-medium animate-pulse ${
+                    isDuolingo ? 'text-slate-400' : 'text-indigo-200 opacity-60'
+                  }`}>
+                    Listening for voice activity...
+                  </span>
+                )}
+              </div>
+
+              {/* Inactivity warning / Auto-sleep indicator */}
+              {!isGenerating && !isSpeaking && !isRecording && (
+                <span className={`text-xs ${
+                  isDuolingo ? 'text-slate-400' : 'text-indigo-400/50'
+                }`}>
+                  Auto-sleeping in 10s of silence...
+                </span>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }
 

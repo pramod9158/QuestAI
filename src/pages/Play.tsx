@@ -161,7 +161,7 @@ export default function Play() {
   };
 
   const getSparkyPlayMessage = () => {
-    if (completedPlayCount === 0) return `Welcome to the Play Zone, Agent! 🎮 I'm Sparky. Test your AI skills or create prototypes in the interactive play modules below!`;
+    if (completedPlayCount === 0) return `Welcome to the Play Zone, Agent! 🎮 I'm Rio. Test your AI skills or create prototypes in the interactive play modules below!`;
     if (completedPlayCount === 20) return `BZZZ! AMAZING! 🏆 You have conquered all Play modules! You are a certified AI Master! Keep experimenting!`;
     const nextMod = filtered[activePlayIndex] || filtered[0];
     return `Welcome back, Agent! We've completed ${completedPlayCount} play missions. Ready to tackle "${nextMod.title}" next? Let's play!`;
@@ -269,26 +269,6 @@ export default function Play() {
         </div>
       </div>
 
-      {/* Companion Banner */}
-      <div className="px-4 pt-4">
-        <div className="p-3 mb-4 flex items-center gap-3 relative overflow-hidden"
-          style={D ? {
-            background: '#FFFFFF', border: '1.5px solid #BBF7D0',
-            borderRadius: 14, boxShadow: '0 2px 10px rgba(16,185,129,0.1)',
-          } : {
-            background: 'linear-gradient(135deg, #1E1B4B 0%, #110B30 100%)',
-            border: '2.5px solid #10B981', boxShadow: '3px 3px 0px #000',
-          }}
-        >
-          <AICompanion
-            state={completedPlayCount === 20 ? 'celebrating' : completedPlayCount === 0 ? 'welcome' : 'idle'}
-            message={getSparkyPlayMessage()}
-            name="SPARKY"
-            size="sm"
-            showBubble={true}
-          />
-        </div>
-      </div>
 
       {/* Play Zone Map */}
       <div className="px-4">
