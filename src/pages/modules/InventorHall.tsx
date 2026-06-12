@@ -5,7 +5,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/Button';
 import { XPToast } from '@/components/ui/GameUI';
 import { generateBrainstormIdea } from '@/lib/ai';
-import { Trophy, Star, Lightbulb, Plus, ArrowLeft } from 'lucide-react';
+import { Trophy, Star, Lightbulb, Plus, ArrowLeft, HelpCircle } from 'lucide-react';
+import { ActivityHelpModal } from '@/components/ui/ActivityHelpModal';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useThemeStyles } from '@/lib/useThemeStyles';
 
@@ -33,6 +34,7 @@ export default function InventorHall() {
   const [inventions, setInventions] = useState<Invention[]>([]);
   const [activeTab, setActiveTab] = useState<'hall' | 'mine'>('hall');
   const [loading, setLoading] = useState(true);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   // Mock gallery data
   const MOCK_INVENTIONS: Invention[] = [
@@ -86,10 +88,25 @@ export default function InventorHall() {
         </button>
         <h1 className={D ? "text-black font-game text-xl flex items-center gap-2 font-extrabold" : "text-white font-game text-xl flex items-center gap-2"}>
           🏛️ Inventor Hall
+          <button
+            onClick={() => setHelpOpen(true)}
+            className="p-1 hover:text-purple-400 transition-colors cursor-pointer text-gray-400"
+            title="Show how it works"
+          >
+            <HelpCircle className="w-4.5 h-4.5" />
+          </button>
         </h1>
-        <p className={D ? "text-gray-500 font-body text-sm mt-1 font-semibold" : "text-white/60 font-body text-sm mt-1"}>
-          Showcase of brilliant AI inventions by young explorers!
-        </p>
+        <div className="flex justify-between items-center mt-1">
+          <p className={D ? "text-gray-500 font-body text-sm font-semibold" : "text-white/60 font-body text-sm"}>
+            Showcase of brilliant AI inventions by young explorers!
+          </p>
+          <button
+            onClick={() => navigate('/play')}
+            className="text-white/30 hover:text-white/60 font-pixel text-[6px] tracking-wider uppercase border border-white/10 px-2 py-0.5 cursor-pointer transition-colors"
+          >
+            ⚡ Skip
+          </button>
+        </div>
 
         <div className={D ? "flex mt-4 p-1 bg-gray-50 border border-gray-200 rounded-xl overflow-x-auto no-scrollbar gap-1" : "flex mt-4 border-4 border-black"}>
           {(['hall', 'mine'] as const).map(tab => (
@@ -168,6 +185,21 @@ export default function InventorHall() {
           </motion.div>
         ))}
       </div>
+
+      <ActivityHelpModal
+        isOpen={helpOpen}
+        onClose={() => setHelpOpen(false)}
+        title="Inventor Hall"
+        type="play"
+        description="The ultimate museum showcase of smart AI invention blueprints conceptualized by other explorers."
+        steps={[
+          "Browse through original projects in the 'Global Hall' feed.",
+          "Check each project's category tags, target audience details, and custom solution name.",
+          "Inspect the AI solution's mechanism and check the calculated 'Innovation Score'.",
+          "Toggle to 'My Inventions' to see all your saved brainstorm laboratory creations."
+        ]}
+        rewards="🏛️ Showcase portfolio of original designs"
+      />
     </div>
   );
 }

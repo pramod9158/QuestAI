@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Download } from 'lucide-react';
+import { ArrowLeft, Download, HelpCircle } from 'lucide-react';
+import { ActivityHelpModal } from '@/components/ui/ActivityHelpModal';
 import jsPDF from 'jspdf';
 import { useThemeStyles } from '@/lib/useThemeStyles';
+import { useFeedbackEngine } from '@/contexts/FeedbackEngineContext';
 
 const PANEL_PROMPTS = [
   { id: 1, title: 'The Hero\'s World 🌍', prompt: 'Where does our story take place?', keywords: ['City', 'Village', 'School', 'Farm', 'Forest', 'Space', 'Ocean', 'Hospital'] },
@@ -30,6 +32,8 @@ export default function ComicCreator() {
   const [currentPanel, setCurrentPanel] = useState(0);
   const [generating, setGenerating] = useState(false);
   const [comicDone, setComicDone] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
+  const { showModuleCompletionCelebration } = useFeedbackEngine();
 
   React.useEffect(() => {
     const percent = comicDone
@@ -54,7 +58,31 @@ export default function ComicCreator() {
       setComicDone(true);
       localStorage.setItem('play_completed_comic', 'true');
       localStorage.setItem('play_progress_comic', '100');
+      showModuleCompletionCelebration({
+        title: "COMIC BOOK COMPLETE!",
+        subtitle: "You created an amazing AI adventure comic book!",
+        xpGained: 20,
+      });
     }
+  };
+
+  const handleDevSkip = () => {
+    setPanelChoices([
+      'Space',
+      'Lost pet',
+      'Smart Camera',
+      'Battery dies',
+      'Smarter prompt',
+      'Pet found'
+    ]);
+    setComicDone(true);
+    localStorage.setItem('play_completed_comic', 'true');
+    localStorage.setItem('play_progress_comic', '100');
+    showModuleCompletionCelebration({
+      title: "COMIC BOOK COMPLETE!",
+      subtitle: "Dev Skip used! You created an amazing AI adventure comic book!",
+      xpGained: 20,
+    });
   };
 
   const downloadComic = () => {
@@ -102,7 +130,26 @@ export default function ComicCreator() {
         >
           <ArrowLeft className="w-4 h-4" /> {D ? 'Back' : 'Back'}
         </button>
-        <h1 style={{ color: ts.textPrimary, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 950 : undefined, fontSize: D ? 20 : undefined }} className={D ? '' : 'font-pixel text-[10px] text-white flex items-center gap-2 tracking-wide'}>📚 COMIC CREATOR</h1>
+        <h1 style={{ color: ts.textPrimary, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 950 : undefined, fontSize: D ? 20 : undefined }} className={D ? 'flex items-center gap-2 justify-between' : 'font-pixel text-[10px] text-white flex items-center justify-between tracking-wide'}>
+          <span className="flex items-center gap-2">
+            <span>📚 COMIC CREATOR</span>
+            <button
+              onClick={() => setHelpOpen(true)}
+              className="p-1 hover:text-purple-400 transition-colors cursor-pointer text-gray-400"
+              title="Show instructions"
+            >
+              <HelpCircle className="w-4.5 h-4.5" />
+            </button>
+          </span>
+          {!comicDone && (
+            <button
+              onClick={handleDevSkip}
+              className="text-white/30 hover:text-white/60 font-pixel text-[6px] tracking-wider uppercase border border-white/10 px-2 py-0.5 cursor-pointer transition-colors"
+            >
+              ⚡ Dev Skip Comic
+            </button>
+          )}
+        </h1>
         <p style={{ color: ts.textSecondary, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontSize: D ? 12 : undefined }} className={D ? 'mt-1' : 'text-white/55 font-body text-sm mt-1'}>Build your own 6-panel AI adventure comic!</p>
       </div>
 
@@ -275,6 +322,21 @@ export default function ComicCreator() {
           </motion.div>
         )}
       </div>
+
+      <ActivityHelpModal
+        isOpen={helpOpen}
+        onClose={() => setHelpOpen(false)}
+        title="Comic Creator"
+        type="play"
+        description="Write and design your very own 6-panel AI themed comic book! Pick the hero's setting, select the problem, choose the smart helper, detail the challenge, draft the solution, and conclude with the happy ending."
+        steps={[
+          "Go through the 6 story panels sequentially (Setting, Problem, Sidekick, Challenge, Solution, Victory).",
+          "For each panel, pick one of the keywords representing story elements (e.g. Space, Water Shortage, Smart Drone).",
+          "Click the button to continue to the next panel.",
+          "Once completed, review your custom layout and download it as a PDF comic book!"
+        ]}
+        rewards="⚡ +20 XP on saving a completed comic"
+      />
     </div>
   );
 }

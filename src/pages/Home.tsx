@@ -12,6 +12,7 @@ import { TreasureChestModal } from '@/components/ui/TreasureChestModal';
 import { getUnopenedChests, getUnopenedCount, type Chest } from '@/lib/treasureChest';
 import { Map } from 'lucide-react';
 import { useThemeStyles } from '@/lib/useThemeStyles';
+import { useLearningCompanion } from '@/contexts/LearningCompanionContext';
 
 const MODULE_CARDS = [
   { path: '/play/around-me', emoji: '🌍', title: 'AI Around Me', desc: 'Discover AI in your world', gradFrom: '#3B82F6', gradTo: '#8B5CF6', border: '#3B82F6', shadow: '#1D4ED8', zone: 'junior' },
@@ -48,6 +49,20 @@ export default function Home() {
   const { updateProfile } = useAuth();
   const ts = useThemeStyles();
   const D = ts.duo; // shorthand
+
+  const { pointTo, dailyQuests } = useLearningCompanion();
+
+  useEffect(() => {
+    if (profile) {
+      const timer = setTimeout(() => {
+        pointTo('#daily-quests-widget', `Welcome back, ${profile.username}! Let's complete today's daily quests to get bonus XP! ⚡`, {
+          mood: 'excited',
+          side: 'left',
+        });
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [profile]);
 
   const [xpToastInfo, setXpToastInfo] = useState<{ amount: number; reason: string } | null>(null);
   const [timeOfDay, setTimeOfDay] = useState('');
@@ -441,6 +456,52 @@ export default function Home() {
             </button>
           </motion.div>
         )}
+
+        {/* ── Daily Quests Widget ───────────────────────────────────────────── */}
+        <motion.div
+          id="daily-quests-widget"
+          {...fadeUp(0.20)}
+          className="mt-5 p-4 space-y-4"
+          style={D ? {
+            background: '#FFFFFF',
+            border: '1.5px solid #10B981',
+            borderRadius: 16,
+            boxShadow: '0 2px 8px rgba(16,185,129,0.1)',
+          } : {
+            background: '#1E1B4B',
+            border: '3px solid #10B981',
+            boxShadow: '4px 4px 0px 0px #000000',
+          }}
+        >
+          <div className="flex items-center justify-between">
+            {D ? (
+              <span style={{ fontFamily: '"Nunito", sans-serif', fontWeight: 900, fontSize: 14, color: '#10B981' }}>⚡ Sparky's Daily Quests</span>
+            ) : (
+              <h3 className="font-game text-xs text-success uppercase">⚡ Sparky's Daily Quests</h3>
+            )}
+            <span className="text-[9px] opacity-60 font-mono tracking-widest text-emerald-400">TODAY</span>
+          </div>
+
+          <div className="space-y-3">
+            {dailyQuests.map((quest) => {
+              const pct = Math.min(100, (quest.currentXP / quest.targetXP) * 100);
+              return (
+                <div key={quest.id} className="space-y-1.5 p-2.5 rounded-lg" style={{ background: D ? '#F9FAF9' : 'rgba(0,0,0,0.2)' }}>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="font-bold text-xs" style={{ color: ts.textPrimary, fontFamily: D ? '"Nunito", sans-serif' : undefined }}>{quest.description}</span>
+                    <span className="text-[10px] text-yellow-500 font-extrabold font-mono">+{quest.rewardXP} XP</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-grow bg-black/20 h-2 rounded-full overflow-hidden">
+                      <div className="h-full bg-gradient-to-r from-emerald-400 to-green-500 rounded-full" style={{ width: `${pct}%` }} />
+                    </div>
+                    <span className="text-[10px] font-bold font-mono whitespace-nowrap" style={{ color: ts.textSecondary }}>{quest.currentXP} / {quest.targetXP}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </motion.div>
 
         {/* ── My Learning Journey ───────────────────────────────────────────── */}
         <motion.div

@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/Button';
 import { XPToast, SpeakButton } from '@/components/ui/GameUI';
 import { useAuth, useCurrentProfile } from '@/contexts/AuthContext';
 import { CheckCircle, XCircle, HelpCircle, ChevronRight, ArrowLeft } from 'lucide-react';
+import { useFeedbackEngine } from '@/contexts/FeedbackEngineContext';
+import { ActivityHelpModal } from '@/components/ui/ActivityHelpModal';
 
 type Answer = 'yes' | 'no' | 'maybe';
 
@@ -24,6 +26,7 @@ export default function AIDetective() {
   const { profile, guestProfile, isGuest, updateProfile } = useAuth();
   const currentProfile = useCurrentProfile();
   const userZone = currentProfile?.zone || 'junior';
+  const { showSuccessCelebration, showFailureMotivation, showModuleCompletionCelebration } = useFeedbackEngine();
 
   // Filter cases by age zone and category
   let zoneCases = DETECTIVE_CASES.filter(c => c.zone === userZone || c.zone === 'both');
@@ -43,6 +46,7 @@ export default function AIDetective() {
   const [showXP, setShowXP] = useState(false);
   const [xpAmount, setXPAmount] = useState(0);
   const [done, setDone] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   useEffect(() => {
     const progKey = category ? `play_progress_detective_${category}` : 'play_progress_detective';
@@ -69,17 +73,49 @@ export default function AIDetective() {
     if (isCorrect) {
       setTotalXP(xp => xp + caseData.xp);
       setXPAmount(caseData.xp);
-      setShowXP(true);
       // Award XP to user profile
       const currentProfileXP = isGuest ? (guestProfile?.xp ?? 0) : (profile?.xp ?? 0);
       updateProfile({ xp: currentProfileXP + caseData.xp });
+
+      showSuccessCelebration({
+        title: "CORRECT!",
+        subtitle: caseData.explanation,
+        xpGained: caseData.xp,
+      });
+    } else {
+      showFailureMotivation({
+        title: "NOT QUITE!",
+        subtitle: caseData.explanation,
+      });
     }
   };
 
   const handleNext = () => {
     setSelected(null);
-    if (currentIndex + 1 >= zoneCases.length) setDone(true);
-    else setCurrentIndex(i => i + 1);
+    if (currentIndex + 1 >= zoneCases.length) {
+      setDone(true);
+      showModuleCompletionCelebration({
+        title: "CASE FILES SOLVED!",
+        subtitle: `You completed all ${zoneCases.length} detective cases!`,
+        xpGained: totalXP,
+      });
+    } else {
+      setCurrentIndex(i => i + 1);
+    }
+  };
+
+  const handleDevSkip = () => {
+    const earned = zoneCases.reduce((sum, c) => sum + c.xp, 0);
+    setTotalXP(earned);
+    setDone(true);
+    const currentProfileXP = isGuest ? (guestProfile?.xp ?? 0) : (profile?.xp ?? 0);
+    updateProfile({ xp: currentProfileXP + earned });
+
+    showModuleCompletionCelebration({
+      title: "CASE FILES SOLVED!",
+      subtitle: `You completed all ${zoneCases.length} detective cases!`,
+      xpGained: earned,
+    });
   };
 
   if (done) {
@@ -115,7 +151,16 @@ export default function AIDetective() {
         <button onClick={() => navigate('/play')} className="flex items-center gap-2 text-white/60 hover:text-white mb-3 font-body text-sm">
           <ArrowLeft className="w-4 h-4" /> Back to Play
         </button>
-        <h1 className="text-white font-game text-xl flex items-center gap-2">🕵️ AI Detective</h1>
+        <h1 className="text-white font-game text-xl flex items-center gap-2">
+          🕵️ AI Detective
+          <button
+            onClick={() => setHelpOpen(true)}
+            className="p-1 hover:text-purple-400 transition-colors cursor-pointer text-white/50"
+            title="Show how to solve case files"
+          >
+            <HelpCircle className="w-4 h-4" />
+          </button>
+        </h1>
         <p className="text-white/60 font-body text-sm mt-1">
           {userZone === 'junior' ? 'Can AI help in these everyday situations?' : 'Analyse complex real-world AI scenarios!'}
         </p>
@@ -126,6 +171,12 @@ export default function AIDetective() {
             ))}
           </div>
           <span className="text-white/50 font-body text-xs ml-auto">{currentIndex + 1}/{zoneCases.length}</span>
+          <button
+            onClick={handleDevSkip}
+            className="text-white/30 hover:text-white/60 font-pixel text-[6px] tracking-wider uppercase border border-white/10 px-2 py-0.5 cursor-pointer transition-colors"
+          >
+            ⚡ Skip
+          </button>
         </div>
       </div>
 
@@ -231,6 +282,22 @@ export default function AIDetective() {
           </AnimatePresence>
         )}
       </div>
+
+      <ActivityHelpModal
+        isOpen={helpOpen}
+        onClose={() => setHelpOpen(false)}
+        title="AI Detective"
+        type="play"
+        description="Become a digital forensics analyst! Investigate different media files and scenarios to deduce if AI algorithms can solve the problems, or identify manipulated deepfake files."
+        steps={[
+          "Read each detective case study scenario carefully.",
+          "Analyze the image and text descriptions.",
+          "Determine if AI can help solve the issue or if it's a deepfake spoof.",
+          "Submit your selection (YES, NO, or MAYBE).",
+          "Read Sparky's educational case report detailing how the technology maps to real-world AI logic."
+        ]}
+        rewards="⚡ +10 to +20 XP per correctly solved case file"
+      />
     </div>
   );
 }

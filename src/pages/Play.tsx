@@ -5,8 +5,84 @@ import { useCurrentProfile } from '@/contexts/AuthContext';
 import { PLAY_MODULES_DATA, type PlayModule } from '@/data/curriculum';
 import { getPlatformProgress, getLevel } from '@/lib/gamification';
 import { AICompanion } from '@/components/ui/AICompanion';
-import { Lock, CheckCircle, Trophy, AlertCircle, Gamepad2 } from 'lucide-react';
+import { Lock, CheckCircle, Trophy, AlertCircle, Gamepad2, HelpCircle } from 'lucide-react';
 import { useThemeStyles } from '@/lib/useThemeStyles';
+import { ActivityHelpModal } from '@/components/ui/ActivityHelpModal';
+
+const PLAY_MODULE_INSTRUCTIONS: Record<string, { steps: string[]; rewards: string }> = {
+  '/play/quiz': {
+    steps: [
+      "Select Casual mode (no timer) or Time Attack (15s limit).",
+      "Answer multiple choice questions on various AI topics.",
+      "Submit your final answer and claim your XP rewards!"
+    ],
+    rewards: "⚡ Variable XP based on correct answers and speed"
+  },
+  '/play/cards': {
+    steps: [
+      "Check your card inventory.",
+      "Complete curriculum modules and missions to unlock card packs.",
+      "Open packs to discover rare and legendary AI hero cards!"
+    ],
+    rewards: "🃏 Collectible cards & profile badges"
+  },
+  '/play/inventor-hall': {
+    steps: [
+      "Explore the showcase of inventions uploaded by other students.",
+      "Read their project names, descriptions, and solutions.",
+      "Like and show support for community innovations!"
+    ],
+    rewards: "❤️ Community appreciation & design inspiration"
+  },
+  '/play/around-me': {
+    steps: [
+      "Select an AI discovery module (Smart Camera, Recycler, Sound Recognizer, gesture puppy).",
+      "Use your device camera or microphone to capture real-world items.",
+      "Train models or classify actions to solve the challenges!"
+    ],
+    rewards: "⚡ +15 to +30 XP upon solving observations"
+  },
+  '/play/story': {
+    steps: [
+      "Accept one of the 8 epic interactive text-based story quests.",
+      "Read the dialogue carefully and explore choices.",
+      "Debug system algorithms and make the right AI-ethical choices to finish the quest!"
+    ],
+    rewards: "⚡ +40 to +60 XP, story checkpoints"
+  },
+  '/play/detective': {
+    steps: [
+      "Examine case details containing photos, statements, or automated files.",
+      "Deduce if AI can help solve the issue or spot deepfake scams.",
+      "Read the educational summary to learn detective clues!"
+    ],
+    rewards: "⚡ +10 to +20 XP per solved case"
+  },
+  '/play/brainstorm': {
+    steps: [
+      "Construct a virtual AI prototype system.",
+      "Set input tokens, define system logic parameters, and inspect outputs.",
+      "Test custom instructions and adjust system boundaries."
+    ],
+    rewards: "⚡ +15 to +30 XP on valid blueprints"
+  },
+  '/play/idea-generator': {
+    steps: [
+      "Pick a local issue (like waste, farming, traffic, water).",
+      "Explain the problem context to the generator helper.",
+      "Get three structured AI solution templates and save your favorites!"
+    ],
+    rewards: "⚡ +15 XP on generating and saving ideas"
+  },
+  '/comic': {
+    steps: [
+      "Compose a multi-panel visual comic strip.",
+      "Type creative image prompts to generate custom scene backgrounds.",
+      "Write speech bubbles and narratives to tell a tech-related story!"
+    ],
+    rewards: "⚡ +20 XP on saving a completed comic"
+  }
+};
 
 const PLAY_PHASES = [
   { id: 1, title: 'Foundation Fields', emoji: '🚀', description: 'Master the basics and explore key AI concepts.' },
@@ -23,6 +99,7 @@ export default function Play() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [lockedTarget, setLockedTarget] = useState<PlayModule | null>(null);
   const [lockedActive, setLockedActive] = useState<PlayModule | null>(null);
+  const [helpModule, setHelpModule] = useState<PlayModule | null>(null);
 
   const userZone = profile?.zone || 'junior';
   const filtered = PLAY_MODULES_DATA.filter(mod => mod.zones.includes(userZone));
@@ -340,9 +417,19 @@ export default function Play() {
                                     {isModLocked ? '🔒' : mod.emoji}
                                   </div>
                                   <h3 style={{ color: ts.textPrimary, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 800 : undefined, fontSize: D ? 13 : undefined }}
-                                      className={D ? '' : 'font-game text-xs text-white leading-snug uppercase tracking-wide'}
+                                      className={D ? '' : 'font-game text-xs text-white leading-snug uppercase tracking-wide flex items-center gap-1.5 flex-wrap'}
                                   >
-                                    {mod.title}
+                                    <span>{mod.title}</span>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setHelpModule(mod);
+                                      }}
+                                      className="p-1 hover:opacity-85 text-[#10B981] transition-opacity cursor-pointer"
+                                      title="Show instructions"
+                                    >
+                                      <HelpCircle className="w-3.5 h-3.5" />
+                                    </button>
                                   </h3>
                                 </div>
                                 <p style={D ? { color: '#8B5CF6', fontFamily: '"Nunito", sans-serif', fontStyle: 'italic', fontSize: 11, marginTop: 4, lineHeight: 1.5 } : {}}
@@ -448,6 +535,16 @@ export default function Play() {
           </div>
         )}
       </AnimatePresence>
+
+      <ActivityHelpModal
+        isOpen={!!helpModule}
+        onClose={() => setHelpModule(null)}
+        title={helpModule?.title || ''}
+        type="play"
+        description={helpModule?.desc || ''}
+        steps={helpModule ? (PLAY_MODULE_INSTRUCTIONS[helpModule.path.split('?')[0]]?.steps || ['Explore and interact with the module activity to earn XP!']) : []}
+        rewards={helpModule ? (PLAY_MODULE_INSTRUCTIONS[helpModule.path.split('?')[0]]?.rewards || '⚡ XP rewards') : ''}
+      />
     </div>
   );
 }

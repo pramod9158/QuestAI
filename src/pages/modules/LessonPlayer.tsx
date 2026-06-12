@@ -13,6 +13,9 @@ import { MissionBriefing, AICompanion } from '@/components/ui/AICompanion';
 import { VideoCheckpointOverlay, CheckpointTimeline } from '@/components/ui/VideoCheckpoint';
 import { MissionComplete } from '@/components/ui/MissionComplete';
 import { useThemeStyles } from '@/lib/useThemeStyles';
+import { ActivityHelpModal } from '@/components/ui/ActivityHelpModal';
+import { useFeedbackEngine } from '@/contexts/FeedbackEngineContext';
+import { useLearningCompanion } from '@/contexts/LearningCompanionContext';
 
 // New Labs
 import PromptLab from '@/components/labs/PromptLab';
@@ -28,6 +31,15 @@ export default function LessonPlayer() {
   const { profile, guestProfile, isGuest, updateProfile } = useAuth();
   const ts = useThemeStyles();
   const D = ts.duo;
+  const { showSuccessCelebration, showFailureMotivation, showModuleCompletionCelebration } = useFeedbackEngine();
+  
+  const { speak, setOutfit, showVideoLoadScreen, hideVideoLoadScreen } = useLearningCompanion();
+  const triggeredMilestonesRef = useRef<number[]>([]);
+
+  useEffect(() => {
+    setOutfit('scientist');
+    return () => setOutfit('default');
+  }, [setOutfit]);
   
   const lesson = CURRICULUM.find(l => l.id === id);
   
@@ -81,6 +93,7 @@ export default function LessonPlayer() {
   const [tutorInput, setTutorInput] = useState('');
   const [tutorAnswer, setTutorAnswer] = useState<string | null>(null);
   const [askingTutor, setAskingTutor] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   // Set step state on load based on saved progress
   useEffect(() => {
@@ -153,6 +166,14 @@ export default function LessonPlayer() {
     }
   }, [lesson?.id]);
 
+  // Trigger video loading screen when step 2 starts
+  useEffect(() => {
+    if (currentStep === 2) {
+      showVideoLoadScreen();
+      triggeredMilestonesRef.current = []; // Reset thresholds
+    }
+  }, [currentStep, showVideoLoadScreen]);
+
   // YouTube API Player Initialization for Step 2
   useEffect(() => {
     if (currentStep !== 2 || !lesson) return;
@@ -182,6 +203,7 @@ export default function LessonPlayer() {
                   videoDurationRef.current = duration;
                   setVideoDuration(duration);
                 }
+                hideVideoLoadScreen();
               },
               onStateChange: (event: any) => {
                 if (event.data === (window as any).YT.PlayerState.ENDED) {
@@ -201,6 +223,24 @@ export default function LessonPlayer() {
                           const duration = playerRef.current.getDuration();
                           videoDurationRef.current = duration;
                           setVideoDuration(duration);
+                        }
+
+                        // Check milestones at 25%, 50%, 75%, and 90%
+                        if (videoDurationRef.current > 0) {
+                          const pct = (curTime / videoDurationRef.current) * 100;
+                          if (pct >= 25 && pct < 50 && !triggeredMilestonesRef.current.includes(25)) {
+                            speak("Interesting, right? Keep watching to learn more! 🧠", { mood: 'curious', pose: 'thinking', outfit: 'scientist' });
+                            triggeredMilestonesRef.current.push(25);
+                          } else if (pct >= 50 && pct < 75 && !triggeredMilestonesRef.current.includes(50)) {
+                            speak("You're halfway through the video! You're doing awesome! 🌟", { mood: 'encouraging', pose: 'wave', outfit: 'scientist' });
+                            triggeredMilestonesRef.current.push(50);
+                          } else if (pct >= 75 && pct < 90 && !triggeredMilestonesRef.current.includes(75)) {
+                            speak("Three-quarters done! Keep up the great focus! 🚀", { mood: 'proud', pose: 'dance', outfit: 'scientist' });
+                            triggeredMilestonesRef.current.push(75);
+                          } else if (pct >= 90 && !triggeredMilestonesRef.current.includes(90)) {
+                            speak("Almost there! Get ready, the interactive AI lab challenge is coming up next! 🧪", { mood: 'excited', pose: 'dance', outfit: 'scientist' });
+                            triggeredMilestonesRef.current.push(90);
+                          }
                         }
 
                         // Check checkpoints
@@ -277,8 +317,16 @@ export default function LessonPlayer() {
     
     if (correct && xpEarned > 0) {
       setCheckpointXp(prev => prev + xpEarned);
-      setToastMessage(`Correct! +${xpEarned} XP`);
-      setShowXPToast(true);
+      showSuccessCelebration({
+        title: "CORRECT!",
+        subtitle: `Checkpoint passed! +${xpEarned} XP`,
+        xpGained: xpEarned,
+      });
+    } else if (!correct) {
+      showFailureMotivation({
+        title: "NOT QUITE!",
+        subtitle: "Let's think about this and try again!",
+      });
     }
     
     setCompletedCheckpoints(prev => [...prev, activeCheckpoint.idx]);
@@ -299,6 +347,45 @@ export default function LessonPlayer() {
     // Mark checkpoints as completed
     const allCps = lesson.videoCheckpoints?.map((_, idx) => idx) || [];
     setCompletedCheckpoints(allCps);
+  };
+
+  const handleSkipProject = async () => {
+    localStorage.setItem(`lesson_${lesson.id}_project`, 'true');
+    const currentXP = isGuest ? (guestProfile?.xp ?? 0) : (profile?.xp ?? 0);
+    const currentCoins = isGuest ? (guestProfile?.coins ?? 0) : (profile?.coins ?? 0);
+    const currentCompleted = profile?.completed_lessons || [];
+    const newCompleted = currentCompleted.includes(lesson.id) ? currentCompleted : [...currentCompleted, lesson.id];
+
+    const videoXpAward = lesson.xpReward + checkpointXp;
+    const labXpAward = lesson.aiLab?.challenges?.reduce((sum, c) => sum + c.xpReward, 0) || 20;
+    const projectXpAward = lesson.microProject?.xpReward || 15;
+    const streakBonus = Math.round((videoXpAward + labXpAward + projectXpAward) * (profile?.current_streak && profile.current_streak >= 3 ? 0.2 : 0));
+    const totalXpGained = videoXpAward + labXpAward + projectXpAward + streakBonus;
+    const coinsGained = lesson.coinsReward || 10;
+
+    await updateProfile({
+      xp: currentXP + totalXpGained,
+      coins: currentCoins + coinsGained,
+      completed_lessons: newCompleted,
+    });
+
+    localStorage.setItem(`lesson_progress_${lesson.id}`, '100');
+    localStorage.setItem(`lesson_completed_at_${lesson.id}`, new Date().toLocaleDateString());
+    
+    setProjectFeedback({
+      score: 100,
+      feedback: "Dev Skip used! Perfect submission.",
+      passed: true
+    });
+    
+    showModuleCompletionCelebration({
+      title: "MODULE COMPLETED",
+      subtitle: `You completed the "${lesson.title}" module!`,
+      xpGained: totalXpGained,
+      coinsGained: coinsGained,
+      badge: lesson.aiLab?.badgeId ? { name: lesson.aiLab.title, emoji: '🔬' } : undefined,
+      onDone: () => setShowCompleteOverlay(true),
+    });
   };
 
   // Progress to step 3 (Lab)
@@ -352,8 +439,20 @@ export default function LessonPlayer() {
         localStorage.setItem(`lesson_progress_${lesson.id}`, '100');
         localStorage.setItem(`lesson_completed_at_${lesson.id}`, new Date().toLocaleDateString());
 
-        // Open completion modal
-        setShowCompleteOverlay(true);
+        showModuleCompletionCelebration({
+          title: "MODULE COMPLETED",
+          subtitle: `You completed the "${lesson.title}" module!`,
+          xpGained: totalXpGained,
+          coinsGained: coinsGained,
+          badge: lesson.aiLab?.badgeId ? { name: lesson.aiLab.title, emoji: '🔬' } : undefined,
+          onDone: () => setShowCompleteOverlay(true),
+        });
+      } else {
+        showFailureMotivation({
+          title: "KEEP TRYING!",
+          subtitle: evaluation.feedback || "Let's review the suggestions and try again!",
+          xpGained: 0,
+        });
       }
     } catch (err) {
       console.error('Failed to evaluate project:', err);
@@ -675,6 +774,13 @@ export default function LessonPlayer() {
           <div style={{ color: D ? '#000000' : '#FFFFFF', fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 800 : undefined, fontSize: D ? 14 : undefined }} className={D ? 'truncate font-bold' : 'font-game text-xs text-white uppercase tracking-wide truncate'}>{lesson.missionTitle || lesson.title}</div>
           <div style={{ color: D ? '#999999' : 'rgba(255,255,255,0.45)', fontFamily: D ? '"Nunito", sans-serif' : undefined, fontSize: D ? 10 : undefined, fontWeight: D ? 700 : undefined }} className={D ? 'truncate font-semibold' : 'text-white/45 font-pixel text-[6px] uppercase tracking-wider'}>{dynamicSubtitle}</div>
         </div>
+        <button
+          onClick={() => setHelpOpen(true)}
+          className={D ? 'p-2 border border-gray-200 bg-gray-50 text-[#8B5CF6] hover:bg-gray-100 transition-colors cursor-pointer rounded-lg' : 'p-2 border-2 border-black bg-black/30 text-white/50 hover:text-white transition-colors cursor-pointer'}
+          title="Show how to complete this lesson"
+        >
+          <HelpCircle className="w-4 h-4" />
+        </button>
         <SpeakButton text={lesson.ttsIntro} />
       </div>
 
@@ -802,6 +908,19 @@ export default function LessonPlayer() {
                   >
                     {labCompleted ? '🛠️ Design Micro Project ➔' : '🔒 Solve AI Lab to Unlock Project'}
                   </Button>
+                  {!labCompleted && (
+                    <div className="flex gap-2 mt-2 justify-center">
+                      <button
+                        onClick={() => {
+                          setLabCompleted(true);
+                          localStorage.setItem(`lesson_${lesson.id}_lab`, 'true');
+                        }}
+                        className="text-white/30 hover:text-white/60 font-pixel text-[6px] tracking-wider uppercase border border-white/10 px-2.5 py-1 cursor-pointer transition-colors"
+                      >
+                        ⚡ Dev Skip Lab
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -847,16 +966,26 @@ export default function LessonPlayer() {
 
                   {/* Submit Button */}
                   {!(projectFeedback?.passed) && (
-                    <Button
-                      onClick={handleSubmitProject}
-                      loading={submittingProject}
-                      disabled={!projectText.trim() || submittingProject}
-                      variant="primary"
-                      fullWidth
-                      className="font-game text-xs uppercase"
-                    >
-                      ⚡ Submit Project to Sparky
-                    </Button>
+                    <>
+                      <Button
+                        onClick={handleSubmitProject}
+                        loading={submittingProject}
+                        disabled={!projectText.trim() || submittingProject}
+                        variant="primary"
+                        fullWidth
+                        className="font-game text-xs uppercase"
+                      >
+                        ⚡ Submit Project to Sparky
+                      </Button>
+                      <div className="mt-2 flex justify-center">
+                        <button
+                          onClick={handleSkipProject}
+                          className="text-white/30 hover:text-white/60 font-pixel text-[6px] tracking-wider uppercase border border-white/10 px-2.5 py-1 cursor-pointer transition-colors"
+                        >
+                          ⚡ Dev Skip Project
+                        </button>
+                      </div>
+                    </>
                   )}
 
                   {/* Feedback Report */}
@@ -968,6 +1097,21 @@ export default function LessonPlayer() {
           badgeUnlocked: lesson.aiLab?.badgeId ? { name: lesson.aiLab.title, emoji: '🔬' } : undefined,
         }}
         onContinue={handleFinalContinue}
+      />
+
+      <ActivityHelpModal
+        isOpen={helpOpen}
+        onClose={() => setHelpOpen(false)}
+        title={lesson.missionTitle || lesson.title}
+        type={lesson.phase === 3 || lesson.phase === 8 ? 'prompt' : 'learn'}
+        description={lesson.description}
+        steps={[
+          "🎥 Watch: Play the video lesson and complete all interactive checkpoint questions.",
+          `🧪 AI Lab: Perform the hands-on lab task: "${lesson.aiLab?.title || ''}" (${lesson.aiLab?.description || ''}).`,
+          `🛠️ Create: Build and document your micro-project: "${lesson.microProject?.title || ''}" (${lesson.microProject?.description || ''}).`
+        ]}
+        deliverable={lesson.microProject?.deliverable}
+        rewards={`⚡ +${lesson.xpReward} XP, 🪙 +${lesson.coinsReward} Coins`}
       />
     </div>
   );

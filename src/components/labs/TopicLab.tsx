@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle2, ChevronRight, Star, Award } from 'lucide-react';
 import { AICompanion } from '../ui/AICompanion';
-import { CelebrationOverlay } from '../ui/CelebrationOverlay';
+import { useFeedbackEngine } from '@/contexts/FeedbackEngineContext';
 
 interface TopicLabProps {
   lessonId: string;
@@ -1761,33 +1761,44 @@ function HumanAICoLab({ onComplete, onCelebrate }: { onComplete: () => void; onC
 
 // ─── Main TopicLab Router ─────────────────────────────────────────────────────
 export default function TopicLab({ lessonId, onComplete }: TopicLabProps) {
-  const [showCelebration, setShowCelebration] = useState(false);
+  const { showSuccessCelebration, showPartialSuccessCelebration } = useFeedbackEngine();
 
   const handleCelebrate = () => {
-    setShowCelebration(true);
+    showSuccessCelebration({
+      title: "100% Correct!",
+      subtitle: "Perfect score! You are an AI genius! 🤖",
+      xpGained: 15,
+      coinsGained: 10,
+      onDone: onComplete,
+    });
   };
 
-  const handleCelebrationDone = () => {
-    setShowCelebration(false);
-    onComplete();
+  const handleCompleteIntercept = () => {
+    showPartialSuccessCelebration({
+      title: "GOOD EFFORT!",
+      subtitle: "You completed the lab! Keep practicing to get 100%!",
+      xpGained: 10,
+      coinsGained: 5,
+      onDone: onComplete,
+    });
   };
 
   const renderLab = () => {
     switch (lessonId) {
-      case 'lesson-5':       return <VoiceRecognitionLab onComplete={onComplete} />;
-      case 'lesson-2':       return <RecommendationLab onComplete={onComplete} />;
-      case 'lesson-12':      return <FutureAILab onComplete={onComplete} onCelebrate={handleCelebrate} />;
-      case 'lesson-10-jr':   return <FairnessLab onComplete={onComplete} onCelebrate={handleCelebrate} />;
-      case 'lesson-13-jr':   return <GameAILab onComplete={onComplete} />;
-      case 'lesson-16-jr':   return <HealthAILab onComplete={onComplete} />;
-      case 'lesson-17-jr':   return <SmartHomeLab onComplete={onComplete} onCelebrate={handleCelebrate} />;
-      case 'lesson-15-jr':   return <EcoAILab onComplete={onComplete} onCelebrate={handleCelebrate} />;
-      case 'lesson-19-jr':   return <WildlifeAILab onComplete={onComplete} onCelebrate={handleCelebrate} />;
-      case 'lesson-11':      return <IndiaAILab onComplete={onComplete} onCelebrate={handleCelebrate} />;
-      case 'lesson-18-jr':   return <SmartFarmLab onComplete={onComplete} />;
-      case 'lesson-20-jr':   return <CyberSafetyLab onComplete={onComplete} onCelebrate={handleCelebrate} />;
-      case 'lesson-21-jr':   return <MusicComposerLab onComplete={onComplete} />;
-      case 'lesson-22-jr':   return <HumanAICoLab onComplete={onComplete} onCelebrate={handleCelebrate} />;
+      case 'lesson-5':       return <VoiceRecognitionLab onComplete={handleCompleteIntercept} />;
+      case 'lesson-2':       return <RecommendationLab onComplete={handleCompleteIntercept} />;
+      case 'lesson-12':      return <FutureAILab onComplete={handleCompleteIntercept} onCelebrate={handleCelebrate} />;
+      case 'lesson-10-jr':   return <FairnessLab onComplete={handleCompleteIntercept} onCelebrate={handleCelebrate} />;
+      case 'lesson-13-jr':   return <GameAILab onComplete={handleCompleteIntercept} />;
+      case 'lesson-16-jr':   return <HealthAILab onComplete={handleCompleteIntercept} />;
+      case 'lesson-17-jr':   return <SmartHomeLab onComplete={handleCompleteIntercept} onCelebrate={handleCelebrate} />;
+      case 'lesson-15-jr':   return <EcoAILab onComplete={handleCompleteIntercept} onCelebrate={handleCelebrate} />;
+      case 'lesson-19-jr':   return <WildlifeAILab onComplete={handleCompleteIntercept} onCelebrate={handleCelebrate} />;
+      case 'lesson-11':      return <IndiaAILab onComplete={handleCompleteIntercept} onCelebrate={handleCelebrate} />;
+      case 'lesson-18-jr':   return <SmartFarmLab onComplete={handleCompleteIntercept} />;
+      case 'lesson-20-jr':   return <CyberSafetyLab onComplete={handleCompleteIntercept} onCelebrate={handleCelebrate} />;
+      case 'lesson-21-jr':   return <MusicComposerLab onComplete={handleCompleteIntercept} />;
+      case 'lesson-22-jr':   return <HumanAICoLab onComplete={handleCompleteIntercept} onCelebrate={handleCelebrate} />;
       default:               return null;
     }
   };
@@ -1795,14 +1806,6 @@ export default function TopicLab({ lessonId, onComplete }: TopicLabProps) {
   return (
     <>
       {renderLab()}
-      <CelebrationOverlay
-        show={showCelebration}
-        title="100% Correct!"
-        subtitle="Perfect score! You are an AI genius! 🤖"
-        xpGained={15}
-        coinsGained={10}
-        onDone={handleCelebrationDone}
-      />
     </>
   );
 }

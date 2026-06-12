@@ -5,9 +5,11 @@ import { STORY_QUESTS } from '@/data/curriculum';
 import { Button } from '@/components/ui/Button';
 import { XPToast } from '@/components/ui/GameUI';
 import { useAuth, useCurrentProfile } from '@/contexts/AuthContext';
-import { Lock, Star, ChevronRight, ArrowLeft, Zap } from 'lucide-react';
+import { Lock, Star, ChevronRight, ArrowLeft, Zap, HelpCircle } from 'lucide-react';
 import { SpeakButton } from '@/components/ui/GameUI';
 import { evaluateStoryReflection } from '@/lib/ai';
+import { ActivityHelpModal } from '@/components/ui/ActivityHelpModal';
+import { useFeedbackEngine } from '@/contexts/FeedbackEngineContext';
 
 const QUEST_STEPS = {
   canteen: [
@@ -35,6 +37,7 @@ export default function StoryAdventures() {
   const { profile, guestProfile, isGuest, updateProfile } = useAuth();
   const currentProfile = useCurrentProfile();
   const userZone = currentProfile?.zone || 'junior';
+  const { showSuccessCelebration } = useFeedbackEngine();
 
   // Filter quests by age zone
   const zoneQuests = STORY_QUESTS.filter(q => q.zone === userZone || q.zone === 'both');
@@ -42,6 +45,7 @@ export default function StoryAdventures() {
   const [selectedQuest, setSelectedQuest] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [showXP, setShowXP] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const completedQuests = profile?.completed_quests || [];
 
   React.useEffect(() => {
@@ -106,6 +110,15 @@ export default function StoryAdventures() {
     setCurrentStep(s => s + 1);
   };
 
+  const handleDevSkip = () => {
+    if (!selectedQuest) return;
+    const qInfo = STORY_QUESTS.find(q => q.id === selectedQuest);
+    if (!qInfo) return;
+    const steps = QUEST_STEPS[selectedQuest as keyof typeof QUEST_STEPS] || [];
+    setCurrentStep(steps.length - 1);
+    handleQuestComplete(selectedQuest, qInfo.xpReward);
+  };
+
   const handleQuestComplete = async (questId: string, xpReward: number) => {
     if (!completedQuests.includes(questId)) {
       const currentProfileXP = isGuest ? (guestProfile?.xp ?? 0) : (profile?.xp ?? 0);
@@ -117,6 +130,13 @@ export default function StoryAdventures() {
     localStorage.setItem(`quests_${questId}`, 'true');
     localStorage.setItem(`play_progress_story_${questId}`, '100');
     setShowXP(true);
+    
+    const questInfo = STORY_QUESTS.find(q => q.id === questId);
+    showSuccessCelebration({
+      title: "QUEST COMPLETE!",
+      subtitle: `Successfully finished quest: ${questInfo?.title || 'Story Quest'}!`,
+      xpGained: xpReward,
+    });
   };
 
   if (selectedQuest) {
@@ -145,7 +165,24 @@ export default function StoryAdventures() {
           <button onClick={() => { navigate('/play/story'); setSelectedQuest(null); setCurrentStep(0); handleNextStep(); }} className="flex items-center gap-2 text-white/60 hover:text-white font-body text-sm mb-3">
             <ArrowLeft className="w-4 h-4" /> Quest Map
           </button>
-          <h1 className="text-white font-game text-lg">{quest.title}</h1>
+          <h1 className="text-white font-game text-lg flex items-center gap-2 justify-between">
+            <span className="flex items-center gap-2">
+              <span>{quest.title}</span>
+              <button
+                onClick={() => setHelpOpen(true)}
+                className="p-1 hover:text-purple-400 transition-colors cursor-pointer text-white/50"
+                title="Show instructions"
+              >
+                <HelpCircle className="w-4.5 h-4.5" />
+              </button>
+            </span>
+            <button
+              onClick={handleDevSkip}
+              className="text-white/30 hover:text-white/60 font-pixel text-[6px] tracking-wider uppercase border border-white/10 px-2 py-0.5 cursor-pointer transition-colors"
+            >
+              ⚡ Dev Skip Quest
+            </button>
+          </h1>
           <div className="flex gap-1 mt-3">
             {steps.map((_, i) => (
               <div key={i} className={`flex-1 h-2 border-2 border-black ${i <= currentStep ? 'bg-primary' : 'bg-white/20'}`} />
@@ -239,6 +276,21 @@ export default function StoryAdventures() {
             </motion.div>
           </AnimatePresence>
         </div>
+
+        <ActivityHelpModal
+          isOpen={helpOpen}
+          onClose={() => setHelpOpen(false)}
+          title={quest?.title || "Story Adventures"}
+          type="play"
+          description={quest?.description || "Solve real-world problems and help local citizens by resolving interactive story quests."}
+          steps={[
+            "Choose a story quest to embark on (e.g. Canteen Waste or Lost Dog).",
+            "Read each story section (problem, root cause, brainstorm, and AI solution).",
+            "Formulate your thoughts and write your reflection answers to get feedback from the AI Tutor.",
+            "Complete all steps to claim the mission rewards!"
+          ]}
+          rewards={quest ? `⚡ +${quest.xpReward} Quest completion XP + Bonus Reflection XP!` : ''}
+        />
       </div>
     );
   }
@@ -250,7 +302,16 @@ export default function StoryAdventures() {
         <button onClick={() => navigate('/play')} className="flex items-center gap-2 text-white/60 hover:text-white mb-3 font-body text-sm">
           <ArrowLeft className="w-4 h-4" /> Back to Play
         </button>
-        <h1 className="text-white font-game text-xl flex items-center gap-2">⚔️ Story Adventures</h1>
+        <h1 className="text-white font-game text-xl flex items-center gap-2">
+          <span>⚔️ Story Adventures</span>
+          <button
+            onClick={() => setHelpOpen(true)}
+            className="p-1 hover:text-purple-400 transition-colors cursor-pointer text-white/50"
+            title="Show how to play"
+          >
+            <HelpCircle className="w-4 h-4" />
+          </button>
+        </h1>
         <p className="text-white/60 font-body text-sm mt-1">
           {userZone === 'junior' ? 'Become an AI hero — solve fun everyday quests!' : 'Tackle complex real-world AI challenges!'}
         </p>
@@ -296,6 +357,21 @@ export default function StoryAdventures() {
           );
         })}
       </div>
+
+      <ActivityHelpModal
+        isOpen={helpOpen}
+        onClose={() => setHelpOpen(false)}
+        title="Story Adventures"
+        type="play"
+        description="Solve real-world problems and help local citizens by resolving interactive story quests."
+        steps={[
+          "Choose a story quest to embark on (e.g. Canteen Waste or Lost Dog).",
+          "Read each story section (problem, root cause, brainstorm, and AI solution).",
+          "Formulate your thoughts and write your reflection answers to get feedback from the AI Tutor.",
+          "Complete all steps to claim the mission rewards!"
+        ]}
+        rewards="⚡ +30 to +40 Quest completion XP + Bonus Reflection XP!"
+      />
     </div>
   );
 }

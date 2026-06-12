@@ -5,9 +5,35 @@ import { QUIZ_QUESTIONS } from '@/data/curriculum';
 import { Button } from '@/components/ui/Button';
 import { XPToast } from '@/components/ui/GameUI';
 import { useAuth, useCurrentProfile } from '@/contexts/AuthContext';
-import { Timer, Zap, Trophy, RotateCcw, ArrowLeft } from 'lucide-react';
+import { Timer, Zap, Trophy, RotateCcw, ArrowLeft, HelpCircle } from 'lucide-react';
+import { ActivityHelpModal } from '@/components/ui/ActivityHelpModal';
+import { useFeedbackEngine } from '@/contexts/FeedbackEngineContext';
+import { useLearningCompanion } from '@/contexts/LearningCompanionContext';
 
 type Mode = 'lobby' | 'time-attack' | 'casual' | 'results';
+
+const QUIZ_HINTS: Record<number, string> = {
+  1: "Think about things that are made by humans (artificial) and how we measure smartness (intelligence)!",
+  2: "Which of these systems learns what you like to watch to suggest similar videos?",
+  3: "Machines learn patterns. What do you need to show them so they recognize something?",
+  4: "Think of voice assistants that answer questions when you talk to them!",
+  5: "Alexa listens to your voice. What kind of technology translates your speech?",
+  6: "AI cameras can look at video frames to search for shapes or colors that match your pet!",
+  7: "If a computer program makes a mistake, showing it more correct examples helps it learn!",
+  8: "AI can calculate, play games, and drive, but does it have real human feelings?",
+  9: "AI can look at history and predict future counts, like how many people will eat lunch!",
+  10: "This technology scans facial features to lock or unlock your phone screen!",
+  101: "This is a subset of AI where computers look at data to find patterns and learn!",
+  102: "AI learns from historical examples. If the examples are biased, the AI becomes biased too!",
+  103: "This combines 'deep learning' and 'fake' to describe generated face swaps or speech!",
+  104: "It starts with P! You type this to instruct ChatGPT or Midjourney.",
+  105: "This is the initial collection of examples that the machine learning algorithm learns from!",
+  106: "It stands for Open Artificial Intelligence!",
+  107: "This happens when training datasets are unbalanced or represent unfair stereotypes.",
+  108: "This is the art of writing clear, optimized instructions to get the best responses from LLMs.",
+  109: "This is a type of AI designed to 'generate' new creative things (text, code, images).",
+  110: "If historic hiring data favored one group, the AI will learn that pattern and replicate it."
+};
 
 export default function QuizArena() {
   const navigate = useNavigate();
@@ -18,7 +44,12 @@ export default function QuizArena() {
   const { profile, guestProfile, isGuest, updateProfile } = useAuth();
   const currentProfile = useCurrentProfile();
   const userZone = currentProfile?.zone || 'junior';
+  const { showSuccessCelebration, showPartialSuccessCelebration, showFailureMotivation } = useFeedbackEngine();
+  const { speak } = useLearningCompanion();
+
   const [mode, setMode] = useState<Mode>('lobby');
+  const [secondsOnQuestion, setSecondsOnQuestion] = useState(0);
+  const [hintShown, setHintShown] = useState(false);
   const [currentQ, setCurrentQ] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [score, setScore] = useState(0);
@@ -26,6 +57,7 @@ export default function QuizArena() {
   const [timeLeft, setTimeLeft] = useState(15);
   const [showXP, setShowXP] = useState(false);
   const [answers, setAnswers] = useState<(number | null)[]>([]);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   // Filter questions by student's age zone and topic
   let questions = QUIZ_QUESTIONS.filter(q => q.zone === userZone || q.zone === 'both');
@@ -55,6 +87,52 @@ export default function QuizArena() {
     }
   }, [mode, currentQ, topic, questions.length]);
 
+  // Greet user on quiz start
+  useEffect(() => {
+    if (mode === 'casual' || mode === 'time-attack') {
+      speak("Good luck! Read each question carefully and trust your AI knowledge! 🎯", {
+        mood: 'excited',
+        pose: 'dance',
+        outfit: 'default',
+        priority: 'high',
+      });
+    }
+  }, [mode]);
+
+  // Reset stuck timer on question change
+  useEffect(() => {
+    setSecondsOnQuestion(0);
+    setHintShown(false);
+  }, [currentQ, mode]);
+
+  // Quiz Coach Stuck Timer checking
+  useEffect(() => {
+    if (mode !== 'casual' && mode !== 'time-attack') return;
+    if (selected !== null || hintShown) return;
+
+    const interval = setInterval(() => {
+      setSecondsOnQuestion(prev => {
+        const triggerTime = mode === 'time-attack' ? 8 : 15;
+        if (prev >= triggerTime - 1) {
+          setHintShown(true);
+          const activeQ = questions[currentQ];
+          const questionHint = activeQ ? (QUIZ_HINTS[activeQ.id] || "Read the options carefully and think about how AI behaves!") : "Think about AI patterns!";
+          speak(questionHint, {
+            mood: 'encouraging',
+            pose: 'wave',
+            outfit: 'default',
+            priority: 'medium',
+          });
+          clearInterval(interval);
+          return prev + 1;
+        }
+        return prev + 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [mode, currentQ, selected, hintShown, questions, speak]);
+
   const handleAnswer = (idx: number) => {
     if (selected !== null) return;
     setSelected(idx);
@@ -81,6 +159,29 @@ export default function QuizArena() {
         // Update profile XP!
         const currentProfileXP = isGuest ? (guestProfile?.xp ?? 0) : (profile?.xp ?? 0);
         updateProfile({ xp: currentProfileXP + currentEarned });
+
+        // Trigger global feedback overlay
+        const finalScore = score + (isCorrect ? 1 : 0);
+        const pctScore = (finalScore / questions.length) * 100;
+        if (pctScore >= 80) {
+          showSuccessCelebration({
+            title: pctScore === 100 ? "PERFECT SCORE!" : "GREAT JOB!",
+            subtitle: `You scored ${finalScore}/${questions.length} on the quiz!`,
+            xpGained: currentEarned,
+          });
+        } else if (pctScore >= 40) {
+          showPartialSuccessCelebration({
+            title: "GOOD EFFORT!",
+            subtitle: `You scored ${finalScore}/${questions.length} on the quiz. Almost there!`,
+            xpGained: currentEarned,
+          });
+        } else {
+          showFailureMotivation({
+            title: "KEEP TRYING!",
+            subtitle: `You scored ${finalScore}/${questions.length} on the quiz. I believe in you!`,
+            xpGained: currentEarned,
+          });
+        }
       }
       else { setCurrentQ(i => i + 1); setSelected(null); setTimeLeft(15); }
     }, 1400);
@@ -88,6 +189,29 @@ export default function QuizArena() {
 
   const restart = () => {
     setMode('lobby'); setCurrentQ(0); setSelected(null); setScore(0); setXPEarned(0); setTimeLeft(15); setAnswers([]);
+  };
+
+  const handleDevSkip = () => {
+    const earned = 100;
+    setScore(questions.length);
+    setXPEarned(earned);
+    setAnswers(questions.map(q => q.correct));
+    setMode('results');
+    setShowXP(true);
+    localStorage.setItem('play_completed_quiz', 'true');
+    localStorage.setItem('play_progress_quiz', '100');
+    if (topic) {
+      localStorage.setItem(`play_completed_quiz_${topic}`, 'true');
+      localStorage.setItem(`play_progress_quiz_${topic}`, '100');
+    }
+    const currentProfileXP = isGuest ? (guestProfile?.xp ?? 0) : (profile?.xp ?? 0);
+    updateProfile({ xp: currentProfileXP + earned });
+
+    showSuccessCelebration({
+      title: "PERFECT SCORE!",
+      subtitle: `You skipped with a mock score of ${questions.length}/${questions.length}!`,
+      xpGained: earned,
+    });
   };
 
   const q = questions[currentQ];
@@ -99,7 +223,16 @@ export default function QuizArena() {
         <button onClick={() => navigate('/play')} className="flex items-center gap-2 text-white/60 hover:text-white mb-3 font-body text-sm">
           <ArrowLeft className="w-4 h-4" /> Back to Play
         </button>
-        <h1 className="text-white font-game text-xl flex items-center gap-2">🎯 Quiz Arena</h1>
+        <h1 className="text-white font-game text-xl flex items-center gap-2">
+          🎯 Quiz Arena
+          <button
+            onClick={() => setHelpOpen(true)}
+            className="p-1 hover:text-purple-400 transition-colors cursor-pointer text-white/50"
+            title="Show how to play"
+          >
+            <HelpCircle className="w-4 h-4" />
+          </button>
+        </h1>
         <p className="text-white/60 font-body text-sm mt-1">
           {userZone === 'junior' ? '🚀 Junior AI Quiz — everyday AI adventures!' : '🧠 Innovator AI Quiz — advanced AI concepts!'}
         </p>
@@ -131,6 +264,14 @@ export default function QuizArena() {
             </div>
           </div>
         </motion.div>
+        <div className="flex justify-center pt-4">
+          <button
+            onClick={handleDevSkip}
+            className="text-white/30 hover:text-white/60 font-pixel text-[6px] tracking-wider uppercase border border-white/10 px-2.5 py-1 cursor-pointer transition-colors"
+          >
+            ⚡ Dev Skip Quiz
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -185,7 +326,10 @@ export default function QuizArena() {
       {/* Quiz Header */}
       <div className={`p-4 border-b-4 border-black ${mode === 'time-attack' ? 'bg-pixel-red/30' : 'bg-success/20'}`}>
         <div className="flex items-center justify-between">
-          <span className="text-white font-body text-sm">{currentQ + 1}/{questions.length}</span>
+          <button onClick={() => setHelpOpen(true)} className="p-1 text-white/50 hover:text-white mr-2" title="Show instructions">
+            <HelpCircle className="w-4 h-4" />
+          </button>
+          <span className="text-white font-body text-sm mr-auto">{currentQ + 1}/{questions.length}</span>
           <span className="text-white font-game text-sm">{mode === 'time-attack' ? '⚡ Time Attack' : '😊 Casual'}</span>
           <span className="text-warning font-pixel text-[10px]">+{xpEarned} XP</span>
         </div>
@@ -255,6 +399,21 @@ export default function QuizArena() {
           </motion.div>
         )}
       </div>
+
+      <ActivityHelpModal
+        isOpen={helpOpen}
+        onClose={() => setHelpOpen(false)}
+        title="Quiz Arena"
+        type="play"
+        description="Test your general AI knowledge and vocabulary metrics by answering multiple choice questions!"
+        steps={[
+          "Select either Time Attack (15 seconds per question + speed bonus XP) or Casual Mode (untimed).",
+          "Read each AI scenario/question carefully.",
+          "Select the correct option from A, B, C, or D.",
+          "Complete all questions in the set to save your score and claim your total XP!"
+        ]}
+        rewards="⚡ Variable XP based on correct answers and speed bonuses"
+      />
     </div>
   );
 }

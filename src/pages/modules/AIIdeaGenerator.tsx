@@ -6,6 +6,7 @@ import { XPToast } from '@/components/ui/GameUI';
 import { generateAIIdeas } from '@/lib/ai';
 import { useCurrentProfile } from '@/contexts/AuthContext';
 import { Zap, Lightbulb, ChevronRight, ArrowLeft } from 'lucide-react';
+import { useFeedbackEngine } from '@/contexts/FeedbackEngineContext';
 
 const JUNIOR_QUICK_PROBLEMS = [
   'My dog always runs away and gets lost',
@@ -40,6 +41,7 @@ export default function AIIdeaGenerator() {
 
   const currentProfile = useCurrentProfile();
   const userZone = currentProfile?.zone || 'junior';
+  const { showModuleCompletionCelebration } = useFeedbackEngine();
 
   const QUICK_PROBLEMS = userZone === 'junior' ? JUNIOR_QUICK_PROBLEMS : INNOVATOR_QUICK_PROBLEMS;
   const CATEGORIES = userZone === 'junior' ? JUNIOR_CATEGORIES : INNOVATOR_CATEGORIES;
@@ -77,6 +79,11 @@ export default function AIIdeaGenerator() {
     setIdeas(result);
     setLoading(false);
     setShowXP(true);
+    showModuleCompletionCelebration({
+      title: "IDEAS GENERATED!",
+      subtitle: "You successfully generated 3 AI-powered ideas for your problem!",
+      xpGained: 40,
+    });
   };
 
   const handleSave = (i: number) => {
@@ -84,6 +91,21 @@ export default function AIIdeaGenerator() {
     saved.push({ ...ideas[i], problem, category, saved_at: new Date().toISOString() });
     localStorage.setItem('saved_ideas', JSON.stringify(saved));
     setSavedIdeas(prev => new Set([...prev, i]));
+  };
+
+  const handleDevSkip = () => {
+    setProblem('Always arriving late');
+    setIdeas([
+      { name: "Smart Traffic Manager", description: "Dev Skip used! Bypassed idea generation steps with perfect templates." },
+      { name: "Predictive Canteen Planner", description: "Dev Skip used! Bypassed idea generation steps with perfect templates." },
+      { name: "Eco Leaf Spotter App", description: "Dev Skip used! Bypassed idea generation steps with perfect templates." }
+    ]);
+    setShowXP(true);
+    showModuleCompletionCelebration({
+      title: "IDEAS GENERATED!",
+      subtitle: "Dev Skip used! You successfully generated 3 AI-powered ideas for your problem!",
+      xpGained: 40,
+    });
   };
 
   const IDEA_COLORS = [
@@ -110,7 +132,17 @@ export default function AIIdeaGenerator() {
       <div className="px-4 pt-4 space-y-5">
         {/* Category */}
         <div>
-          <label className="text-white/70 font-body text-sm mb-2 block">Category:</label>
+          <div className="flex justify-between items-center mb-2">
+            <label className="text-white/70 font-body text-sm block">Category:</label>
+            {ideas.length === 0 && (
+              <button
+                onClick={handleDevSkip}
+                className="text-white/30 hover:text-white/60 font-pixel text-[6px] tracking-wider uppercase border border-white/10 px-2 py-0.5 cursor-pointer transition-colors"
+              >
+                ⚡ Dev Skip Ideas
+              </button>
+            )}
+          </div>
           <div className="flex gap-2 flex-wrap">
             {CATEGORIES.map(c => (
               <button

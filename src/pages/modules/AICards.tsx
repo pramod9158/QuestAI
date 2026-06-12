@@ -3,8 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { AI_CARDS_DATA } from '@/data/curriculum';
 import { SpeakButton } from '@/components/ui/GameUI';
-import { Lock, Star, ArrowLeft } from 'lucide-react';
+import { Lock, Star, ArrowLeft, HelpCircle } from 'lucide-react';
 import { useThemeStyles } from '@/lib/useThemeStyles';
+import { ActivityHelpModal } from '@/components/ui/ActivityHelpModal';
 
 const RARITY_COLORS = {
   common: { border: 'border-gray-400', badge: 'bg-gray-500', label: 'COMMON' },
@@ -24,6 +25,7 @@ export default function AICards() {
   const unlockedIds: number[] = JSON.parse(localStorage.getItem('unlocked_cards') || '[1, 2, 3]');
   const [flipped, setFlipped] = useState<number | null>(null);
   const [viewCard, setViewCard] = useState<typeof AI_CARDS_DATA[0] | null>(null);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   useEffect(() => {
     localStorage.setItem('play_completed_cards', 'true');
@@ -46,6 +48,13 @@ export default function AICards() {
         </button>
         <h1 className={D ? "text-black font-game text-xl flex items-center gap-2 font-extrabold" : "text-white font-game text-xl flex items-center gap-2"}>
           🃏 AI Cards
+          <button
+            onClick={() => setHelpOpen(true)}
+            className="p-1 hover:text-purple-400 transition-colors cursor-pointer text-gray-400"
+            title="Show how to collect cards"
+          >
+            <HelpCircle className="w-4.5 h-4.5" />
+          </button>
         </h1>
         <p className={D ? "text-gray-500 font-body text-sm mt-1 font-semibold" : "text-white/60 font-body text-sm mt-1"}>
           Collect all 7 AI hero cards!
@@ -62,6 +71,12 @@ export default function AICards() {
           <span className={D ? "text-[#5FCC5F] font-body text-xs font-bold" : "text-warning font-pixel text-[10px]"}>
             {AI_CARDS_DATA.length}/{AI_CARDS_DATA.length} COLLECTED
           </span>
+          <button
+            onClick={() => navigate('/play')}
+            className="text-white/30 hover:text-white/60 font-pixel text-[6px] tracking-wider uppercase border border-white/10 px-2 py-0.5 ml-auto cursor-pointer transition-colors"
+          >
+            ⚡ Skip
+          </button>
         </div>
       </div>
 
@@ -230,6 +245,21 @@ export default function AICards() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <ActivityHelpModal
+        isOpen={helpOpen}
+        onClose={() => setHelpOpen(false)}
+        title="AI Cards"
+        type="play"
+        description="Unlock and collect all 7 AI hero cards detailing key technologies like rovers, smart diagnostic grids, and translators."
+        steps={[
+          "Browse through the list of cards in your album.",
+          "Check which cards are unlocked (indicated by bright colors) and locked (indicated by a lock pad).",
+          "Click on any unlocked card to view its AI superpower details, the problem solved, and a fun fact.",
+          "Unlock more cards by completing curriculum lessons and earning XP!"
+        ]}
+        rewards="🃏 7 collectible AI hero cards"
+      />
     </div>
   );
 }

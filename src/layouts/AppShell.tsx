@@ -11,6 +11,8 @@ import { Map } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { DuoConfetti } from '@/components/ui/DuoConfetti';
+import { Mascot } from '@/components/ui/Mascot';
+import { useLearningCompanion } from '@/contexts/LearningCompanionContext';
 
 // ── Nav items with both icon and emoji labels ─────────────────────────────────
 const NAV_ITEMS = [
@@ -27,6 +29,15 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { isDuolingo } = useTheme();
+  const { triggerTravel } = useLearningCompanion();
+
+  const handleNav = (targetPath: string) => {
+    if (location.pathname === targetPath) return;
+    const type = ['/play', '/worlds', '/prompts'].some(p => targetPath.startsWith(p)) ? 'portal' : 'rocket';
+    triggerTravel(type, () => {
+      navigate(targetPath);
+    });
+  };
 
   const xp = profile?.xp ?? 0;
   const level = getLevel(xp);
@@ -145,10 +156,12 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
                   </>
                 ) : (
                   <>
-                    <span className="text-xl">🤖</span>
-                    <span className="font-pixel text-[8px] text-white tracking-wider grad-text-primary">
-                      AI EXPLORER
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <Mascot type="header" size={24} />
+                      <span className="font-pixel text-[8px] text-white tracking-wider grad-text-primary">
+                        AI EXPLORER
+                      </span>
+                    </div>
                   </>
                 )}
               </div>
@@ -159,7 +172,7 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
                 {/* World Map shortcut */}
                 <motion.button
                   whileTap={{ scale: 0.9 }}
-                  onClick={() => navigate('/worlds')}
+                  onClick={() => handleNav('/worlds')}
                   className="w-8 h-8 flex items-center justify-center cursor-pointer"
                   style={isDuolingo ? {
                     background: '#F0FAF0',
@@ -187,7 +200,7 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
                       animate={{ rotate: [-3, 3, -3], y: [0, -2, 0] }}
                       transition={{ repeat: Infinity, duration: 1.8 }}
                       whileTap={{ scale: 0.9 }}
-                      onClick={() => navigate('/')}
+                      onClick={() => handleNav('/')}
                       className="relative cursor-pointer text-lg"
                       title={`${count} treasure chest${count > 1 ? 's' : ''} waiting!`}
                     >
@@ -297,7 +310,7 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
             initial={{ y: 50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.3 }}
-            onClick={() => navigate(nextAction.path)}
+            onClick={() => handleNav(nextAction.path)}
             className={`cursor-pointer flex items-center justify-between gap-3 px-4 py-2.5 hover:brightness-[0.97] active:scale-[0.99] transition-all select-none ${isDuolingo ? 'duo-next-action' : ''}`}
             style={isDuolingo ? {} : {
               background: 'linear-gradient(90deg, #1E1B4B 0%, #16103A 100%)',
@@ -387,7 +400,15 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
               {NAV_ITEMS.map(({ path, label, icon: Icon, emoji }) => {
                 const isActive = path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
                 return (
-                  <NavLink key={path} to={path} className={`nav-tab ${isActive ? 'active' : ''}`}>
+                  <NavLink
+                    key={path}
+                    to={path}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleNav(path);
+                    }}
+                    className={`nav-tab ${isActive ? 'active' : ''}`}
+                  >
                     <motion.div
                       animate={isActive ? { scale: [1, 1.15, 1] } : { scale: 1 }}
                       transition={{ duration: 0.3 }}

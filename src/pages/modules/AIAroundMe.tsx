@@ -4,7 +4,9 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { XPToast } from '@/components/ui/GameUI';
 import { SpeakButton } from '@/components/ui/GameUI';
-import { Zap, ArrowLeft } from 'lucide-react';
+import { Zap, ArrowLeft, HelpCircle } from 'lucide-react';
+import { ActivityHelpModal } from '@/components/ui/ActivityHelpModal';
+import { useFeedbackEngine } from '@/contexts/FeedbackEngineContext';
 
 const SWIPE_CARDS = [
   { id: 1, emoji: '📱', title: 'Your Phone\'s Face Unlock', question: 'Is this AI?', answer: true, explanation: 'YES! Your phone uses AI-powered facial recognition — scanning 30,000 invisible dots on your face every time!', xp: 15 },
@@ -22,6 +24,7 @@ export default function AIAroundMe() {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const type = searchParams.get('type');
+  const { showSuccessCelebration, showFailureMotivation, showModuleCompletionCelebration } = useFeedbackEngine();
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answered, setAnswered] = useState<boolean | null>(null);
@@ -30,6 +33,7 @@ export default function AIAroundMe() {
   const [showXP, setShowXP] = useState(false);
   const [xpAmount, setXPAmount] = useState(0);
   const [done, setDone] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   React.useEffect(() => {
     const progKey = type ? `play_progress_around-me_${type}` : 'play_progress_around-me';
@@ -57,14 +61,44 @@ export default function AIAroundMe() {
       setScore(s => s + 1);
       setTotalXP(xp => xp + card.xp);
       setXPAmount(card.xp);
-      setShowXP(true);
+      showSuccessCelebration({
+        title: "CORRECT!",
+        subtitle: card.explanation,
+        xpGained: card.xp,
+      });
+    } else {
+      showFailureMotivation({
+        title: "NOT QUITE!",
+        subtitle: card.explanation,
+      });
     }
   };
 
   const handleNext = () => {
     setAnswered(null);
-    if (currentIndex + 1 >= SWIPE_CARDS.length) setDone(true);
-    else setCurrentIndex(i => i + 1);
+    if (currentIndex + 1 >= SWIPE_CARDS.length) {
+      setDone(true);
+      showModuleCompletionCelebration({
+        title: "GAME COMPLETED",
+        subtitle: `You classified all smart devices! Score: ${score}/${SWIPE_CARDS.length}`,
+        xpGained: totalXP,
+      });
+    } else {
+      setCurrentIndex(i => i + 1);
+    }
+  };
+
+  const handleDevSkip = () => {
+    const sumXP = SWIPE_CARDS.reduce((sum, c) => sum + c.xp, 0);
+    setScore(SWIPE_CARDS.length);
+    setTotalXP(sumXP);
+    setDone(true);
+
+    showModuleCompletionCelebration({
+      title: "GAME COMPLETED",
+      subtitle: `You skipped with a mock score of ${SWIPE_CARDS.length}/${SWIPE_CARDS.length}!`,
+      xpGained: sumXP,
+    });
   };
 
   if (done) {
@@ -99,7 +133,16 @@ export default function AIAroundMe() {
         <button onClick={() => navigate('/play')} className="flex items-center gap-2 text-white/60 hover:text-white mb-3 font-body text-sm">
           <ArrowLeft className="w-4 h-4" /> Back to Play
         </button>
-        <h1 className="text-white font-game text-xl flex items-center gap-2">🌍 AI Around Me</h1>
+        <h1 className="text-white font-game text-xl flex items-center gap-2">
+          🌍 AI Around Me
+          <button
+            onClick={() => setHelpOpen(true)}
+            className="p-1 hover:text-purple-400 transition-colors cursor-pointer text-white/50"
+            title="Show how to play"
+          >
+            <HelpCircle className="w-4 h-4" />
+          </button>
+        </h1>
         <p className="text-white/60 font-body text-sm mt-1">Swipe cards — Is this AI or not?</p>
         <div className="flex items-center gap-3 mt-3">
           <div className="flex gap-1">
@@ -108,6 +151,12 @@ export default function AIAroundMe() {
             ))}
           </div>
           <span className="text-white/50 font-body text-xs">{currentIndex + 1}/{SWIPE_CARDS.length}</span>
+          <button
+            onClick={handleDevSkip}
+            className="text-white/30 hover:text-white/60 font-pixel text-[6px] tracking-wider uppercase border border-white/10 px-2 py-0.5 cursor-pointer transition-colors"
+          >
+            ⚡ Skip
+          </button>
           <div className="ml-auto flex items-center gap-1">
             <Zap className="w-4 h-4 text-warning" />
             <span className="text-warning font-pixel text-[10px]">{totalXP} XP</span>
@@ -178,6 +227,21 @@ export default function AIAroundMe() {
           </Button>
         )}
       </div>
+
+      <ActivityHelpModal
+        isOpen={helpOpen}
+        onClose={() => setHelpOpen(false)}
+        title="AI Around Me"
+        type="play"
+        description="Spot and identify AI-powered products, sensors, and recommendations in your daily life surroundings."
+        steps={[
+          "Read the name and scenario displayed on each card.",
+          "Decide if it represents an AI system (learns, adapts, has smart decision sensors) or not (follows strict manual physics/rules).",
+          "Click 'YES, AI!' or 'NOT AI' to test your classification accuracy.",
+          "Review Sparky's feedback to understand the smart sensors behind each device!"
+        ]}
+        rewards="⚡ +10 to +20 XP per correct classification"
+      />
     </div>
   );
 }

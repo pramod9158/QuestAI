@@ -6,7 +6,9 @@ import { XPToast } from '@/components/ui/GameUI';
 import { generateBrainstormIdea } from '@/lib/ai';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { Lightbulb, ChevronRight, Save, Loader2, ArrowLeft } from 'lucide-react';
+import { Lightbulb, ChevronRight, Save, Loader2, ArrowLeft, HelpCircle } from 'lucide-react';
+import { ActivityHelpModal } from '@/components/ui/ActivityHelpModal';
+import { useFeedbackEngine } from '@/contexts/FeedbackEngineContext';
 
 const CATEGORIES = [
   { id: 'school', label: 'School', emoji: '🏫', color: 'bg-blue-game' },
@@ -28,6 +30,7 @@ export default function BrainstormPlayground() {
   const mode = searchParams.get('mode');
 
   const { user } = useAuth();
+  const { showSuccessCelebration, showModuleCompletionCelebration } = useFeedbackEngine();
   const [step, setStep] = useState(0);
   const [category, setCategory] = useState('');
   const [problem, setProblem] = useState('');
@@ -36,6 +39,7 @@ export default function BrainstormPlayground() {
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
   const [showXP, setShowXP] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   useEffect(() => {
     const progKey = mode ? `play_progress_brainstorm_${mode}` : 'play_progress_brainstorm';
@@ -59,7 +63,12 @@ export default function BrainstormPlayground() {
     setResult(idea);
     setLoading(false);
     setStep(3);
-    setShowXP(true);
+    
+    showModuleCompletionCelebration({
+      title: "INVENTION CREATED!",
+      subtitle: `Your AI solution "${idea.name}" is generated!`,
+      xpGained: 60,
+    });
   };
 
   const handleSave = async () => {
@@ -80,6 +89,29 @@ export default function BrainstormPlayground() {
       localStorage.setItem('guest_inventions', JSON.stringify(inventions));
     }
     setSaved(true);
+    showSuccessCelebration({
+      title: "SAVED TO HALL!",
+      subtitle: "Your invention is published to the Inventor Hall!",
+    });
+  };
+
+  const handleDevSkip = () => {
+    setCategory('school');
+    setProblem('Always arriving late');
+    setAudience('Students');
+    const mockResult = {
+      name: "Smart Schedule Bot",
+      description: "Dev Skip used! Bypassed brainstorm steps with perfect diagnostic blueprints.",
+      innovation_score: 95
+    };
+    setResult(mockResult);
+    setStep(3);
+    
+    showModuleCompletionCelebration({
+      title: "INVENTION CREATED!",
+      subtitle: `Your AI solution "${mockResult.name}" is generated!`,
+      xpGained: 60,
+    });
   };
 
   return (
@@ -91,7 +123,16 @@ export default function BrainstormPlayground() {
         <button onClick={() => navigate('/play')} className="flex items-center gap-2 text-white/60 hover:text-white mb-3 font-body text-sm">
           <ArrowLeft className="w-4 h-4" /> Back to Play
         </button>
-        <h1 className="text-white font-game text-xl flex items-center gap-2">💡 Brainstorm Lab</h1>
+        <h1 className="text-white font-game text-xl flex items-center gap-2">
+          💡 Brainstorm Lab
+          <button
+            onClick={() => setHelpOpen(true)}
+            className="p-1 hover:text-purple-400 transition-colors cursor-pointer text-white/50"
+            title="Show how to brainstorm"
+          >
+            <HelpCircle className="w-4 h-4" />
+          </button>
+        </h1>
         <p className="text-white/60 font-body text-sm mt-1">Turn your ideas into AI-powered inventions!</p>
         {/* Steps indicator */}
         <div className="flex gap-2 mt-4">
@@ -102,6 +143,17 @@ export default function BrainstormPlayground() {
               {i + 1}. {s}
             </div>
           ))}
+        </div>
+        <div className="flex justify-between items-center mt-3">
+          <div className="text-white/40 font-pixel text-[5px]">STAGE PROGRESSION</div>
+          {step < 3 && (
+            <button
+              onClick={handleDevSkip}
+              className="text-white/30 hover:text-white/60 font-pixel text-[6px] tracking-wider uppercase border border-white/10 px-2 py-0.5 cursor-pointer transition-colors"
+            >
+              ⚡ Dev Skip Brainstorm
+            </button>
+          )}
         </div>
       </div>
 
@@ -262,6 +314,22 @@ export default function BrainstormPlayground() {
           )}
         </AnimatePresence>
       </div>
+
+      <ActivityHelpModal
+        isOpen={helpOpen}
+        onClose={() => setHelpOpen(false)}
+        title="Brainstorm Lab"
+        type="play"
+        description="Turn your ideas into AI-powered inventions! Pick a topic category, detail a real-world problem, select your target audience, and let AI outline a solution."
+        steps={[
+          "Select a domain category (e.g. School, Health, Environment).",
+          "Enter a clear description of a real problem you observed, or tap a quick prompt chip example.",
+          "Identify the target audience who faces this issue.",
+          "Click 'Generate AI Idea!' to view a custom solution description and innovation score.",
+          "Save the invention to display it in your Inventor Hall portfolio!"
+        ]}
+        rewards="⚡ +60 XP upon completed generation & save"
+      />
     </div>
   );
 }

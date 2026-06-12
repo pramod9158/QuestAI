@@ -22,6 +22,8 @@ import {
 } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useThemeStyles } from '@/lib/useThemeStyles';
+import { ActivityHelpModal } from '@/components/ui/ActivityHelpModal';
+import { useLearningCompanion } from '@/contexts/LearningCompanionContext';
 
 // ==========================================
 // DATA CONFIGURATION
@@ -153,12 +155,26 @@ export default function PromptEngineering() {
   const { isDuolingo } = useTheme();
   const D = isDuolingo;
   const ts = useThemeStyles();
+
+  const { speak, setOutfit } = useLearningCompanion();
+  
+  useEffect(() => {
+    setOutfit('prompt-master');
+    speak("Welcome to the Prompt Kingdom! I am Sparky, the Prompt Master. Let's write some magical AI spells! 🪄", {
+      mood: 'excited',
+      pose: 'dance',
+      outfit: 'prompt-master',
+      priority: 'high',
+    });
+    return () => setOutfit('default');
+  }, [setOutfit]);
   
   const [activeTab, setActiveTab] = useState<'lessons' | 'playground' | 'music'>('lessons');
   const completedIds = profile?.completed_lessons || [];
 
   // Custom profile override for testing/swapping modes easily
   const [activeZone, setActiveZone] = useState<'junior' | 'innovator'>('junior');
+  const [helpLesson, setHelpLesson] = useState<any>(null);
 
   // Filter curriculum to grab Phase 3 and Phase 8 modules for prompting
   const promptLessons = CURRICULUM.filter(l => 
@@ -554,13 +570,23 @@ Respond ONLY with a JSON object:
                       )}
                     </div>
 
-                    <div className="flex items-center gap-2">
+                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-2xl">{lesson.missionEmoji || lesson.emoji}</span>
                       <h3 
-                        className="font-game text-xs leading-snug uppercase tracking-wide"
+                        className="font-game text-xs leading-snug uppercase tracking-wide flex items-center gap-1.5"
                         style={{ color: D ? '#3C3C3C' : '#FFFFFF' }}
                       >
-                        {lesson.missionTitle || lesson.title}
+                        <span>{lesson.missionTitle || lesson.title}</span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setHelpLesson(lesson);
+                          }}
+                          className="p-1 hover:opacity-85 text-[#7C3AED] transition-opacity cursor-pointer"
+                          title="Show how to complete this lesson"
+                        >
+                          <HelpCircle className="w-3.5 h-3.5" />
+                        </button>
                       </h3>
                     </div>
                     <p 
@@ -1340,6 +1366,21 @@ Respond ONLY with a JSON object:
 
       {/* ─── MUSIC TAB ─── */}
       {activeTab === 'music' && <PromptsMusicStudio D={D} ts={ts} />}
+
+      <ActivityHelpModal
+        isOpen={!!helpLesson}
+        onClose={() => setHelpLesson(null)}
+        title={helpLesson?.missionTitle || helpLesson?.title || ''}
+        type="prompt"
+        description={helpLesson?.description || ''}
+        steps={[
+          "🎥 Watch: Play the video lesson and complete all interactive checkpoint questions.",
+          `🧪 AI Lab: Perform the hands-on lab task: "${helpLesson?.aiLab?.title || ''}" (${helpLesson?.aiLab?.description || ''}).`,
+          `🛠️ Create: Build and document your micro-project: "${helpLesson?.microProject?.title || ''}" (${helpLesson?.microProject?.description || ''}).`
+        ]}
+        deliverable={helpLesson?.microProject?.deliverable}
+        rewards={`⚡ +${helpLesson?.xpReward || 0} XP, 🪙 +${helpLesson?.coinsReward || 0} Coins`}
+      />
 
       {/* Gamification popup */}
       <CelebrationOverlay

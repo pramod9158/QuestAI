@@ -10,6 +10,9 @@ import { FileText, CheckCircle, XCircle, Zap, ArrowLeft, HelpCircle, Sparkles, U
 import { generateMissionSuggestions, evaluateMissionSubmission } from '@/lib/ai';
 import { getPlatformProgress } from '@/lib/gamification';
 import { useThemeStyles } from '@/lib/useThemeStyles';
+import { ActivityHelpModal } from '@/components/ui/ActivityHelpModal';
+import { useFeedbackEngine } from '@/contexts/FeedbackEngineContext';
+import { useLearningCompanion } from '@/contexts/LearningCompanionContext';
 
 interface Submission { 
   missionId: number; 
@@ -70,8 +73,22 @@ export default function WeeklyMissions() {
   const D = ts.duo;
   const { user, profile, guestProfile, isGuest, updateProfile } = useAuth();
   const currentProfile = useCurrentProfile();
+  const { showSuccessCelebration, showFailureMotivation, showMissionCompletionCelebration } = useFeedbackEngine();
   const userZone = currentProfile?.zone || 'junior';
   const navigate = useNavigate();
+
+  const { speak, setOutfit } = useLearningCompanion();
+  
+  useEffect(() => {
+    setOutfit('mission-guide');
+    speak("Missions help us explore AI in the real world! Pick a mission, complete the task, and submit it for epic badges! 🗺️", {
+      mood: 'excited',
+      pose: 'walk',
+      outfit: 'mission-guide',
+      priority: 'high',
+    });
+    return () => setOutfit('default');
+  }, [setOutfit]);
 
   const stats = getPlatformProgress(currentProfile);
   const completedMissionsCount = stats.completedMissions;
@@ -90,6 +107,7 @@ export default function WeeklyMissions() {
   });
 
   const [customMissions, setCustomMissions] = useState<any[]>([]);
+  const [helpMission, setHelpMission] = useState<any>(null);
 
   // Weekly missions data
   const zoneMissions = WEEKLY_MISSIONS_DATA.filter(m => m.zone === userZone || m.zone === 'both');
@@ -243,14 +261,34 @@ export default function WeeklyMissions() {
         localStorage.setItem(`mission_progress_${mission.id}`, '100');
         localStorage.removeItem(`mission_draft_${mission.id}`);
         setToastXP(earnedXp);
-      }
 
-      setEvaluationResult({
-        score: evalResult.score,
-        feedback: evalResult.feedback,
-        earnedXp
-      });
-      setShowGradeCard(true);
+        showMissionCompletionCelebration({
+          title: "MISSION ACCOMPLISHED",
+          subtitle: `You completed "${mission.title}" successfully!`,
+          xpGained: earnedXp,
+          onDone: () => {
+            setEvaluationResult({
+              score: evalResult.score,
+              feedback: evalResult.feedback,
+              earnedXp
+            });
+            setShowGradeCard(true);
+          }
+        });
+      } else {
+        showFailureMotivation({
+          title: "Let's try again!",
+          subtitle: "Check the guidelines and details to improve your observations.",
+          onDone: () => {
+            setEvaluationResult({
+              score: evalResult.score,
+              feedback: evalResult.feedback,
+              earnedXp: 0
+            });
+            setShowGradeCard(true);
+          }
+        });
+      }
     } catch (error) {
       console.error(error);
     } finally {
@@ -262,8 +300,11 @@ export default function WeeklyMissions() {
   const handleJoinTeam = (teamId: string) => {
     if (!joinedTeams.includes(teamId)) {
       setJoinedTeams(prev => [...prev, teamId]);
-      setToastXP(50);
-      setShowXP(true);
+      showSuccessCelebration({
+        title: "TEAM JOINED!",
+        subtitle: "Collaborative mission active!",
+        xpGained: 50,
+      });
     }
   };
 
@@ -271,8 +312,11 @@ export default function WeeklyMissions() {
   const handleContestSubmit = () => {
     if (!contestName.trim() || !contestDesc.trim()) return;
     setContestSubmitted(true);
-    setToastXP(100);
-    setShowXP(true);
+    showSuccessCelebration({
+      title: "ENTRY SUBMITTED!",
+      subtitle: "Good luck in the AI Creativity Contest!",
+      xpGained: 100,
+    });
   };
 
   // Like gallery item
@@ -506,9 +550,19 @@ export default function WeeklyMissions() {
                                 {/* Title */}
                                 <h3
                                   style={{ color: ts.textPrimary, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 800 : undefined, fontSize: D ? 13 : undefined }}
-                                  className={D ? '' : 'font-game text-xs text-white leading-snug uppercase tracking-wide'}
+                                  className={D ? '' : 'font-game text-xs text-white leading-snug uppercase tracking-wide flex items-center gap-1.5 flex-wrap'}
                                 >
-                                  {m.title}
+                                  <span>{m.title}</span>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setHelpMission(m);
+                                    }}
+                                    className="p-1 hover:opacity-85 text-[#B366FF] transition-opacity cursor-pointer"
+                                    title="Show instructions"
+                                  >
+                                    <HelpCircle className="w-3.5 h-3.5" />
+                                  </button>
                                 </h3>
                               </div>
                               {/* Italic description — like Play's mod.desc */}
@@ -946,16 +1000,73 @@ export default function WeeklyMissions() {
                   )}
 
 
-                  <div className="flex gap-2">
-                    <Button variant="ghost" size="sm" onClick={() => setSelectedMission(null)}>Cancel</Button>
-                    <Button
-                      variant="success"
-                      fullWidth
-                      disabled={!isValid}
-                      onClick={handleSubmit}
+                  <div className="flex flex-col gap-2">
+                    <div className="flex gap-2">
+                      <Button variant="ghost" size="sm" onClick={() => setSelectedMission(null)}>Cancel</Button>
+                      <Button
+                        variant="success"
+                        fullWidth
+                        disabled={!isValid}
+                        onClick={handleSubmit}
+                      >
+                        Submit Observations 🚀
+                      </Button>
+                    </div>
+                    <button
+                      onClick={async () => {
+                        const earnedXp = mission.xp_reward;
+                        const submission: Submission = {
+                          missionId: mission.id,
+                          text: text.trim() || "Dev Skip Submission",
+                          status: 'approved',
+                          xp: earnedXp,
+                          submittedAt: new Date().toISOString(),
+                          score: 100,
+                          feedback: "Dev Skip used!"
+                        };
+
+                        if (user) {
+                          await supabase.from('mission_submissions').insert({
+                            user_id: user.id,
+                            mission_id: mission.id,
+                            text_observation: text.trim() || "Dev Skip Submission",
+                            status: 'approved',
+                            earned_xp: earnedXp,
+                          });
+                          await updateProfile({
+                            xp: (profile?.xp ?? 0) + earnedXp
+                          });
+                        } else if (isGuest) {
+                          await updateProfile({
+                            xp: (guestProfile?.xp ?? 0) + earnedXp
+                          });
+                        }
+
+                        const newSubs = [...submissions, submission];
+                        setSubmissions(newSubs);
+                        localStorage.setItem('mission_submissions', JSON.stringify(newSubs));
+                        localStorage.setItem(`mission_progress_${mission.id}`, '100');
+                        localStorage.removeItem(`mission_draft_${mission.id}`);
+                        setToastXP(earnedXp);
+
+                        showMissionCompletionCelebration({
+                          title: "MISSION ACCOMPLISHED",
+                          subtitle: `You completed "${mission.title}" successfully!`,
+                          xpGained: earnedXp,
+                          onDone: () => {
+                            setEvaluationResult({
+                              score: 100,
+                              feedback: "Dev Skip used!",
+                              earnedXp
+                            });
+                            setShowGradeCard(true);
+                          }
+                        });
+                      }}
+                      className="w-full text-white/30 hover:text-white/60 font-pixel text-[6px] tracking-wider uppercase border border-white/10 py-1.5 cursor-pointer transition-colors"
                     >
-                      Submit Observations 🚀
-                    </Button>
+                      ⚡ Dev Skip Mission
+                    </button>
                   </div>
                 </div>
               )}
@@ -963,6 +1074,18 @@ export default function WeeklyMissions() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <ActivityHelpModal
+        isOpen={!!helpMission}
+        onClose={() => setHelpMission(null)}
+        title={helpMission?.title || ''}
+        type="mission"
+        description={helpMission?.description || ''}
+        goal={helpMission ? (MISSION_HELPERS[helpMission.id]?.goal || 'Complete the weekly solo mission!') : ''}
+        examples={helpMission ? MISSION_HELPERS[helpMission.id]?.examples : ''}
+        deliverable={helpMission ? MISSION_HELPERS[helpMission.id]?.validationDesc : ''}
+        rewards={helpMission ? `⚡ +${helpMission.xp_reward} XP` : ''}
+      />
     </div>
   );
 }

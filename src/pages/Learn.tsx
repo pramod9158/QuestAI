@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CURRICULUM, PHASES, type Lesson } from '@/data/curriculum';
-import { Lock, Play, CheckCircle, Zap, Calendar, Trophy, Flame, Map, LayoutGrid, AlertCircle, Sparkles } from 'lucide-react';
+import { Lock, Play, CheckCircle, Zap, Calendar, Trophy, Flame, Map, LayoutGrid, AlertCircle, Sparkles, HelpCircle } from 'lucide-react';
 import { getPlatformProgress, getLevel } from '@/lib/gamification';
 import { useCurrentProfile } from '@/contexts/AuthContext';
 import { AICompanion } from '@/components/ui/AICompanion';
 import { useThemeStyles } from '@/lib/useThemeStyles';
+import { ActivityHelpModal } from '@/components/ui/ActivityHelpModal';
 
 export default function Learn() {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ export default function Learn() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [lockedTarget, setLockedTarget] = useState<Lesson | null>(null);
   const [lockedActive, setLockedActive] = useState<Lesson | null>(null);
+  const [helpLesson, setHelpLesson] = useState<Lesson | null>(null);
 
   useEffect(() => {
     const isLocked = searchParams.get('locked') === 'true';
@@ -372,13 +374,23 @@ export default function Learn() {
 
                             <div className="flex items-start justify-between gap-1 mb-1">
                               <div>
-                                <div className="flex items-center gap-1">
+                                <div className="flex items-center gap-1 flex-wrap">
                                   <span className="text-base">{lesson.missionEmoji || lesson.emoji}</span>
                                   <h3 style={{ color: ts.textPrimary, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 800 : undefined, fontSize: D ? 13 : undefined }}
                                       className={D ? '' : 'font-game text-xs text-white leading-snug uppercase tracking-wide'}
                                   >
                                     {lesson.missionTitle || lesson.title}
                                   </h3>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setHelpLesson(lesson);
+                                    }}
+                                    className="p-1 hover:opacity-80 text-[#8B5CF6] transition-opacity cursor-pointer ml-1"
+                                    title="Show how to complete this lesson"
+                                  >
+                                    <HelpCircle className="w-3.5 h-3.5" />
+                                  </button>
                                 </div>
                                 <p style={D ? {
                                   color: '#8B5CF6', fontFamily: '"Nunito", sans-serif',
@@ -535,6 +547,21 @@ export default function Learn() {
           </div>
         )}
       </AnimatePresence>
+
+      <ActivityHelpModal
+        isOpen={!!helpLesson}
+        onClose={() => setHelpLesson(null)}
+        title={helpLesson?.missionTitle || helpLesson?.title || ''}
+        type="learn"
+        description={helpLesson?.description || ''}
+        steps={[
+          "🎥 Watch: Play the video lesson and complete all interactive checkpoint questions.",
+          `🧪 AI Lab: Perform the hands-on lab task: "${helpLesson?.aiLab?.title || ''}" (${helpLesson?.aiLab?.description || ''}).`,
+          `🛠️ Create: Build and document your micro-project: "${helpLesson?.microProject?.title || ''}" (${helpLesson?.microProject?.description || ''}).`
+        ]}
+        deliverable={helpLesson?.microProject?.deliverable}
+        rewards={`⚡ +${helpLesson?.xpReward || 0} XP, 🪙 +${helpLesson?.coinsReward || 0} Coins`}
+      />
     </div>
   );
 }

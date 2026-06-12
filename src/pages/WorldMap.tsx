@@ -15,8 +15,8 @@ import { useNavigate } from 'react-router-dom';
 import { useCurrentProfile } from '@/contexts/AuthContext';
 import { CURRICULUM, PHASES } from '@/data/curriculum';
 import { ArrowLeft, Lock, Star, Zap, ChevronRight, Trophy } from 'lucide-react';
-import { CelebrationOverlay } from '@/components/ui/CelebrationOverlay';
 import { useThemeStyles } from '@/lib/useThemeStyles';
+import { useFeedbackEngine } from '@/contexts/FeedbackEngineContext';
 
 interface World {
   id: number;
@@ -419,10 +419,7 @@ export default function WorldMap() {
   const ts = useThemeStyles();
   const D = ts.duo;
   const [selectedWorld, setSelectedWorld] = useState<World | null>(null);
-  const [showCelebration, setShowCelebration] = useState(false);
-  const [celebrationData, setCelebrationData] = useState<{
-    title: string; xp: number; coins: number; badge: { emoji: string; name: string };
-  } | null>(null);
+  const { showChapterCompletionCelebration } = useFeedbackEngine();
 
   const completedLessons = profile?.completed_lessons || [];
   const userZone = profile?.zone || 'junior';
@@ -455,6 +452,24 @@ export default function WorldMap() {
     worldStates.reduce((sum, ws) => sum + ws.progress.percent, 0) / dynamicWorlds.length
   );
 
+  React.useEffect(() => {
+    worldStates.forEach(({ world, progress }) => {
+      if (progress.percent === 100) {
+        const key = `world_celebrated_${world.id}`;
+        if (!localStorage.getItem(key)) {
+          localStorage.setItem(key, 'true');
+          showChapterCompletionCelebration({
+            title: `WORLD ${world.id} CONQUERED!`,
+            subtitle: `You completed all lessons in ${world.name}!`,
+            xpGained: world.completionXP,
+            coinsGained: world.completionCoins,
+            badge: world.completionBadge,
+          });
+        }
+      }
+    });
+  }, [completedLessons, userZone, showChapterCompletionCelebration]);
+
   function handleWorldClick(world: World) {
     setSelectedWorld(world);
   }
@@ -469,18 +484,6 @@ export default function WorldMap() {
       className={D ? '' : 'min-h-full'}
       style={D ? ts.page : { background: '#0F0A2E' }}
     >
-      {/* Celebration Overlay */}
-      {showCelebration && celebrationData && (
-        <CelebrationOverlay
-          show={showCelebration}
-          title={celebrationData.title}
-          subtitle="World Complete!"
-          xpGained={celebrationData.xp}
-          coinsGained={celebrationData.coins}
-          badge={celebrationData.badge}
-          onDone={() => setShowCelebration(false)}
-        />
-      )}
 
       {/* Header */}
       <motion.div

@@ -144,6 +144,9 @@ function AppRoutes() {
   );
 }
 
+import { FeedbackEngineProvider } from '@/contexts/FeedbackEngineContext';
+import { LearningCompanionProvider } from '@/contexts/LearningCompanionContext';
+
 // ── Theme-aware Toaster ─────────────────────────────────────────────────────
 function ThemedToaster() {
   const { isDuolingo } = useTheme();
@@ -184,12 +187,16 @@ function ThemedToaster() {
 export default function App() {
   return (
     <ThemeProvider>
-      <BrowserRouter>
-        <AuthProvider>
-          <ThemedToaster />
-          <AppRoutes />
-        </AuthProvider>
-      </BrowserRouter>
+      <FeedbackEngineProvider>
+        <BrowserRouter>
+          <AuthProvider>
+            <LearningCompanionProvider>
+              <ThemedToaster />
+              <AppRoutes />
+            </LearningCompanionProvider>
+          </AuthProvider>
+        </BrowserRouter>
+      </FeedbackEngineProvider>
     </ThemeProvider>
   );
 }
