@@ -133,37 +133,30 @@ export function AppShell({ children }: { children?: React.ReactNode }) {
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                {isDuolingo ? (
-                  <>
-                    <motion.span
-                      animate={{ y: [0, -4, 0], rotate: [0, -5, 5, 0] }}
-                      transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
-                      style={{ fontSize: 22, display: 'inline-block', lineHeight: 1 }}
-                    >
-                      🦉
-                    </motion.span>
-                    <span
-                      style={{
-                        fontFamily: '"Nunito", sans-serif',
-                        fontWeight: 900,
-                        fontSize: 15,
-                        color: '#5FCC5F',
-                        letterSpacing: '-0.3px',
-                      }}
-                    >
-                      AI Explorer
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <div className="flex items-center gap-1.5">
-                      <Mascot type="header" size={24} />
-                      <span className="font-pixel text-[8px] text-white tracking-wider grad-text-primary">
-                        AI EXPLORER
-                      </span>
-                    </div>
-                  </>
-                )}
+                <div className="flex items-center gap-1.5">
+                  <motion.div
+                    animate={{ y: [0, -2, 0], rotate: [0, -3, 3, 0] }}
+                    transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
+                  >
+                    <Mascot type="header" size={24} />
+                  </motion.div>
+                  <span
+                    style={
+                      isDuolingo
+                        ? {
+                            fontFamily: '"Nunito", sans-serif',
+                            fontWeight: 900,
+                            fontSize: 15,
+                            color: '#5FCC5F',
+                            letterSpacing: '-0.3px',
+                          }
+                        : {}
+                    }
+                    className={isDuolingo ? '' : 'font-pixel text-[8px] text-white tracking-wider grad-text-primary'}
+                  >
+                    {isDuolingo ? 'AI Explorer' : 'AI EXPLORER'}
+                  </span>
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 {/* Theme Toggle */}

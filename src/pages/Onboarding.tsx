@@ -66,19 +66,9 @@ export default function Onboarding() {
           >
             {/* Header */}
             <div className="text-center">
-              {D ? (
-                <motion.div
-                  animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.08, 1] }}
-                  transition={{ repeat: Infinity, duration: 3.5, ease: 'easeInOut' }}
-                  className="text-8xl mb-5"
-                >
-                  🦉
-                </motion.div>
-              ) : (
-                <div className="mb-5 flex justify-center">
-                  <Mascot type="onboarding" size={120} />
-                </div>
-              )}
+              <div className="mb-5 flex justify-center">
+                <Mascot type="onboarding" size={120} />
+              </div>
               <h1 style={{ color: ts.textPrimary, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 950 : undefined, fontSize: D ? 28 : undefined }} className={D ? '' : 'font-pixel text-[14px] tracking-wider grad-text-primary'}>
                 {D ? 'Quest AI' : 'QUEST AI'}
               </h1>

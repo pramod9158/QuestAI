@@ -190,7 +190,7 @@ export default function Learn() {
           <AICompanion
             state={doneCount === totalCount ? 'celebrating' : doneCount === 0 ? 'welcome' : 'idle'}
             message={getSparkyMessage()}
-            name={D ? 'QUEST OWL' : 'SPARKY'}
+            name="SPARKY"
             size="sm"
             showBubble={true}
           />

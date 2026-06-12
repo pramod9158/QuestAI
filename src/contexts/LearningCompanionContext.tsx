@@ -460,10 +460,10 @@ export function LearningCompanionProvider({ children }: { children: React.ReactN
       <AnimatePresence>
         {/* 1. Travel overlays */}
         {travelType === 'rocket' && (
-          <RocketTravelOverlay active={!!travelType} />
+          <RocketTravelOverlay active={!!travelType} isDuolingo={isDuolingo} />
         )}
         {travelType === 'portal' && (
-          <PortalTravelOverlay active={!!travelType} />
+          <PortalTravelOverlay active={!!travelType} isDuolingo={isDuolingo} />
         )}
 
         {/* 2. Interactive Video Load screen */}
@@ -471,6 +471,7 @@ export function LearningCompanionProvider({ children }: { children: React.ReactN
           <VideoLoadingFactsScreen
             facts={loadFacts}
             onClose={hideVideoLoadScreen}
+            isDuolingo={isDuolingo}
           />
         )}
       </AnimatePresence>
@@ -684,8 +685,13 @@ function FloatingCompanion({ state, targetSelector, side, onDismiss, isDuolingo 
 // TRANSITIONS & OVERLAYS
 // ============================================================================
 
-function RocketTravelOverlay({ active }: { active: boolean }) {
-  // Star particle list
+interface TravelOverlayProps {
+  active: boolean;
+  isDuolingo: boolean;
+}
+
+function RocketTravelOverlay({ active, isDuolingo }: TravelOverlayProps) {
+  // Star particle list for dark theme
   const stars = useRef(
     Array.from({ length: 30 }, (_, i) => ({
       id: i,
@@ -696,6 +702,18 @@ function RocketTravelOverlay({ active }: { active: boolean }) {
     }))
   );
 
+  // Cloud list for light theme
+  const clouds = useRef(
+    Array.from({ length: 6 }, (_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      y: Math.random() * 80 + 10,
+      width: Math.random() * 80 + 70,
+      height: Math.random() * 25 + 20,
+      speed: Math.random() * 3 + 3,
+    }))
+  );
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -703,26 +721,54 @@ function RocketTravelOverlay({ active }: { active: boolean }) {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.4 }}
       className="fixed inset-0 z-[300] flex flex-col items-center justify-center overflow-hidden"
-      style={{ background: '#070320' }}
+      style={{
+        background: isDuolingo
+          ? 'linear-gradient(to bottom, #BAE6FD 0%, #E0F2FE 60%, #F0FDFA 100%)'
+          : '#070320',
+      }}
     >
-      {/* Falling Stars */}
-      <div className="absolute inset-0">
-        {stars.current.map(s => (
-          <motion.div
-            key={s.id}
-            animate={{ y: ['-10%', '110%'] }}
-            transition={{ repeat: Infinity, duration: s.speed, ease: 'linear' }}
-            className="absolute rounded-full bg-white opacity-80"
-            style={{
-              left: `${s.x}%`,
-              top: `${s.y}%`,
-              width: s.size,
-              height: s.size,
-              boxShadow: '0 0 8px #FFF',
-            }}
-          />
-        ))}
-      </div>
+      {/* Background Elements */}
+      {isDuolingo ? (
+        // Drifting Clouds for Light Theme
+        <div className="absolute inset-0 opacity-80 pointer-events-none">
+          {clouds.current.map(c => (
+            <motion.div
+              key={c.id}
+              animate={{ x: ['120%', '-40%'], y: ['-20%', '120%'] }}
+              transition={{ repeat: Infinity, duration: c.speed, ease: 'linear' }}
+              className="absolute bg-white/80 rounded-full"
+              style={{
+                left: `${c.x}%`,
+                top: `${c.y}%`,
+                width: c.width,
+                height: c.height,
+                filter: 'blur(3px)',
+                borderRadius: '999px',
+                boxShadow: '10px 10px 0 rgba(255,255,255,0.05)',
+              }}
+            />
+          ))}
+        </div>
+      ) : (
+        // Falling Stars for Dark Theme
+        <div className="absolute inset-0 pointer-events-none">
+          {stars.current.map(s => (
+            <motion.div
+              key={s.id}
+              animate={{ y: ['-10%', '110%'] }}
+              transition={{ repeat: Infinity, duration: s.speed, ease: 'linear' }}
+              className="absolute rounded-full bg-white opacity-80"
+              style={{
+                left: `${s.x}%`,
+                top: `${s.y}%`,
+                width: s.size,
+                height: s.size,
+                boxShadow: '0 0 8px #FFF',
+              }}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Rocket and Sparky */}
       <div className="relative w-64 h-64 flex flex-col items-center justify-center">
@@ -742,32 +788,77 @@ function RocketTravelOverlay({ active }: { active: boolean }) {
           
           {/* Retro Rocket ship */}
           <svg width="70" height="90" viewBox="0 0 70 90" fill="none">
-            <path d="M35 5 L60 40 L60 75 L10 75 L10 40 Z" fill="#E2E8F0" stroke="#000" strokeWidth="3" />
-            <path d="M10 75 L5 85 L20 85 L20 75 Z" fill="#EF4444" stroke="#000" strokeWidth="2" />
-            <path d="M60 75 L65 85 L50 85 L50 75 Z" fill="#EF4444" stroke="#000" strokeWidth="2" />
-            <circle cx="35" cy="45" r="8" fill="#3B82F6" stroke="#000" strokeWidth="2" />
+            {/* Body */}
+            <path
+              d="M35 5 L60 40 L60 75 L10 75 L10 40 Z"
+              fill={isDuolingo ? '#FFFFFF' : '#E2E8F0'}
+              stroke={isDuolingo ? '#4B5563' : '#000000'}
+              strokeWidth={isDuolingo ? '2.5' : '3'}
+            />
+            {/* Wings */}
+            <path
+              d="M10 75 L5 85 L20 85 L20 75 Z"
+              fill={isDuolingo ? '#5FCC5F' : '#EF4444'}
+              stroke={isDuolingo ? '#4B5563' : '#000000'}
+              strokeWidth={isDuolingo ? '2' : '2'}
+            />
+            <path
+              d="M60 75 L65 85 L50 85 L50 75 Z"
+              fill={isDuolingo ? '#5FCC5F' : '#EF4444'}
+              stroke={isDuolingo ? '#4B5563' : '#000000'}
+              strokeWidth={isDuolingo ? '2' : '2'}
+            />
+            {/* Window */}
+            <circle
+              cx="35"
+              cy="45"
+              r="8"
+              fill={isDuolingo ? '#06B6D4' : '#3B82F6'}
+              stroke={isDuolingo ? '#4B5563' : '#000000'}
+              strokeWidth={isDuolingo ? '2' : '2'}
+            />
             {/* Thruster Fire */}
             <motion.path
               d="M30 75 L35 90 L40 75 Z"
-              fill="#F59E0B"
-              animate={{ scaleY: [1, 1.5, 1], fill: ['#F59E0B', '#EF4444', '#F59E0B'] }}
+              fill={isDuolingo ? '#FFB84D' : '#F59E0B'}
+              animate={{
+                scaleY: [1, 1.5, 1],
+                fill: isDuolingo ? ['#FFB84D', '#FF6B35', '#FFB84D'] : ['#F59E0B', '#EF4444', '#F59E0B'],
+              }}
               transition={{ repeat: Infinity, duration: 0.15 }}
             />
           </svg>
         </motion.div>
       </div>
 
-      <h2 className="font-game text-sm text-yellow-300 tracking-widest mt-8 animate-pulse text-center px-4">
-        HYPERSPACE JUMP ACTIVATED!
+      <h2
+        className="tracking-widest mt-8 animate-pulse text-center px-4"
+        style={{
+          fontFamily: isDuolingo ? '"Nunito", sans-serif' : '"Fredoka One", cursive',
+          fontSize: isDuolingo ? '16px' : '14px',
+          fontWeight: isDuolingo ? 900 : 700,
+          color: isDuolingo ? '#1EBC6B' : '#FCD34D',
+          textShadow: isDuolingo ? 'none' : '2px 2px 0px #000',
+        }}
+      >
+        {isDuolingo ? 'PREPARING YOUR LESSON JOURNEY!' : 'HYPERSPACE JUMP ACTIVATED!'}
       </h2>
-      <p className="font-pixel text-[6px] text-white opacity-70 mt-2">
-        SPARKY IS NAVIGATING...
+      <p
+        className="mt-2 text-center"
+        style={{
+          fontFamily: isDuolingo ? '"Nunito", sans-serif' : 'monospace',
+          fontSize: isDuolingo ? '11px' : '6px',
+          fontWeight: isDuolingo ? 700 : 400,
+          color: isDuolingo ? '#4B5563' : 'rgba(255, 255, 255, 0.7)',
+        }}
+      >
+        {isDuolingo ? 'Sparky is charting the course...' : 'SPARKY IS NAVIGATING...'}
       </p>
     </motion.div>
   );
 }
 
-function PortalTravelOverlay({ active }: { active: boolean }) {
+function PortalTravelOverlay({ active, isDuolingo }: TravelOverlayProps) {
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -775,23 +866,36 @@ function PortalTravelOverlay({ active }: { active: boolean }) {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.4 }}
       className="fixed inset-0 z-[300] flex flex-col items-center justify-center overflow-hidden"
-      style={{ background: '#0F0A2E' }}
+      style={{
+        background: isDuolingo ? 'linear-gradient(to bottom, #ECFDF5 0%, #D1FAE5 100%)' : '#0F0A2E',
+      }}
     >
       {/* Portal Core Spiral */}
       <motion.div
         animate={{ rotate: 360 }}
         transition={{ repeat: Infinity, duration: 4, ease: 'linear' }}
         className="w-72 h-72 rounded-full border-4 border-dashed flex items-center justify-center"
-        style={{
-          borderImage: 'linear-gradient(to right, #7C3AED, #3B82F6, #EC4899) 1',
-          background: 'radial-gradient(circle, rgba(124,58,237,0.3) 0%, rgba(15,10,46,0) 70%)',
-          boxShadow: '0 0 50px rgba(124,58,237,0.5)',
-        }}
+        style={
+          isDuolingo
+            ? {
+                borderColor: '#5FCC5F',
+                background: 'radial-gradient(circle, rgba(95,204,95,0.2) 0%, rgba(209,250,229,0) 70%)',
+                boxShadow: '0 0 50px rgba(95,204,95,0.25)',
+              }
+            : {
+                borderImage: 'linear-gradient(to right, #7C3AED, #3B82F6, #EC4899) 1',
+                background: 'radial-gradient(circle, rgba(124,58,237,0.3) 0%, rgba(15,10,46,0) 70%)',
+                boxShadow: '0 0 50px rgba(124,58,237,0.5)',
+              }
+        }
       >
         <motion.div
           animate={{ scale: [1, 1.2, 1] }}
           transition={{ repeat: Infinity, duration: 2 }}
-          className="w-48 h-48 rounded-full border-2 border-dashed border-blue-400"
+          className="w-48 h-48 rounded-full border-2 border-dashed"
+          style={{
+            borderColor: isDuolingo ? '#06B6D4' : '#3B82F6',
+          }}
         />
       </motion.div>
 
@@ -809,8 +913,17 @@ function PortalTravelOverlay({ active }: { active: boolean }) {
         <Mascot mood="excited" pose="dance" size={100} />
       </motion.div>
 
-      <h2 className="font-game text-xs text-blue-300 mt-8 animate-pulse text-center tracking-widest px-4">
-        WARPING THROUGH QUANTUM PORTAL...
+      <h2
+        className="tracking-widest mt-8 animate-pulse text-center px-4"
+        style={{
+          fontFamily: isDuolingo ? '"Nunito", sans-serif' : '"Fredoka One", cursive',
+          fontSize: isDuolingo ? '16px' : '12px',
+          fontWeight: isDuolingo ? 900 : 700,
+          color: isDuolingo ? '#10B981' : '#93C5FD',
+          textShadow: isDuolingo ? 'none' : '2px 2px 0px #000',
+        }}
+      >
+        {isDuolingo ? 'WARPING TO NEXT ACTIVITY...' : 'WARPING THROUGH QUANTUM PORTAL...'}
       </h2>
     </motion.div>
   );
@@ -823,6 +936,7 @@ function PortalTravelOverlay({ active }: { active: boolean }) {
 interface VideoLoadingFactsScreenProps {
   facts: string[];
   onClose: () => void;
+  isDuolingo: boolean;
 }
 
 interface StarItem {
@@ -831,7 +945,7 @@ interface StarItem {
   y: number;
 }
 
-function VideoLoadingFactsScreen({ facts, onClose }: VideoLoadingFactsScreenProps) {
+function VideoLoadingFactsScreen({ facts, onClose, isDuolingo }: VideoLoadingFactsScreenProps) {
   const [activeFactIdx, setActiveFactIdx] = useState(0);
   const [starsCollected, setStarsCollected] = useState(0);
   const [starTargets, setStarTargets] = useState<StarItem[]>([]);
@@ -911,17 +1025,64 @@ function VideoLoadingFactsScreen({ facts, onClose }: VideoLoadingFactsScreenProp
       onClick={handleScreenClick}
       className="fixed inset-0 z-[250] flex flex-col justify-between p-6 select-none cursor-crosshair overflow-hidden"
       style={{
-        background: 'radial-gradient(circle, #181145 0%, #0B0625 100%)',
+        background: isDuolingo
+          ? 'radial-gradient(circle, #FFFFFF 0%, #F3F4F6 100%)'
+          : 'radial-gradient(circle, #181145 0%, #0B0625 100%)',
       }}
     >
       {/* Star count and header */}
       <div className="flex justify-between items-center z-10">
         <div>
-          <span className="font-game text-[9px] text-yellow-300 block">LOADING MODULE LESSON...</span>
-          <span className="font-pixel text-[5px] text-white opacity-60">Tap screen to feed Sparky stars!</span>
+          <span
+            className="block"
+            style={{
+              fontFamily: isDuolingo ? '"Nunito", sans-serif' : '"Fredoka One", cursive',
+              fontSize: isDuolingo ? '12px' : '9px',
+              fontWeight: isDuolingo ? 900 : 400,
+              color: isDuolingo ? '#1EBC6B' : '#FCD34D',
+            }}
+          >
+            {isDuolingo ? 'LOADING YOUR LESSON ACTIVITY...' : 'LOADING MODULE LESSON...'}
+          </span>
+          <span
+            className="opacity-75"
+            style={{
+              fontFamily: isDuolingo ? '"Nunito", sans-serif' : 'monospace',
+              fontSize: isDuolingo ? '10px' : '5px',
+              fontWeight: isDuolingo ? 600 : 400,
+              color: isDuolingo ? '#555555' : '#FFFFFF',
+            }}
+          >
+            {isDuolingo ? 'Tap the screen to feed stars to Sparky!' : 'Tap screen to feed Sparky stars!'}
+          </span>
         </div>
-        <div className="font-game text-[9px] text-white bg-black/40 border border-white/20 px-3 py-1.5 rounded-full">
-          ⭐ STARS COLLECTED: <span className="text-yellow-300 font-bold">{starsCollected}</span>
+        <div
+          style={
+            isDuolingo
+              ? {
+                  fontFamily: '"Nunito", sans-serif',
+                  fontSize: '11px',
+                  fontWeight: 800,
+                  color: '#4B5563',
+                  background: '#FFFFFF',
+                  border: '1.5px solid #E0E0E0',
+                  padding: '6px 12px',
+                  borderRadius: '999px',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                }
+              : {
+                  fontFamily: '"Fredoka One", cursive',
+                  fontSize: '9px',
+                  color: '#FFFFFF',
+                  background: 'rgba(0,0,0,0.4)',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  padding: '6px 12px',
+                  borderRadius: '999px',
+                }
+          }
+        >
+          ⭐ STARS COLLECTED:{' '}
+          <span style={{ color: '#EAB308', fontWeight: 'bold' }}>{starsCollected}</span>
         </div>
       </div>
 
@@ -933,7 +1094,7 @@ function VideoLoadingFactsScreen({ facts, onClose }: VideoLoadingFactsScreenProp
             initial={{ scale: 0 }}
             animate={{ scale: [1, 1.3, 1], rotate: 360 }}
             transition={{ repeat: Infinity, duration: 1 }}
-            className="absolute text-xl text-yellow-300 drop-shadow-[0_0_8px_#FCD34D]"
+            className="absolute text-xl text-yellow-400 drop-shadow-[0_2px_8px_rgba(250,204,21,0.6)]"
             style={{ left: star.x - 10, top: star.y - 10 }}
           >
             ★
@@ -963,14 +1124,42 @@ function VideoLoadingFactsScreen({ facts, onClose }: VideoLoadingFactsScreenProp
             exit={{ opacity: 0, scale: 0.95, y: -15 }}
             transition={{ duration: 0.3 }}
             className="w-full max-w-sm p-6 text-center"
-            style={{
-              background: 'rgba(26, 17, 68, 0.8)',
-              border: '3px solid #000',
-              boxShadow: '6px 6px 0 #000',
-            }}
+            style={
+              isDuolingo
+                ? {
+                    background: '#FFFFFF',
+                    border: '1.5px solid #E0E0E0',
+                    borderRadius: '24px',
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.06)',
+                  }
+                : {
+                    background: 'rgba(26, 17, 68, 0.8)',
+                    border: '3px solid #000000',
+                    boxShadow: '6px 6px 0px #000000',
+                  }
+            }
           >
-            <div className="font-game text-[8px] text-purple-400 mb-2">SPARKY'S AI FUN FACT</div>
-            <p className="font-bold text-sm text-white leading-relaxed">
+            <div
+              style={{
+                fontFamily: isDuolingo ? '"Nunito", sans-serif' : '"Fredoka One", cursive',
+                fontSize: isDuolingo ? '11px' : '8px',
+                fontWeight: 800,
+                color: isDuolingo ? '#10B981' : '#A78BFA',
+                marginBottom: '8px',
+                letterSpacing: '0.5px',
+              }}
+            >
+              SPARKY'S AI FUN FACT
+            </div>
+            <p
+              style={{
+                fontFamily: isDuolingo ? '"Nunito", sans-serif' : 'inherit',
+                fontWeight: isDuolingo ? 800 : 700,
+                fontSize: isDuolingo ? '14px' : '13px',
+                color: isDuolingo ? '#374151' : '#FFFFFF',
+                lineHeight: 1.5,
+              }}
+            >
               {facts[activeFactIdx]}
             </p>
           </motion.div>
@@ -978,12 +1167,33 @@ function VideoLoadingFactsScreen({ facts, onClose }: VideoLoadingFactsScreenProp
       </div>
 
       {/* Footer controls */}
-      <div className="flex flex-col items-center gap-4 z-10">
-        <div className="w-full max-w-xs h-3 bg-black/60 border border-white/20 p-0.5 rounded-full overflow-hidden">
+      <div className="flex flex-col items-center gap-4 z-10 w-full">
+        <div
+          className="w-full max-w-xs h-3 overflow-hidden"
+          style={
+            isDuolingo
+              ? {
+                  background: '#E5E7EB',
+                  borderRadius: '999px',
+                  padding: '2px',
+                }
+              : {
+                  background: 'rgba(0,0,0,0.6)',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  borderRadius: '999px',
+                  padding: '2px',
+                }
+          }
+        >
           <motion.div
             animate={{ width: ['0%', '100%'] }}
             transition={{ duration: 8, ease: 'easeOut' }}
-            className="h-full rounded-full bg-gradient-to-r from-purple-500 to-indigo-500"
+            className="h-full rounded-full"
+            style={{
+              background: isDuolingo
+                ? 'linear-gradient(to right, #34D399, #10B981)'
+                : 'linear-gradient(to right, #8B5CF6, #6366F1)',
+            }}
           />
         </div>
         
@@ -992,7 +1202,49 @@ function VideoLoadingFactsScreen({ facts, onClose }: VideoLoadingFactsScreenProp
             e.stopPropagation();
             onClose();
           }}
-          className="px-6 py-2.5 font-game text-[8px] cursor-pointer text-black bg-yellow-300 border-2 border-black shadow-[3px_3px_0_#000] active:translate-y-0.5 active:shadow-[1.5px_1.5px_0_#000]"
+          style={
+            isDuolingo
+              ? {
+                  fontFamily: '"Nunito", sans-serif',
+                  fontSize: '12px',
+                  fontWeight: 900,
+                  color: '#FFFFFF',
+                  background: '#5FCC5F',
+                  borderRadius: '16px',
+                  padding: '12px 28px',
+                  border: 'none',
+                  boxShadow: '0 4px 0 #1EBC6B',
+                  cursor: 'pointer',
+                  transform: 'translateY(0px)',
+                  transition: 'all 0.1s ease',
+                }
+              : {
+                  fontFamily: '"Fredoka One", cursive',
+                  fontSize: '8px',
+                  color: '#000000',
+                  background: '#FDE047',
+                  border: '2px solid #000000',
+                  boxShadow: '3px 3px 0px #000000',
+                  padding: '10px 24px',
+                  cursor: 'pointer',
+                }
+          }
+          onMouseDown={
+            isDuolingo
+              ? (e) => {
+                  e.currentTarget.style.transform = 'translateY(4px)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }
+              : undefined
+          }
+          onMouseUp={
+            isDuolingo
+              ? (e) => {
+                  e.currentTarget.style.transform = 'translateY(0px)';
+                  e.currentTarget.style.boxShadow = '0 4px 0 #1EBC6B';
+                }
+              : undefined
+          }
         >
           SKIP LOADING ➔
         </button>

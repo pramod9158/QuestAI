@@ -976,7 +976,7 @@ export default function Home() {
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: 18,
             }}>
-              {D ? '🦉' : '🤖'}
+              🤖
             </div>
             <div>
               <div style={{ color: ts.textPrimary, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 800 : undefined, fontSize: D ? 14 : undefined }}

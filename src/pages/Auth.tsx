@@ -80,19 +80,9 @@ export default function Auth() {
 
           {/* Logo */}
           <div className="text-center">
-            {D ? (
-              <motion.div
-                animate={{ rotate: [0, 8, -8, 0] }}
-                transition={{ repeat: Infinity, duration: 4 }}
-                className="text-7xl mb-4"
-              >
-                🦉
-              </motion.div>
-            ) : (
-              <div className="mb-4 flex justify-center">
-                <Mascot type="onboarding" size={100} />
-              </div>
-            )}
+            <div className="mb-4 flex justify-center">
+              <Mascot type="onboarding" size={100} />
+            </div>
             <h1 style={{ color: ts.textPrimary, fontFamily: D ? '"Nunito", sans-serif' : undefined, fontWeight: D ? 950 : undefined, fontSize: D ? 26 : undefined }} className={D ? '' : 'font-pixel text-[12px] tracking-wider grad-text-primary'}>
               {D ? 'Quest AI' : 'QUEST AI'}
             </h1>

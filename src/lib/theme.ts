@@ -62,8 +62,8 @@ export const THEME_EMOJIS: Record<ThemeId, Record<string, string>> = {
     retry:        '🔄',
     done:         '✨',
     locked:       '🔒',
-    loading:      '🦉',
-    mascot:       '🦉',
+    loading:      '🤖',
+    mascot:       '🤖',
   },
 };
 
@@ -106,7 +106,7 @@ export const THEME_META: Record<ThemeId, { label: string; icon: string; desc: st
   },
   duolingo: {
     label: 'Duolingo',
-    icon:  '🦉',
+    icon:  '🤖',
     desc:  'Light, fun & friendly',
   },
 };
