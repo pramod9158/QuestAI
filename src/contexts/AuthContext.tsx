@@ -194,14 +194,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) return { error: error.message };
     
     if (data.user && zone) {
-      try {
-        await Promise.all([
-          supabase.auth.updateUser({ data: { zone } }),
-          supabase.from('profiles').update({ zone }).eq('id', data.user.id)
-        ]);
-      } catch (err) {
-        console.warn("Could not update zone during login:", err);
-      }
+      // Perform background updates non-blocking to prevent UI spinner hangs
+      const performBackgroundUpdates = async () => {
+        try {
+          await Promise.all([
+            supabase.auth.updateUser({ data: { zone } }),
+            supabase.from('profiles').update({ zone }).eq('id', data.user.id)
+          ]);
+        } catch (err) {
+          console.warn("Could not update zone background data:", err);
+        }
+      };
+      performBackgroundUpdates();
     }
     return { error: null };
   };

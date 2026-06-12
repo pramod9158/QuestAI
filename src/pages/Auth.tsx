@@ -42,21 +42,35 @@ export default function Auth() {
       return;
     }
 
-    if (tab === 'login') {
-      const { error } = await signIn(email, password, selectedZone);
-      if (error) setError(error);
-      else navigate('/');
-    } else {
-      if (!username.trim()) { setError('Please enter a username'); setLoading(false); return; }
-      const { error } = await signUp(email, password, username, selectedZone);
-      if (error) setError(error);
-      else {
-        setSuccess('✅ Account created! Please check your email to confirm, then sign in.');
-        setTab('login');
-        setPassword('');
+    try {
+      if (tab === 'login') {
+        const { error } = await signIn(email, password, selectedZone);
+        if (error) {
+          setError(error);
+          setLoading(false);
+        } else {
+          // The useEffect hook below automatically navigates to '/' once profile is non-null.
+          // We set a backup timeout to reset the loading state if the redirect takes time.
+          setTimeout(() => setLoading(false), 3500);
+        }
+      } else {
+        if (!username.trim()) { setError('Please enter a username'); setLoading(false); return; }
+        const { error } = await signUp(email, password, username, selectedZone);
+        if (error) {
+          setError(error);
+          setLoading(false);
+        } else {
+          setSuccess('✅ Account created! Please check your email to confirm, then sign in.');
+          setTab('login');
+          setPassword('');
+          setLoading(false);
+        }
       }
+    } catch (err: any) {
+      console.error("Auth submit error:", err);
+      setError(err?.message || 'An unexpected error occurred. Please try again!');
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
