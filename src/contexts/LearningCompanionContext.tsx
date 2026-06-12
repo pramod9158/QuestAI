@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
 import { useCurrentProfile } from '@/contexts/AuthContext';
@@ -141,12 +141,12 @@ export function LearningCompanionProvider({ children }: { children: React.ReactN
   // Travel Transitions
   const [travelType, setTravelType] = useState<'rocket' | 'portal' | null>(null);
   const [travelingTo, setTravelingTo] = useState('');
-  const [onTravelDone, setOnTravelDone] = useState<(() => void) | null>(null);
+  const onTravelDoneRef = useRef<(() => void) | null>(null);
 
   // Video Load Screens
   const [videoLoading, setVideoLoading] = useState(false);
   const [loadFacts, setLoadFacts] = useState<string[]>([]);
-  const [onLoadDone, setOnLoadDone] = useState<(() => void) | null>(null);
+  const onLoadDoneRef = useRef<(() => void) | null>(null);
 
   // Muting & Anti-Spam
   const [isMuted, setIsMuted] = useState(false);
@@ -206,7 +206,12 @@ export function LearningCompanionProvider({ children }: { children: React.ReactN
   }, [profile]);
 
   // Helper selectors
-  const speak = (
+  const hide = useCallback(() => {
+    setVisible(false);
+    setTargetSelector(null);
+  }, []);
+
+  const speak = useCallback((
     msg: string,
     options?: {
       mood?: CompanionState['mood'];
@@ -233,7 +238,7 @@ export function LearningCompanionProvider({ children }: { children: React.ReactN
     }
 
     if (isProactive) {
-      setProactiveMessageCount(prev => ({ ...prev, [currentPath]: count + 1 }));
+      setProactiveMessageCount(prev => ({ ...prev, [currentPath]: (prev[currentPath] || 0) + 1 }));
       lastProactiveTime.current = now;
     }
 
@@ -245,12 +250,13 @@ export function LearningCompanionProvider({ children }: { children: React.ReactN
 
     if (options?.duration) {
       setTimeout(() => {
-        hide();
+        setVisible(false);
+        setTargetSelector(null);
       }, options.duration);
     }
-  };
+  }, [isMuted, proactiveMessageCount]);
 
-  const pointTo = (
+  const pointTo = useCallback((
     selector: string,
     msg: string,
     options?: {
@@ -270,47 +276,49 @@ export function LearningCompanionProvider({ children }: { children: React.ReactN
 
     if (options?.duration) {
       setTimeout(() => {
-        hide();
+        setVisible(false);
+        setTargetSelector(null);
       }, options.duration);
     }
-  };
+  }, []);
 
-  const hide = () => {
-    setVisible(false);
-    setTargetSelector(null);
-  };
+  const setOutfit = useCallback((o: CompanionState['outfit']) => setOutfitState(o), []);
+  const setMood = useCallback((m: CompanionState['mood']) => setMoodState(m), []);
+  const setPose = useCallback((p: CompanionState['pose']) => setPoseState(p), []);
 
-  const setOutfit = (o: CompanionState['outfit']) => setOutfitState(o);
-  const setMood = (m: CompanionState['mood']) => setMoodState(m);
-  const setPose = (p: CompanionState['pose']) => setPoseState(p);
-
-  const triggerTravel = (type: 'rocket' | 'portal', onComplete?: () => void) => {
+  const triggerTravel = useCallback((type: 'rocket' | 'portal', onComplete?: () => void) => {
     setTravelType(type);
     setTravelingTo(location.pathname);
-    setOnTravelDone(() => onComplete || null);
+    onTravelDoneRef.current = onComplete || null;
 
     // Auto complete after 2.5s
     setTimeout(() => {
       setTravelType(null);
-      if (onComplete) onComplete();
+      if (onTravelDoneRef.current) {
+        onTravelDoneRef.current();
+        onTravelDoneRef.current = null;
+      }
     }, 2500);
-  };
+  }, [location.pathname]);
 
-  const showVideoLoadScreen = (facts?: string[], onComplete?: () => void) => {
+  const showVideoLoadScreen = useCallback((facts?: string[], onComplete?: () => void) => {
     setLoadFacts(facts || AI_FUN_FACTS);
     setVideoLoading(true);
-    setOnLoadDone(() => onComplete || null);
-  };
+    onLoadDoneRef.current = onComplete || null;
+  }, []);
 
-  const hideVideoLoadScreen = () => {
+  const hideVideoLoadScreen = useCallback(() => {
     setVideoLoading(false);
-    if (onLoadDone) onLoadDone();
-  };
+    if (onLoadDoneRef.current) {
+      onLoadDoneRef.current();
+      onLoadDoneRef.current = null;
+    }
+  }, []);
 
-  const mute = () => setIsMuted(true);
-  const unmute = () => setIsMuted(false);
+  const mute = useCallback(() => setIsMuted(true), []);
+  const unmute = useCallback(() => setIsMuted(false), []);
 
-  const gainXP = (amount: number) => {
+  const gainXP = useCallback((amount: number) => {
     // Interactive feedback engine triggers arpeggios
     // Daily Quest XP gains logic update
     const todayXPEarned = (Number(localStorage.getItem('today_xp_earned')) || 0) + amount;
@@ -334,20 +342,21 @@ export function LearningCompanionProvider({ children }: { children: React.ReactN
         return q;
       })
     );
-  };
+  }, [speak]);
 
-  const completeQuest = (id: string) => {
+  const completeQuest = useCallback((id: string) => {
     setDailyQuests(prev =>
       prev.map(q => (q.id === id ? { ...q, completed: true, currentXP: q.targetXP } : q))
     );
-  };
+  }, []);
 
-  const dismissTip = (tipId: string) => {
+  const dismissTip = useCallback((tipId: string) => {
     const dismissed = JSON.parse(localStorage.getItem('dismissed_tips_v2') || '[]');
     dismissed.push(tipId);
     localStorage.setItem('dismissed_tips_v2', JSON.stringify(dismissed));
-    hide();
-  };
+    setVisible(false);
+    setTargetSelector(null);
+  }, []);
 
   // 1. Safety Interrupter: Mute on input areas & active quizzes
   useEffect(() => {
