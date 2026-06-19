@@ -280,7 +280,8 @@ export function getPlatformProgress(profile: any): ProgressStats {
         }
       } else if (key === 'inventions') {
         const rawInventions = JSON.parse(localStorage.getItem('guest_inventions') || '[]');
-        percent = rawInventions.length > 0 ? 100 : localStorage.getItem('play_progress_brainstorm') ? 50 : 0;
+        const userHasInventions = localStorage.getItem('user_has_inventions') === 'true';
+        percent = (rawInventions.length > 0 || userHasInventions) ? 100 : localStorage.getItem('play_progress_brainstorm') ? 50 : 0;
       } else if (key === 'ideas') {
         const savedIdeas = JSON.parse(localStorage.getItem('saved_ideas') || '[]');
         percent = savedIdeas.length > 0 ? 100 : localStorage.getItem('play_progress_idea-generator') ? 50 : 0;

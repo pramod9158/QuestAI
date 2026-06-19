@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useCurrentProfile } from '@/contexts/AuthContext';
+import { useCurrentProfile, useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/Button';
 import { getLevel, getEarnedBadges } from '@/lib/gamification';
 import { 
@@ -20,6 +21,7 @@ import { useThemeStyles } from '@/lib/useThemeStyles';
 export default function Dashboard() {
   const navigate = useNavigate();
   const profile = useCurrentProfile();
+  const { user } = useAuth();
   const ts = useThemeStyles();
   const D = ts.duo;
   
@@ -32,10 +34,26 @@ export default function Dashboard() {
   // Tab State (Only 3 tabs now)
   const [activeTab, setActiveTab] = useState<'report' | 'skills' | 'cooperative'>('report');
 
+  const [dbInventions, setDbInventions] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (user) {
+      supabase
+        .from('user_inventions')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .then(({ data }) => {
+          if (data) setDbInventions(data);
+        });
+    }
+  }, [user]);
+
   const completedLessons = profile?.completed_lessons?.length || 0;
   const completedQuests = profile?.completed_quests?.length || 0;
   const submissions = JSON.parse(localStorage.getItem('mission_submissions') || '[]').filter((s: any) => s.status === 'approved').length;
-  const inventions = JSON.parse(localStorage.getItem('guest_inventions') || '[]').length;
+  const guestInventions = JSON.parse(localStorage.getItem('guest_inventions') || '[]');
+  const inventions = user ? dbInventions.length : guestInventions.length;
   const savedIdeas = JSON.parse(localStorage.getItem('saved_ideas') || '[]').length;
 
   const badges = profile ? getEarnedBadges(profile.xp, profile.current_streak) : [];
@@ -95,9 +113,11 @@ export default function Dashboard() {
   };
 
   // Cooperative Hub States (Sticker seals & reviews)
-  const [endorsementsList, setEndorsementsList] = useState<{ id: string; type: string; title: string; detail: string; date: string; score: number; isDemo?: boolean }[]>(() => {
+  const [endorsementsList, setEndorsementsList] = useState<{ id: string; type: string; title: string; detail: string; date: string; score: number; isDemo?: boolean }[]>([]);
+
+  useEffect(() => {
     const rawSubs = JSON.parse(localStorage.getItem('mission_submissions') || '[]').filter((s: any) => s.status === 'approved');
-    const myInventions = JSON.parse(localStorage.getItem('guest_inventions') || '[]');
+    const myInventions = user ? dbInventions : JSON.parse(localStorage.getItem('guest_inventions') || '[]');
     
     const items: any[] = [];
     
@@ -144,8 +164,8 @@ export default function Dashboard() {
       });
     }
 
-    return items;
-  });
+    setEndorsementsList(items);
+  }, [user, dbInventions]);
 
   const [endorsedIds, setEndorsedIds] = useState<string[]>(() => {
     return JSON.parse(localStorage.getItem('parent_endorsed_ids') || '[]');
@@ -201,15 +221,15 @@ export default function Dashboard() {
     setSendingChat(true);
 
     const rawSubs = JSON.parse(localStorage.getItem('mission_submissions') || '[]');
-    const rawInventions = JSON.parse(localStorage.getItem('guest_inventions') || '[]');
+    const rawInventions = user ? dbInventions : JSON.parse(localStorage.getItem('guest_inventions') || '[]');
     const formattedSubs = rawSubs.map((s: any) => ({
       text: s.text,
       score: s.score || 100,
       feedback: s.feedback || ''
     }));
     const formattedInventions = rawInventions.map((i: any) => ({
-      name: i.name,
-      description: i.description,
+      name: i.ai_solution_name || i.name,
+      description: i.ai_solution_description || i.description,
       innovation_score: i.innovation_score || 80
     }));
 

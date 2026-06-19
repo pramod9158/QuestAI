@@ -32,6 +32,7 @@ export default function InventorHall() {
 
   const { user } = useAuth();
   const [inventions, setInventions] = useState<Invention[]>([]);
+  const [myInventions, setMyInventions] = useState<Invention[]>([]);
   const [activeTab, setActiveTab] = useState<'hall' | 'mine'>('hall');
   const [loading, setLoading] = useState(true);
   const [helpOpen, setHelpOpen] = useState(false);
@@ -55,19 +56,74 @@ export default function InventorHall() {
 
   useEffect(() => {
     const fetchInventions = async () => {
+      setLoading(true);
       try {
-        if (user) {
-          const { data } = await supabase.from('user_inventions').select('*, profiles(username)').order('innovation_score', { ascending: false });
-          if (data && data.length > 0) { setInventions(data as Invention[]); setLoading(false); return; }
+        // 1. Fetch Global Hall inventions from DB (accessible to everyone)
+        const { data: globalData } = await supabase
+          .from('user_inventions')
+          .select('*, profiles(username)')
+          .order('innovation_score', { ascending: false });
+        
+        if (globalData && globalData.length > 0) {
+          const formattedGlobal = globalData.map((item: any) => ({
+            id: item.id,
+            category: item.category,
+            problem: item.problem,
+            target_audience: item.target_audience,
+            ai_solution_name: item.ai_solution_name,
+            ai_solution_description: item.ai_solution_description,
+            innovation_score: item.innovation_score,
+            username: item.profiles?.username || 'Explorer',
+            created_at: item.created_at
+          }));
+          setInventions(formattedGlobal);
+        } else {
+          setInventions(MOCK_INVENTIONS);
         }
-      } catch {}
-      setInventions(MOCK_INVENTIONS);
+      } catch (err) {
+        console.warn("Error fetching global inventions, falling back to mock:", err);
+        setInventions(MOCK_INVENTIONS);
+      }
+
+      // 2. Fetch "My Inventions"
+      if (user) {
+        try {
+          const { data: myData } = await supabase
+            .from('user_inventions')
+            .select('*, profiles(username)')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false });
+          
+          if (myData) {
+            const formattedMine = myData.map((item: any) => ({
+              id: item.id,
+              category: item.category,
+              problem: item.problem,
+              target_audience: item.target_audience,
+              ai_solution_name: item.ai_solution_name,
+              ai_solution_description: item.ai_solution_description,
+              innovation_score: item.innovation_score,
+              username: item.profiles?.username || 'Explorer',
+              created_at: item.created_at
+            }));
+            setMyInventions(formattedMine);
+          } else {
+            setMyInventions([]);
+          }
+        } catch (err) {
+          console.warn("Error fetching my inventions:", err);
+          setMyInventions([]);
+        }
+      } else {
+        // Guest user - load from localStorage
+        const local = JSON.parse(localStorage.getItem('guest_inventions') || '[]');
+        setMyInventions(local);
+      }
       setLoading(false);
     };
+
     fetchInventions();
   }, [user]);
-
-  const myInventions: Invention[] = JSON.parse(localStorage.getItem('guest_inventions') || '[]');
 
   const displayList = activeTab === 'hall' ? inventions : myInventions;
 

@@ -83,6 +83,7 @@ export default function BrainstormPlayground() {
         ai_solution_description: result.description,
         innovation_score: result.innovation_score,
       });
+      localStorage.setItem('user_has_inventions', 'true');
     } else {
       const inventions = JSON.parse(localStorage.getItem('guest_inventions') || '[]');
       inventions.push({ category, problem, audience, ...result, created_at: new Date().toISOString() });

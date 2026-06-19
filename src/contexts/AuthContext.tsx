@@ -83,6 +83,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setProfile(newProfile as unknown as Profile);
         }
       }
+
+      // Check if user has inventions in the database
+      try {
+        const { count, error: countErr } = await supabase
+          .from('user_inventions')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', userId);
+        
+        if (!countErr && count !== null && count > 0) {
+          localStorage.setItem('user_has_inventions', 'true');
+        } else {
+          localStorage.removeItem('user_has_inventions');
+        }
+      } catch (err) {
+        console.warn('Failed to query user inventions count:', err);
+      }
     } catch (err) {
       console.warn("Could not retrieve or create profile:", err);
     }

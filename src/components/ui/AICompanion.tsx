@@ -57,7 +57,11 @@ export function AICompanion({ state = 'idle', message, name, size = 'md', onDism
   }, [message]);
 
   return (
-    <div className={`flex items-start gap-3 ${className}`}>
+    <motion.div
+      drag
+      dragMomentum={false}
+      className={`flex items-start gap-3 cursor-grab active:cursor-grabbing z-50 ${className}`}
+    >
       {/* Avatar */}
       <motion.div
         animate={
@@ -159,7 +163,7 @@ export function AICompanion({ state = 'idle', message, name, size = 'md', onDism
           </motion.div>
         </AnimatePresence>
       )}
-    </div>
+    </motion.div>
   );
 }
 

@@ -183,7 +183,7 @@ export default function Home() {
       const qId = key.replace('quests_', '');
       return localStorage.getItem(`quests_${qId}`) === 'true' || !!(profile?.completed_quests && profile.completed_quests.includes(qId));
     }
-    if (key === 'inventions') return rawInventions.length > 0;
+    if (key === 'inventions') return rawInventions.length > 0 || localStorage.getItem('user_has_inventions') === 'true';
     if (key === 'ideas') return savedIdeas.length > 0;
     return localStorage.getItem(key) === 'true';
   };
