@@ -18,14 +18,6 @@ const PLAY_MODULE_INSTRUCTIONS: Record<string, { steps: string[]; rewards: strin
     ],
     rewards: "⚡ Variable XP based on correct answers and speed"
   },
-  '/play/cards': {
-    steps: [
-      "Check your card inventory.",
-      "Complete curriculum modules and missions to unlock card packs.",
-      "Open packs to discover rare and legendary AI hero cards!"
-    ],
-    rewards: "🃏 Collectible cards & profile badges"
-  },
   '/play/inventor-hall': {
     steps: [
       "Explore the showcase of inventions uploaded by other students.",

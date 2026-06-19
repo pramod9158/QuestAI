@@ -765,9 +765,7 @@ export interface PlayModule {
 }
 
 export const PLAY_MODULES_DATA: PlayModule[] = [
-  // Both zones (3 items)
   { path: '/play/quiz', emoji: '🎯', title: 'Quiz Arena', desc: 'Test your general AI knowledge', gradFrom: '#EC4899', gradTo: '#7C3AED', border: '#EC4899', shadow: '#BE185D', zones: ['junior', 'innovator'], completionKey: 'play_completed_quiz' },
-  { path: '/play/cards', emoji: '🃏', title: 'AI Cards', desc: 'Collect all 7 AI hero cards!', gradFrom: '#F59E0B', gradTo: '#10B981', border: '#F59E0B', shadow: '#D97706', zones: ['junior', 'innovator'], completionKey: 'play_completed_cards' },
   { path: '/play/inventor-hall', emoji: '🏛️', title: 'Inventor Hall', desc: 'Check the global showcase of inventions', gradFrom: '#8B5CF6', gradTo: '#EF4444', border: '#8B5CF6', shadow: '#6D28D9', zones: ['junior', 'innovator'], completionKey: 'play_completed_inventor-hall' },
 
   // Junior only zones (17 items)
@@ -803,7 +801,6 @@ export const PLAY_MODULES_DATA: PlayModule[] = [
   { path: '/play/idea-generator?mode=startup', emoji: '💼', title: 'AI Startup Builder', desc: 'Design revenue plans for community diagnostic grids', gradFrom: '#10B981', gradTo: '#059669', border: '#10B981', shadow: '#064E3B', zones: ['innovator'], completionKey: 'play_completed_idea-generator_startup' },
   { path: '/play/brainstorm?mode=ethics', emoji: '⚖️', title: 'Ethical AI Debate', desc: 'Map frameworks for privacy laws & accountability codes', gradFrom: '#F59E0B', gradTo: '#D97706', border: '#F59E0B', shadow: '#78350F', zones: ['innovator'], completionKey: 'play_completed_brainstorm_ethics' },
   { path: '/play/inventor-hall?filter=india', emoji: '🇮🇳', title: 'India Innovator Show', desc: 'Browse agricultural & medical projects built locally', gradFrom: '#EC4899', gradTo: '#DB2777', border: '#EC4899', shadow: '#831843', zones: ['innovator'], completionKey: 'play_completed_inventor-hall_india' },
-  { path: '/play/cards?category=supercomputers', emoji: '🖥️', title: 'Supercomputer Arena', desc: 'Learn specs of giant Indian & global AI clusters', gradFrom: '#8B5CF6', gradTo: '#7C3AED', border: '#8B5CF6', shadow: '#4C1D95', zones: ['innovator'], completionKey: 'play_completed_cards_supercomputers' },
   { path: '/play/detective?category=satellites', emoji: '🛰️', title: 'Canopy Fire Radar', desc: 'Examine thermal imagery detection scenarios', gradFrom: '#3B82F6', gradTo: '#1D4ED8', border: '#3B82F6', shadow: '#1E3A8A', zones: ['innovator'], completionKey: 'play_completed_detective_satellites' },
   { path: '/play/detective?category=traffic', emoji: '🚦', title: 'Smart Grid Planner', desc: 'Solve green light scheduling algorithm case files', gradFrom: '#EF4444', gradTo: '#DC2626', border: '#EF4444', shadow: '#7F1D1D', zones: ['innovator'], completionKey: 'play_completed_detective_traffic' },
   { path: '/play/quiz?topic=futurework', emoji: '🤝', title: 'Future of Work Quiz', desc: 'Map jobs boosted by co-pilots and smart bots', gradFrom: '#10B981', gradTo: '#059669', border: '#10B981', shadow: '#064E3B', zones: ['innovator'], completionKey: 'play_completed_quiz_futurework' },

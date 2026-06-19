@@ -21,7 +21,6 @@ const MODULE_CARDS = [
   { path: '/play/brainstorm', emoji: '💡', title: 'Brainstorm Lab', desc: 'Invent AI solutions', gradFrom: '#F59E0B', gradTo: '#FCD34D', border: '#F59E0B', shadow: '#D97706', zone: 'innovator' },
   { path: '/play/idea-generator', emoji: '⚡', title: 'Idea Generator', desc: 'AI power your ideas', gradFrom: '#EF4444', gradTo: '#F59E0B', border: '#EF4444', shadow: '#991B1B', zone: 'innovator' },
   { path: '/play/quiz', emoji: '🎯', title: 'Quiz Arena', desc: 'Test your AI knowledge', gradFrom: '#EC4899', gradTo: '#7C3AED', border: '#EC4899', shadow: '#BE185D', zone: 'both' },
-  { path: '/play/cards', emoji: '🃏', title: 'AI Cards', desc: 'Collect them all!', gradFrom: '#F59E0B', gradTo: '#10B981', border: '#F59E0B', shadow: '#D97706', zone: 'both' },
   { path: '/play/inventor-hall', emoji: '🏛️', title: 'Inventor Hall', desc: 'Share your inventions', gradFrom: '#8B5CF6', gradTo: '#EF4444', border: '#8B5CF6', shadow: '#6D28D9', zone: 'both' },
 ];
 
@@ -33,7 +32,6 @@ const DUO_MODULE_COLORS: Record<string, string> = {
   '/play/brainstorm':   '#F59E0B',
   '/play/idea-generator': '#EF4444',
   '/play/quiz':         '#EC4899',
-  '/play/cards':        '#F59E0B',
   '/play/inventor-hall': '#8B5CF6',
 };
 

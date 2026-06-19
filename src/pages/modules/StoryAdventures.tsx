@@ -26,6 +26,55 @@ const QUEST_STEPS = {
     { step: 'ai', title: 'AI Pet Finder! 🤖', content: 'An AI app lets Raja upload Fluffy\'s photo. AI scans 500 CCTV cameras across the city for matching dogs — checking size, color, breed, and markings. Within 2 hours, Fluffy is spotted 3km away at a playground!', emoji: '🤖', question: 'How does AI solve this?' },
     { step: 'hero', title: 'Fluffy Found! 🎉', content: 'Raja and Fluffy are reunited! You\'ve completed the Pet Detective mission. This same technology is used to help find missing children around the world!', emoji: '🎉', question: null },
   ],
+  library: [
+    { step: 'problem', title: 'The Problem 📚', content: 'The school library has lost over 500 books this year! Students borrow books but they get misplaced, and there is no record of who took what or where they are.', emoji: '📚', question: 'What is the main problem here?' },
+    { step: 'causes', title: 'Root Causes 🔍', content: 'The librarian has to manually check every book and write down names. With hundreds of kids, books get misplaced, returned to the wrong shelves, or taken without entry.', emoji: '🔍', question: 'Why does the problem happen?' },
+    { step: 'brainstorm', title: 'Brainstorm 💡', content: 'What if books had smart trackers? What if we had a smart scanner at the door? What if an AI app scanned book covers to instantly identify and log them?', emoji: '💡', question: 'How might we solve it?' },
+    { step: 'ai', title: 'AI to the Rescue! 🤖', content: 'An AI scanner at the exit automatically logs books using camera recognition as students walk out. It checks library database records and maps books to their correct shelves. It also sends friendly alerts if a book is overdue!', emoji: '🤖', question: 'How does AI help?' },
+    { step: 'hero', title: 'You\'re a Hero! 🏆', content: 'All 500 missing books are found and correctly catalogued! The librarian is overjoyed, and students can now easily find their favorite books in seconds!', emoji: '🎉', question: null },
+  ],
+  rain: [
+    { step: 'problem', title: 'The Problem 🌧️', content: 'The school Sports Day has been cancelled three times in a row due to sudden rain showers. The children are disappointed, and rescheduling is expensive and frustrating.', emoji: '🌧️', question: 'What is the main problem here?' },
+    { step: 'causes', title: 'Root Causes 🔍', content: 'Weather changes quickly, and traditional forecast models only give broad, city-wide predictions that are often incorrect for our local school ground.', emoji: '🔍', question: 'Why does the problem happen?' },
+    { step: 'brainstorm', title: 'Brainstorm 💡', content: 'What if we could predict localized rain hours in advance? What if we analysed local wind and cloud patterns? What if we used smart rain radars to plan events?', emoji: '💡', question: 'How might we solve it?' },
+    { step: 'ai', title: 'AI to the Rescue! 🤖', content: 'An AI weather model analyses high-resolution satellite pictures of clouds, wind patterns, and local temperature. It accurately predicts when and where it will rain within a 1km radius, helping the school schedule the matches perfectly!', emoji: '🤖', question: 'How does AI help?' },
+    { step: 'hero', title: 'You\'re a Hero! 🏆', content: 'Sports Day is a massive success under a clear blue sky! Thanks to the AI planner, the kids enjoyed all events without a single drop of rain!', emoji: '🎉', question: null },
+  ],
+  traffic: [
+    { step: 'problem', title: 'The Problem 🚗', content: 'Terrible traffic jams form near the school gates every morning at 8:00 AM, causing students to be late and creating heavy air pollution.', emoji: '🚗', question: 'What is the main problem here?' },
+    { step: 'causes', title: 'Root Causes 🔍', content: 'Hundreds of cars, buses, and cycles arrive at the same time. The traffic lights are set on fixed timers and do not adapt to the morning rush hour.', emoji: '🔍', question: 'Why does the problem happen?' },
+    { step: 'brainstorm', title: 'Brainstorm 💡', content: 'What if traffic lights changed dynamically based on queue length? What if we monitored traffic density using smart cameras? What if we had staggered school timings?', emoji: '💡', question: 'How might we solve it?' },
+    { step: 'ai', title: 'AI to the Rescue! 🤖', content: 'An AI-controlled traffic system uses computer vision cameras to count vehicles in real-time. It adjusts green light durations dynamically to clear the heaviest lanes first, reducing average wait times by 65%!', emoji: '🤖', question: 'How does AI help?' },
+    { step: 'hero', title: 'You\'re a Hero! 🏆', content: 'The road is clear, students arrive on time, and tailpipe emissions around the school have dropped significantly! Excellent work!', emoji: '🎉', question: null },
+  ],
+  water: [
+    { step: 'problem', title: 'The Problem 💧', content: 'The village lake is drying up rapidly. Villagers waste water by leaving taps running, and leaks in underground pipes go unnoticed for weeks.', emoji: '💧', question: 'What is the main problem here?' },
+    { step: 'causes', title: 'Root Causes 🔍', content: 'There is no way to monitor how much water is used in real-time. Finding underground pipe leaks requires digging up roads blindly.', emoji: '🔍', question: 'Why does the problem happen?' },
+    { step: 'brainstorm', title: 'Brainstorm 💡', content: 'What if we could measure water pressure changes automatically? What if smart valves shut off when they detect a leak? What if we tracked daily water use per household?', emoji: '💡', question: 'How might we solve it?' },
+    { step: 'ai', title: 'AI to the Rescue! 🤖', content: 'An AI system connects to acoustic sensors on pipes. It listens for the quiet sound of escaping water underground, locating leaks within 1 meter! It also alerts families via SMS if their taps are left running.', emoji: '🤖', question: 'How does AI help?' },
+    { step: 'hero', title: 'You\'re a Hero! 🏆', content: 'The lake is saved and stays full! The village water supply is secure, and clean water waste has been reduced to almost zero!', emoji: '🎉', question: null },
+  ],
+  fire: [
+    { step: 'problem', title: 'The Problem 🌳', content: 'Wildfires destroy thousands of trees and displace local wildlife every summer. By the time smoke is seen from the ground, the fire is already too large to control.', emoji: '🌳', question: 'What is the main problem here?' },
+    { step: 'causes', title: 'Root Causes 🔍', content: 'Forests are too vast for rangers to patrol on foot. Smoke detectors do not work in open areas, and normal satellites only refresh pictures once a day.', emoji: '🔍', question: 'Why does the problem happen?' },
+    { step: 'brainstorm', title: 'Brainstorm 💡', content: 'What if we used thermal sensors? What if drones patrolled the sky? What if satellite feeds were processed continuously by AI to spot early fires?', emoji: '💡', question: 'How might we solve it?' },
+    { step: 'ai', title: 'AI to the Rescue! 🤖', content: 'An AI model continuously scans multispectral satellite imagery. It spots thermal hotspots and tiny smoke plumes in real-time, alerting rangers within minutes of a spark so they can extinguish it immediately!', emoji: '🤖', question: 'How does AI help?' },
+    { step: 'hero', title: 'You\'re a Hero! 🏆', content: 'The forest and its wildlife are safe! Early detection has prevented small sparks from turning into raging disasters.', emoji: '🎉', question: null },
+  ],
+  crops: [
+    { step: 'problem', title: 'The Problem 🌾', content: 'A strange fungal disease is spreading across Farmer Ramu\'s wheat crop. If it is not stopped in a few days, the entire harvest will be lost.', emoji: '🌾', question: 'What is the main problem here?' },
+    { step: 'causes', title: 'Root Causes 🔍', content: 'Ramu doesn\'t know what disease it is. Applying the wrong pesticide will kill the crop, and waiting for an agricultural expert takes too long.', emoji: '🔍', question: 'Why does the problem happen?' },
+    { step: 'brainstorm', title: 'Brainstorm 💡', content: 'What if we could identify diseases from leaf photos? What if an expert could video call? What if AI matched symptoms against a database of crop fungal patterns?', emoji: '💡', question: 'How might we solve it?' },
+    { step: 'ai', title: 'AI to the Rescue! 🤖', content: 'Farmer Ramu uses an AI smartphone app to take a photo of a leaf. The computer vision model analyses the brown spots and identifies it as Leaf Rust, instantly suggesting a cheap organic spray.', emoji: '🤖', question: 'How does AI help?' },
+    { step: 'hero', title: 'You\'re a Hero! 🏆', content: 'Ramu saves his wheat crop and secures his family\'s income! The successful harvest is celebrated by the whole village!', emoji: '🎉', question: null },
+  ],
+  hospital: [
+    { step: 'problem', title: 'The Problem 🏥', content: 'Patients wait up to 4 hours in the outpatient clinic queue. This causes immense stress, particularly for elderly patients and parents with sick babies.', emoji: '🏥', question: 'What is the main problem here?' },
+    { step: 'causes', title: 'Root Causes 🔍', content: 'All appointments are scheduled for the morning. Doctors have varying consultation times depending on the case, and there is no real-time planning.', emoji: '🔍', question: 'Why does the problem happen?' },
+    { step: 'brainstorm', title: 'Brainstorm 💡', content: 'What if we staggered arrival times? What if AI predicted consultation durations based on symptoms? What if patients booked slots live from home?', emoji: '💡', question: 'How might we solve it?' },
+    { step: 'ai', title: 'AI to the Rescue! 🤖', content: 'An AI queue manager analyses 3 years of appointment data. It predicts appointment lengths based on patient age and symptoms. It texts patients dynamic arrival times, reducing wait times to just 15 minutes!', emoji: '🤖', question: 'How does AI help?' },
+    { step: 'hero', title: 'You\'re a Hero! 🏆', content: 'No more long, crowded queues! Patients arrive exactly when the doctor is ready, making visits safe, calm, and efficient.', emoji: '🎉', question: null },
+  ],
 };
 
 export default function StoryAdventures() {
@@ -49,7 +98,7 @@ export default function StoryAdventures() {
   const completedQuests = profile?.completed_quests || [];
 
   React.useEffect(() => {
-    if (questParam && QUEST_STEPS[questParam as keyof typeof QUEST_STEPS]) {
+    if (questParam && STORY_QUESTS.some(q => q.id === questParam)) {
       setSelectedQuest(questParam);
     } else {
       setSelectedQuest(null);
