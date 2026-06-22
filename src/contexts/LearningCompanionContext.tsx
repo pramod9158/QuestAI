@@ -9,6 +9,8 @@ import { getSparkyResponse, LearningContext, SparkyMessage } from '@/lib/sparkyS
 import { getLevel } from '@/lib/gamification';
 import { CURRICULUM } from '@/data/curriculum';
 import { SparkyChatPanel } from '@/components/ui/SparkyChatPanel';
+import { toast } from 'react-hot-toast';
+
 
 // ============================================================================
 // TYPES & SCHEMAS
@@ -235,6 +237,8 @@ export function LearningCompanionProvider({ children }: { children: React.ReactN
   const audioContextRef = useRef<AudioContext | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const vadLoopActiveRef = useRef(false);
+  const useWebSpeechFallbackRef = useRef(false);
+
 
   useEffect(() => {
     isGeneratingRef.current = isGenerating;
@@ -396,6 +400,18 @@ export function LearningCompanionProvider({ children }: { children: React.ReactN
     });
   }, [learningContext, playResponseSpeech, stopAudioPlayback]);
 
+  const stopVAD = useCallback(() => {
+    vadLoopActiveRef.current = false;
+    if (audioContextRef.current) {
+      audioContextRef.current.close().catch(() => {});
+      audioContextRef.current = null;
+    }
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      mediaStreamRef.current = null;
+    }
+  }, []);
+
   const startContinuousVAD = useCallback(async () => {
     // Prevent duplicate VAD stream initializations
     if (vadLoopActiveRef.current) return;
@@ -541,7 +557,10 @@ export function LearningCompanionProvider({ children }: { children: React.ReactN
                         startVoiceInput();
                       }
                     } catch (err) {
-                      console.warn("VAD active transcription failed:", err);
+                      console.warn("VAD active transcription failed, falling back to WebSpeech:", err);
+                      useWebSpeechFallbackRef.current = true;
+                      stopVAD();
+                      toast.error("Speech server offline. Using local browser speech recognition.");
                       setIsGenerating(false);
                       setMoodState('guiding');
                       setPoseState('idle');
@@ -562,7 +581,106 @@ export function LearningCompanionProvider({ children }: { children: React.ReactN
     } catch (err) {
       console.warn("Failed to request mic access for volume VAD:", err);
     }
-  }, [sendUserMessage, playResponseSpeech, setChatOpenState]);
+  }, [sendUserMessage, playResponseSpeech, setChatOpenState, stopVAD]);
+
+  const startWebSpeechInput = useCallback(() => {
+    console.log("Starting Web Speech API SpeechRecognition...");
+    setRealtimeTranscript('');
+    realtimeTranscriptRef.current = '';
+    
+    setIsRecording(true);
+    setMoodState('curious');
+    setPoseState('idle');
+
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.abort();
+      } catch (e) {}
+      recognitionRef.current = null;
+    }
+
+    if (silenceTimeoutRef.current) {
+      clearTimeout(silenceTimeoutRef.current);
+      silenceTimeoutRef.current = null;
+    }
+
+    const rec = createSpeechRecognizer({
+      onTranscript: (text: string, isFinal: boolean) => {
+        console.log("WebSpeech interim/final transcript:", text, "isFinal:", isFinal);
+        setRealtimeTranscript(text);
+        realtimeTranscriptRef.current = text;
+
+        if (sleepTimeoutRef.current) {
+          clearTimeout(sleepTimeoutRef.current);
+          sleepTimeoutRef.current = null;
+        }
+
+        if (silenceTimeoutRef.current) {
+          clearTimeout(silenceTimeoutRef.current);
+          silenceTimeoutRef.current = null;
+        }
+
+        // Auto-respond when user stops speaking (1.5 seconds silence)
+        silenceTimeoutRef.current = setTimeout(async () => {
+          const finaltext = realtimeTranscriptRef.current.trim();
+          console.log("WebSpeech silence threshold met. Text:", finaltext);
+          
+          if (recognitionRef.current) {
+            try {
+              recognitionRef.current.abort();
+            } catch (e) {}
+            recognitionRef.current = null;
+          }
+          setIsRecording(false);
+
+          if (finaltext) {
+            await sendUserMessage(finaltext);
+          } else {
+            // Silently restart listening if empty
+            if (startVoiceInputRef.current) {
+              startVoiceInputRef.current();
+            }
+          }
+        }, 1500);
+      },
+      onError: (err: any) => {
+        console.warn("WebSpeech recognition error:", err);
+        setIsRecording(false);
+        // Restart voice input on transient errors
+        setTimeout(() => {
+          if (chatOpenRef.current && startVoiceInputRef.current) {
+            startVoiceInputRef.current();
+          }
+        }, 500);
+      },
+      onEnd: () => {
+        console.log("WebSpeech recognition ended.");
+        // Restart if appropriate
+        setTimeout(() => {
+          if (
+            chatOpenRef.current &&
+            !isSpeakingRef.current &&
+            !isGeneratingRef.current &&
+            realtimeTranscriptRef.current === '' &&
+            startVoiceInputRef.current
+          ) {
+            startVoiceInputRef.current();
+          }
+        }, 300);
+      }
+    });
+
+    if (rec) {
+      recognitionRef.current = rec;
+      try {
+        rec.start();
+      } catch (err) {
+        console.error("Failed to start SpeechRecognition:", err);
+      }
+    } else {
+      console.warn("WebSpeech API SpeechRecognition not supported in this browser.");
+    }
+  }, [sendUserMessage]);
 
   const startVoiceInput = useCallback(() => {
     setRealtimeTranscript('');
@@ -572,17 +690,34 @@ export function LearningCompanionProvider({ children }: { children: React.ReactN
     setMoodState('curious');
     setPoseState('idle');
 
+    if (useWebSpeechFallbackRef.current) {
+      startWebSpeechInput();
+      return;
+    }
+
     // Ensure VAD is running
     const hasMicPermission = localStorage.getItem('mic_permission_granted') === 'true';
     if (hasMicPermission) {
       startContinuousVAD();
     }
-  }, [startContinuousVAD]);
+  }, [startContinuousVAD, startWebSpeechInput]);
 
   const stopVoiceInput = useCallback(() => {
     setRealtimeTranscript('');
     realtimeTranscriptRef.current = '';
     setIsRecording(false);
+
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.abort();
+      } catch (e) {}
+      recognitionRef.current = null;
+    }
+
+    if (silenceTimeoutRef.current) {
+      clearTimeout(silenceTimeoutRef.current);
+      silenceTimeoutRef.current = null;
+    }
   }, []);
 
   // Sync startVoiceInputRef with startVoiceInput
@@ -1031,7 +1166,11 @@ export function LearningCompanionProvider({ children }: { children: React.ReactN
     if (!chatOpen) {
       // Set mic permission and boot VAD immediately on click gesture!
       localStorage.setItem('mic_permission_granted', 'true');
-      startContinuousVAD();
+      if (useWebSpeechFallbackRef.current) {
+        startWebSpeechInput();
+      } else {
+        startContinuousVAD();
+      }
 
       setChatOpenState(true);
       setMoodState('excited');
@@ -1058,7 +1197,7 @@ export function LearningCompanionProvider({ children }: { children: React.ReactN
         }, 100);
       }
     }
-  }, [visible, message, chatOpen, messages, isSpeaking, playResponseSpeech, stopAudioPlayback, stopVoiceInput, hide, setChatOpenState, startContinuousVAD]);
+  }, [visible, message, chatOpen, messages, isSpeaking, playResponseSpeech, stopAudioPlayback, stopVoiceInput, hide, setChatOpenState, startContinuousVAD, startWebSpeechInput]);
 
   const isWakeWordListening = false;
 
