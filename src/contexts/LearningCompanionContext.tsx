@@ -237,7 +237,10 @@ export function LearningCompanionProvider({ children }: { children: React.ReactN
   const audioContextRef = useRef<AudioContext | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const vadLoopActiveRef = useRef(false);
-  const useWebSpeechFallbackRef = useRef(false);
+  const useWebSpeechFallbackRef = useRef(
+    typeof window !== 'undefined' && 
+    (!!(window as any).SpeechRecognition || !!(window as any).webkitSpeechRecognition)
+  );
 
 
   useEffect(() => {
@@ -728,7 +731,7 @@ export function LearningCompanionProvider({ children }: { children: React.ReactN
   // VAD lifecycle effect (start on mount if permission granted)
   useEffect(() => {
     const hasMicPermission = localStorage.getItem('mic_permission_granted') === 'true';
-    if (hasMicPermission) {
+    if (hasMicPermission && !useWebSpeechFallbackRef.current) {
       startContinuousVAD();
     }
 
